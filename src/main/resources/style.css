@@ -1,0 +1,17 @@
+.root {
+    -fx-background-color: white;
+}
+
+.nodeContent {
+    -fx-font-size: 20;
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 8;
+}
+
+.nodeBorder {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #c2c2c2;
+    -fx-border-width: 1;
+}
