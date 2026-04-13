@@ -11,11 +11,14 @@ import myMind.constants.SizeConstants;
 import myMind.controller.MindController;
 import org.fxmisc.richtext.InlineCssTextArea;
 
+import java.util.List;
+
 
 public class MindNode extends StackPane {
 	@Getter
 	private final NodeModel model;
 	private final InlineCssTextArea textArea;
+	private final MindController controller;
 	private double dragStartX, dragStartY;
 	private double mousePressedX;
 	private double mousePressedY;
@@ -24,11 +27,16 @@ public class MindNode extends StackPane {
 
 	public MindNode(NodeModel model, MindController controller) {
 		this.model = model;
+		model.setMindNode(this);
+		this.controller = controller;
 
 		textArea = new InlineCssTextArea();
 		textArea.replaceText(0, 0, model.getText());
 		textArea.setWrapText(true);
 		textArea.getStyleClass().add("nodeContent");
+		// 让绘制连线时，能获取结点位置
+		textArea.setPrefWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
+		textArea.setPrefHeight(SizeConstants.MIN_TEXTAREA_HEIGHT);
 
 		measureText = new Text();
 		measureText.setFont(Font.font("System", SizeConstants.NODE_FONT_SIZE));
@@ -47,10 +55,10 @@ public class MindNode extends StackPane {
 		// 初始调整尺寸
 		Platform.runLater(this::adjustTextArea);
 
-		addListener(model, controller);
+		addListener(model);
 	}
 
-	private void addListener(NodeModel model, MindController controller) {
+	private void addListener(NodeModel model) {
 		// 鼠标拖拽移动结点
 		setOnMousePressed(e -> {
 			//PRIMARY = 左键
@@ -131,7 +139,7 @@ public class MindNode extends StackPane {
 		// textArea 左右无内边距，宽度 = 文本宽度
 		double textWidth = measureText.getLayoutBounds().getWidth();
 
-		// 20px padding 2px border
+		// MindNode 宽度 = border(2px) + padding(20px) + textArea 宽度
 		double nodeWidth = textWidth + 22;
 		// MIN_NODE_WIDTH <= 宽度 <= MAX_NODE_WIDTH
 		nodeWidth = Math.max(SizeConstants.MIN_NODE_WIDTH,
@@ -146,15 +154,45 @@ public class MindNode extends StackPane {
 		// MindNode 高度 = border(2px) + padding(20px) + textArea 高度
 		double nodeHeight = textHeight + 22;
 
-		System.out.println("contentHeight：" + contentHeight);
-		System.out.println("textAreaHeight：" + textHeight);
-		System.out.println("nodeHeight：" + nodeHeight);
-		System.out.println("——————————————————————————————————————————————");
+//		System.out.println("contentHeight：" + contentHeight);
+//		System.out.println("textAreaHeight：" + textHeight);
+//		System.out.println("nodeHeight：" + nodeHeight);
+//		System.out.println("——————————————————————————————————————————————");
 
 		textArea.setPrefWidth(textWidth);
 		textArea.setPrefHeight(textHeight);
 		setPrefWidth(nodeWidth);
 		setPrefHeight(nodeHeight);
+
+		adjustChildren(nodeWidth);
+	}
+
+	private void adjustChildren(double parentWidth) {
+		List<NodeModel> children = model.getChildren();
+		if (children == null || children.isEmpty()) {
+			return;
+		}
+
+		// 子结点X坐标
+		double parentX = model.getX();
+		double childX = parentX + parentWidth + SizeConstants.NODE_GAP_X;
+
+		// 子结点Y坐标
+		double totalChildrenHeight = model.getMidY();
+		double parentY = model.getY();
+		double gapBetweenChildren = SizeConstants.NODE_GAP_Y;
+		double childY = parentY - totalChildrenHeight / 2;
+
+		for (NodeModel child : children) {
+			MindNode childNode = child.getMindNode();
+			if (childNode != null) {
+				child.setX(childX);
+				child.setY(childY);
+				childY += childNode.getHeight() + gapBetweenChildren;
+			}
+		}
+
+		controller.refreshLines();
 	}
 
 }
