@@ -3,7 +3,7 @@ package myMind.componet;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
-import myMind.controller.MindController;
+import myMind.controller.NodeController;
 
 /**
  * 主控面板，放结点和连线
@@ -20,7 +20,7 @@ public class MindPane extends Pane {
      */
     private final Pane linesLayer = new Pane();
 
-    public MindPane(MindController controller) {
+    public MindPane(NodeController controller) {
         // 让连线不干扰鼠标事件
         linesLayer.setMouseTransparent(true);
         nodesLayer.setMouseTransparent(false);

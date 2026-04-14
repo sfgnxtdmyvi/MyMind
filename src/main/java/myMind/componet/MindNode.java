@@ -8,7 +8,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import lombok.Getter;
 import myMind.constants.SizeConstants;
-import myMind.controller.MindController;
+import myMind.controller.NodeController;
 import org.fxmisc.richtext.InlineCssTextArea;
 
 import java.util.List;
@@ -18,14 +18,14 @@ public class MindNode extends StackPane {
 	@Getter
 	private final NodeModel model;
 	private final InlineCssTextArea textArea;
-	private final MindController controller;
+	private final NodeController controller;
 	private double dragStartX, dragStartY;
 	private double mousePressedX;
 	private double mousePressedY;
 	//用于测量文本尺寸
 	private Text measureText;
 
-	public MindNode(NodeModel model, MindController controller) {
+	public MindNode(NodeModel model, NodeController controller) {
 		this.model = model;
 		model.setMindNode(this);
 		this.controller = controller;
@@ -114,7 +114,7 @@ public class MindNode extends StackPane {
 		});
 	}
 
-	private void finishEdit(String newText, MindController controller) {
+	private void finishEdit(String newText, NodeController controller) {
 		model.setText(newText);
 
 		// 文本变化会改变结点尺寸，刷新连线端点

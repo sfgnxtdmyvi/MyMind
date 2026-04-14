@@ -10,7 +10,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import lombok.Getter;
-import myMind.controller.MindController;
+import myMind.controller.NodeController;
 import myMind.constants.SizeConstants;
 
 
