@@ -41,11 +41,10 @@ public class NodeController {
 
 	public void addChild() {
 		NodeModel parentModel = selectedNode.getModel();
-		double parentWidth = selectedNode.getWidth();
 
 		// 基于已有最后一个子结点位置加上偏移
 		List<NodeModel> children = parentModel.getChildren();
-		double childX = parentModel.getX() + parentWidth + SizeConstants.NODE_GAP_X;
+		double childX = parentModel.getX() + selectedNode.getWidth() + SizeConstants.NODE_GAP_X;
 		double childY;
 		if (children == null || children.isEmpty()) {
 			childY = parentModel.getY();
@@ -59,11 +58,8 @@ public class NodeController {
 		NodeModel childModel = new NodeModel(nextId(), "", childX, childY);
 		parentModel.addChild(childModel);
 		addNode(childModel);
-		double midY = parentModel.getMidY();
-		double height = selectedNode.getHeight();
-		double y = midY - height / 2;
-		parentModel.setY(y);
-		refreshLines();
+
+		adjustParent(parentModel);
 	}
 
 	public void addSibling() {
@@ -77,11 +73,8 @@ public class NodeController {
 		NodeModel parentModel = nodeModel.getParent();
 		parentModel.addChild(siblingModel);
 		addNode(siblingModel);
-		double midY = parentModel.getMidY();
-		double height = selectedNode.getHeight();
-		double y = midY - height / 2;
-		parentModel.setY(y);
-		refreshLines();
+
+		adjustParent(parentModel);
 	}
 
 	public void delete() {
@@ -152,6 +145,14 @@ public class NodeController {
 			removeNode(child);
 		}
 		node.getChildren().clear();
+	}
+
+	/**
+	 * 调整父结点位置
+	 */
+	private void adjustParent(NodeModel parentModel) {
+		parentModel.setY(parentModel.getMidY() - parentModel.getMindNode().getHeight() / 2.0);
+		refreshLines();
 	}
 
 	private Point2D getRightPoint(MindNode node) {

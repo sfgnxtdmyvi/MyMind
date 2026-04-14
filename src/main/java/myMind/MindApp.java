@@ -1,13 +1,17 @@
 package myMind;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.MenuBar;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import myMind.constants.SizeConstants;
 import myMind.controller.FileController;
-import myMind.controller.MenuBarController;
+import myMind.controller.MenuController;
 import myMind.controller.NodeController;
+
+import java.io.IOException;
 
 public class MindApp extends Application {
 
@@ -15,15 +19,22 @@ public class MindApp extends Application {
     public void start(Stage primaryStage) {
         NodeController nodeController = new NodeController();
         FileController fileController = new FileController(nodeController);
-        MenuBarController menuBarController = new MenuBarController(nodeController, fileController);
 
         BorderPane root = new BorderPane();
-        root.setTop(menuBarController.createMenuBar());
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
+            MenuBar menuBar = loader.load();
+            MenuController menuController = loader.getController();
+            menuController.setControllers(nodeController, fileController);
+            root.setTop(menuBar);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         root.setCenter(nodeController.getMindMapPane());
         root.getStyleClass().add("root");
 
         Scene scene = new Scene(root, 1450, 740);
-        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         primaryStage.setScene(scene);
         primaryStage.setTitle("MyMind");

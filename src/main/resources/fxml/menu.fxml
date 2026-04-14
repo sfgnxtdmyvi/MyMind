@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+
+<MenuBar xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+         fx:controller="myMind.controller.MenuController">
+    <menus>
+        <Menu text="文件">
+            <items>
+                <MenuItem onAction="#handleNew" text="新建"/>
+                <MenuItem onAction="#handleLoad" text="打开"/>
+                <MenuItem onAction="#handleLoadRecently" text="打开最近"/>
+                <SeparatorMenuItem mnemonicParsing="false"/>
+                <MenuItem onAction="#handleSave" text="保存"/>
+                <MenuItem onAction="#handleSaveAs" text="另存为"/>
+            </items>
+        </Menu>
+        <Menu text="编辑">
+            <items>
+                <MenuItem onAction="#handleAddChild" text="添加子结点"/>
+                <MenuItem onAction="#handleDelete" text="删除结点"/>
+            </items>
+        </Menu>
+    </menus>
+</MenuBar>
