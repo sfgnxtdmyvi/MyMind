@@ -4,101 +4,113 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import myMind.constants.SizeConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
 public class NodeModel {
-	//结点内部属性
-	@Getter
-	private final int id;
-	@Getter
-	@Setter
-	private MindNode mindNode;
-	private final StringProperty text = new SimpleStringProperty();
-	private final DoubleProperty x = new SimpleDoubleProperty();
-	private final DoubleProperty y = new SimpleDoubleProperty();
+    //节点内部属性
+    private final int id;
+    private MindNode mindNode;
+    private final StringProperty text = new SimpleStringProperty();
+    private final DoubleProperty x = new SimpleDoubleProperty();
+    private final DoubleProperty y = new SimpleDoubleProperty();
 
-	//结点之间的关系
-	@Getter
-	private NodeModel parent;
-	@Getter
-	private final List<NodeModel> children = new ArrayList<>();
+    //节点之间的关系
+    private NodeModel parent;
+    private final List<NodeModel> children = new ArrayList<>();
 
-	public NodeModel(int id, String text, double x, double y) {
-		this.id = id;
-		this.text.set(text);
-		this.x.set(x);
-		this.y.set(y);
-	}
+    public NodeModel(int id, String text, double x, double y) {
+        this.id = id;
+        this.text.set(text);
+        this.x.set(x);
+        this.y.set(y);
+    }
 
-	public String getText() {
-		return text.get();
-	}
+    public String getText() {
+        return text.get();
+    }
 
-	public void setText(String text) {
-		this.text.set(text);
-	}
+    public void setText(String text) {
+        this.text.set(text);
+    }
 
-	public StringProperty textProperty() {
-		return text;
-	}
+    public double getX() {
+        return x.get();
+    }
 
-	public double getX() {
-		return x.get();
-	}
+    public void setX(double x) {
+        this.x.set(x);
+    }
 
-	public void setX(double x) {
-		this.x.set(x);
-	}
+    public DoubleProperty xProperty() {
+        return x;
+    }
 
-	public DoubleProperty xProperty() {
-		return x;
-	}
+    public double getY() {
+        return y.get();
+    }
 
-	public double getY() {
-		return y.get();
-	}
+    public void setY(double y) {
+        this.y.set(y);
+    }
 
-	public void setY(double y) {
-		this.y.set(y);
-	}
+    public DoubleProperty yProperty() {
+        return y;
+    }
 
-	public DoubleProperty yProperty() {
-		return y;
-	}
+    public void addChild(NodeModel child) {
+        children.add(child);
+        child.setParent(this);
+    }
 
-	public void setParent(NodeModel parent) {
-		this.parent = parent;
-	}
+    public void removeChildren() {
+        for (int i = 0; i < children.size(); i++) {
+            NodeModel remove = children.remove(i);
+            remove.setParent(null);
+        }
+    }
 
-	public void addChild(NodeModel child) {
-		children.add(child);
-		child.setParent(this);
-	}
+    public void removeChild(NodeModel child) {
+        children.remove(child);
+        child.setParent(null);
+    }
 
-	public void removeChild(NodeModel child) {
-		children.remove(child);
-		child.setParent(null);
-	}
+    /**
+     * 获取所有子节点的中间位置
+     */
+    public double getMidY() {
+        return (getStartY() + getEndY()) / 2.0;
+    }
 
-	/**
-	 * 获取所有子结点的中间位置
-	 */
-	public double getMidY() {
-		double totalChildrenHeight = 0;
-		for (NodeModel child : children) {
-			MindNode childNode = child.getMindNode();
-			if (childNode != null) {
-				totalChildrenHeight += childNode.getHeight();
-			}
-		}
-		totalChildrenHeight += SizeConstants.NODE_GAP_Y * (children.size() - 1);
+    public double getTotalHeight() {
+        if (children.isEmpty()) {
+            return getMindNode().getHeight();
+        } else {
+            return getEndY() - getStartY();
+        }
+    }
 
-		double y1 = children.get(0).getY();
-		return y1 + totalChildrenHeight / 2;
-	}
+    public double getEndY() {
+        NodeModel lastNodeModel = children.get(children.size() - 1);
+        if (!lastNodeModel.children.isEmpty()) {
+            return lastNodeModel.getEndY();
+        } else {
+            return lastNodeModel.getY() + lastNodeModel.getMindNode().getHeight();
+        }
+    }
+
+    //———————————————————————————————————————————私有方法———————————————————————————————————————————
+    private double getStartY() {
+        NodeModel fistNodeModel = children.get(0);
+        if (!fistNodeModel.children.isEmpty()) {
+            return fistNodeModel.getStartY();
+        } else {
+            return fistNodeModel.getY();
+        }
+    }
 }

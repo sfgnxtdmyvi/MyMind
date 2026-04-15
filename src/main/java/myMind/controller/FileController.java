@@ -55,7 +55,7 @@ public class FileController {
 			// 简易解析 （生产环境建议用 JSON 库，这里手动解析足够演示）
 			Map<Integer, NodeModel> loadedModels = new HashMap<>();
 			Map<Integer, Integer> parentRelations = new HashMap<>();
-			// 提取结点数组
+			// 提取节点数组
 			int nodesStart = json.indexOf("\"nodes\":");
 			if (nodesStart == -1) throw new RuntimeException("无效文件格式");
 			int arrStart = json.indexOf("[", nodesStart);
@@ -83,7 +83,7 @@ public class FileController {
 					if (parent != null) parent.addChild(entry.getValue());
 				}
 			}
-			if (newRoot == null) throw new RuntimeException("没有根结点");
+			if (newRoot == null) throw new RuntimeException("没有根节点");
 			// 替换当前所有内容
 			nodeController.clearAll();
 			nodeController.setRootModel(newRoot);

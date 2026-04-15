@@ -28,7 +28,7 @@ public class MenuController {
     private void handleLoad() {
         FileChooser fc = new FileChooser();
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON 文件", "*.json"));
-        File file = fc.showOpenDialog(nodeController.getMindMapPane().getScene().getWindow());
+        File file = fc.showOpenDialog(nodeController.getMindPane().getScene().getWindow());
         if (file != null) {
             fileController.loadFromFile(file);
         }
@@ -43,7 +43,7 @@ public class MenuController {
         FileChooser fc = new FileChooser();
         fc.setInitialFileName("mindmap.json");
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON 文件", "*.json"));
-        File file = fc.showSaveDialog(nodeController.getMindMapPane().getScene().getWindow());
+        File file = fc.showSaveDialog(nodeController.getMindPane().getScene().getWindow());
         if (file != null) {
             fileController.saveToFile(file);
         }

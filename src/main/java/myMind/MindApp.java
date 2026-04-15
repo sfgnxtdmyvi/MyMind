@@ -30,7 +30,7 @@ public class MindApp extends Application {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        root.setCenter(nodeController.getMindMapPane());
+        root.setCenter(nodeController.getMindPane());
         root.getStyleClass().add("root");
 
         Scene scene = new Scene(root, 1450, 740);
@@ -43,12 +43,12 @@ public class MindApp extends Application {
 
         // 窗口显示后，使用实际MindMapPane大小初始化根节点并居中
         javafx.application.Platform.runLater(() -> {
-            double centerX = (nodeController.getMindMapPane().getWidth()) / 2 - SizeConstants.MIN_NODE_WIDTH;
-            double centerY = (nodeController.getMindMapPane().getHeight() - SizeConstants.MIN_NODE_HEIGHT) / 2;
+            double centerX = (nodeController.getMindPane().getWidth()) / 2 - SizeConstants.MIN_NODE_WIDTH;
+            double centerY = (nodeController.getMindPane().getHeight() - SizeConstants.MIN_NODE_HEIGHT) / 2;
             nodeController.initRootNode(centerX, centerY);
         });
 
-        // 窗口大小改变时重新计算连线 （结点位置可能相对变化？结点是绝对布局，不受窗口缩放影响，但为了安全）
+        // 窗口大小改变时重新计算连线 （节点位置可能相对变化？节点是绝对布局，不受窗口缩放影响，但为了安全）
         primaryStage.widthProperty().addListener((obs, oldVal, newVal) -> nodeController.refreshLines());
         primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> nodeController.refreshLines());
     }
