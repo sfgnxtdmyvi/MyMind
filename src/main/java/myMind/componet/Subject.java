@@ -10,7 +10,7 @@ import myMind.controller.NodeController;
  * 主控面板，放节点和连线
  */
 @Getter
-public class MindPane extends Pane {
+public class Subject extends Pane {
     /**
      * 节点层
      */
@@ -28,7 +28,7 @@ public class MindPane extends Pane {
     private double currentTranslateX = 0;
     private double currentTranslateY = 0;
 
-    public MindPane(NodeController controller) {
+    public Subject(NodeController controller) {
         this.controller = controller;
 
         // 让连线不干扰鼠标事件
@@ -116,7 +116,6 @@ public class MindPane extends Pane {
             // 处理删除操作
             if (isAltDown && code == KeyCode.DELETE) {
                 controller.delete();
-                e.consume();
                 return;
             }
 
@@ -149,7 +148,6 @@ public class MindPane extends Pane {
                 nodesLayer.setTranslateY(0);
                 linesLayer.setTranslateY(0);
             }
-            e.consume();
         });
     }
 
@@ -185,7 +183,7 @@ public class MindPane extends Pane {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        //确保两个图层始终填满整个 MindPane
+        //确保两个图层始终填满整个 Subject
         nodesLayer.resizeRelocate(0, 0, getWidth(), getHeight());
         linesLayer.resizeRelocate(0, 0, getWidth(), getHeight());
     }

@@ -5,9 +5,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import myMind.componet.MindPane;
+import myMind.componet.Subject;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
 import myMind.constants.SizeConstants;
@@ -19,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
 public class NodeController {
-    private final MindPane mindPane = new MindPane(this);
+    private final Subject subject = new Subject(this);
     private final Map<Integer, MindNode> nodeMap = new HashMap<>();
     private NodeModel rootModel;
     private MindNode selectedNode = null;
@@ -114,7 +112,7 @@ public class NodeController {
     }
 
     public void refreshLines() {
-        Pane linesLayer = mindPane.getLinesLayer();
+        Pane linesLayer = subject.getLinesLayer();
         linesLayer.getChildren().clear();
 
         // 找到每一个子节点的父节点，创建连接线
@@ -160,8 +158,8 @@ public class NodeController {
     }
 
     public void clearAll() {
-        mindPane.getNodesLayer().getChildren().clear();
-        mindPane.getLinesLayer().getChildren().clear();
+        subject.getNodesLayer().getChildren().clear();
+        subject.getLinesLayer().getChildren().clear();
         nodeMap.clear();
         selectedNode = null;
     }
@@ -177,12 +175,12 @@ public class NodeController {
     private void addNode(NodeModel model) {
         MindNode node = new MindNode(model, this);
         nodeMap.put(model.getId(), node);
-        mindPane.getNodesLayer().getChildren().add(node);
+        subject.getNodesLayer().getChildren().add(node);
         setSelectedNode(node);
 
         // 强制刷新布局，确保尺寸计算正确，否则node.getHeight()返回0
-        mindPane.applyCss();
-        mindPane.layout();
+        subject.applyCss();
+        subject.layout();
     }
 
     private void deleteChildren(NodeModel parentNodeModel) {
@@ -201,7 +199,7 @@ public class NodeController {
      */
     private void deleteNode(NodeModel childNodeModel) {
         MindNode childNode = nodeMap.remove(childNodeModel.getId());
-        mindPane.getNodesLayer().getChildren().remove(childNode);
+        subject.getNodesLayer().getChildren().remove(childNode);
     }
 
     /**

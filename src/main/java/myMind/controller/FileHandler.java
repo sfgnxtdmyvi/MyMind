@@ -10,11 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FileController {
+public class FileHandler {
 	
 	private final NodeController nodeController;
 	
-	public FileController(NodeController nodeController) {
+	public FileHandler(NodeController nodeController) {
 		this.nodeController = nodeController;
 	}
 

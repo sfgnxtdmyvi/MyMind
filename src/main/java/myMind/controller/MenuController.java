@@ -2,9 +2,6 @@ package myMind.controller;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -12,11 +9,11 @@ import java.io.File;
 public class MenuController {
 
     private NodeController nodeController;
-    private FileController fileController;
+    private FileHandler fileHandler;
 
-    public void setControllers(NodeController nodeController, FileController fileController) {
+    public void setControllers(NodeController nodeController, FileHandler fileHandler) {
         this.nodeController = nodeController;
-        this.fileController = fileController;
+        this.fileHandler = fileHandler;
     }
 
     //—————————————————————————————————————————文件—————————————————————————————————————————
@@ -28,9 +25,9 @@ public class MenuController {
     private void handleLoad() {
         FileChooser fc = new FileChooser();
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON 文件", "*.json"));
-        File file = fc.showOpenDialog(nodeController.getMindPane().getScene().getWindow());
+        File file = fc.showOpenDialog(nodeController.getSubject().getScene().getWindow());
         if (file != null) {
-            fileController.loadFromFile(file);
+            fileHandler.loadFromFile(file);
         }
     }
 
@@ -43,9 +40,9 @@ public class MenuController {
         FileChooser fc = new FileChooser();
         fc.setInitialFileName("mindmap.json");
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON 文件", "*.json"));
-        File file = fc.showSaveDialog(nodeController.getMindPane().getScene().getWindow());
+        File file = fc.showSaveDialog(nodeController.getSubject().getScene().getWindow());
         if (file != null) {
-            fileController.saveToFile(file);
+            fileHandler.saveToFile(file);
         }
     }
 

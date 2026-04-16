@@ -6,32 +6,40 @@ import javafx.scene.Scene;
 import javafx.scene.control.MenuBar;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import myMind.constants.SizeConstants;
-import myMind.controller.FileController;
+import myMind.componet.Workspace;
+import myMind.controller.FileHandler;
 import myMind.controller.MenuController;
 import myMind.controller.NodeController;
 
 import java.io.IOException;
 
 public class MindApp extends Application {
+    private MenuController menuController;
+    private Workspace workspace;
 
     @Override
     public void start(Stage primaryStage) {
-        NodeController nodeController = new NodeController();
-        FileController fileController = new FileController(nodeController);
+        workspace = new Workspace();
 
         BorderPane root = new BorderPane();
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
             MenuBar menuBar = loader.load();
-            MenuController menuController = loader.getController();
-            menuController.setControllers(nodeController, fileController);
+            menuController = loader.getController();
+            // 指向第一个标签页
+            updateMenuController();
             root.setTop(menuBar);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        root.setCenter(nodeController.getMindPane());
+
+        root.setCenter(workspace);
         root.getStyleClass().add("root");
+
+        // 监听标签页切换，动态更新菜单绑定的控制器
+        workspace.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+            updateMenuController();
+        });
 
         Scene scene = new Scene(root, 1450, 740);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
@@ -40,17 +48,12 @@ public class MindApp extends Application {
         primaryStage.setTitle("MyMind");
         primaryStage.setMaximized(true);
         primaryStage.show();
+    }
 
-        // 窗口显示后，使用实际MindMapPane大小初始化根节点并居中
-        javafx.application.Platform.runLater(() -> {
-            double centerX = (nodeController.getMindPane().getWidth()) / 2 - SizeConstants.MIN_NODE_WIDTH;
-            double centerY = (nodeController.getMindPane().getHeight() - SizeConstants.MIN_NODE_HEIGHT) / 2;
-            nodeController.initRootNode(centerX, centerY);
-        });
-
-        // 窗口大小改变时重新计算连线 （节点位置可能相对变化？节点是绝对布局，不受窗口缩放影响，但为了安全）
-        primaryStage.widthProperty().addListener((obs, oldVal, newVal) -> nodeController.refreshLines());
-        primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> nodeController.refreshLines());
+    private void updateMenuController() {
+        NodeController nc = workspace.getCurrentController();
+        FileHandler fc = new FileHandler(nc);
+        menuController.setControllers(nc, fc);
     }
 
     public static void main(String[] args) {
