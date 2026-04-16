@@ -5,9 +5,11 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import lombok.Data;
+import myMind.componet.RootNodeModel;
 import myMind.componet.Subject;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
+import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 
 import java.util.HashMap;
@@ -24,43 +26,47 @@ public class NodeController {
     private final AtomicInteger idGenerator = new AtomicInteger(1);
 
     public void initRootNode(double centerX, double centerY) {
-        rootModel = new NodeModel(nextId(), "", centerX, centerY);
+        rootModel = new RootNodeModel(nextId(), "", centerX, centerY);
         addNode(rootModel);
     }
 
-    public void addChild() {
+    public void addChildR() {
         if (selectedNode == null) {
             return;
         }
         NodeModel parentModel = selectedNode.getModel();
 
-        // 基于已有最后一个子节点位置加上偏移
         List<NodeModel> children = parentModel.getChildren();
-        double childX = parentModel.getX() + selectedNode.getWidth() + SizeConstants.NODE_GAP_X;
+        double childX;
+        childX = parentModel.getX() + selectedNode.getWidth() + SizeConstants.NODE_GAP_X;
         double childY;
-        if (children == null || children.isEmpty()) {
+        //
+        if (children.isEmpty()) {
             childY = parentModel.getY();
-        } else {
-            NodeModel lastModel = children.get(children.size() - 1);
-            double height = lastModel.getMindNode().getLayoutBounds().getHeight();
-            double y = lastModel.getY();
-            childY = lastModel.getY() + height + SizeConstants.NODE_GAP_Y;
+        }
+        // 基于最后一个子节点的位置加上偏移
+        else {
+            childY = parentModel.getEndY() + SizeConstants.NODE_GAP_Y;
         }
 
-        NodeModel childModel = new NodeModel(nextId(), "", childX, childY);
+        NodeModel childModel = new NodeModel(nextId(), "", childX, childY, PosConstants.RIGHT);
         parentModel.addChild(childModel);
         addNode(childModel);
 
         adjustChildrenY();
     }
 
-    public void addSibling() {
+    public void addChildL() {
+
+    }
+
+    public void addSiblingR() {
         if (selectedNode == null) {
             return;
         }
         NodeModel nodeModel = selectedNode.getModel();
         NodeModel parentModel = nodeModel.getParent();
-        if (parentModel == null ) {
+        if (parentModel == null) {
             return;
         }
 
@@ -68,7 +74,7 @@ public class NodeController {
         double siblingX = nodeModel.getX();
         double siblingY = nodeModel.getY() + selectedNode.getLayoutBounds().getHeight() + SizeConstants.NODE_GAP_Y;
 
-        NodeModel siblingModel = new NodeModel(nextId(), "", siblingX, siblingY);
+        NodeModel siblingModel = new NodeModel(nextId(), "", siblingX, siblingY, PosConstants.RIGHT);
         parentModel.addChild(siblingModel);
         addNode(siblingModel);
 
@@ -143,20 +149,6 @@ public class NodeController {
         }
     }
 
-    /**
-     * 调整父节点位置
-     */
-    public void adjustParent(NodeModel model) {
-        model.setY(model.getMidY() - model.getMindNode().getHeight() / 2.0);
-
-        NodeModel parentModel = model.getParent();
-        if (parentModel != null) {
-            adjustParent(parentModel);
-        } else {
-            refreshLines();
-        }
-    }
-
     public void clearAll() {
         subject.getNodesLayer().getChildren().clear();
         subject.getLinesLayer().getChildren().clear();
@@ -215,27 +207,35 @@ public class NodeController {
         double childY;
         if (y == null) {
             double totalHeight = calculateTotalHeight(children);
-            double parentMidY = parentModel.getY() + parentModel.getMindNode().getHeight() / 2.0;
+            double parentMidY = parentModel.getY() + parentModel.getMindNode().getPrefHeight() / 2.0;
             childY = parentMidY - totalHeight / 2.0;
         } else {
             childY = y;
         }
 
         // 依次调整所有子节点
-        for (NodeModel child : children) {
-            MindNode childNode = child.getMindNode();
-            List<NodeModel> childrenOfChild = child.getChildren();
-            // Todo 父结点的高度大于子结点高度时
-            if (!childrenOfChild.isEmpty()) {
-                adjustChildrenY(child, childY);
-                double midY = child.getMidY();
-                child.setY(midY - childNode.getHeight() / 2.0);
+        for (NodeModel childModel : children) {
+            MindNode childNode = childModel.getMindNode();
+            List<NodeModel> childrenOfChild = childModel.getChildren();
 
-                // 下一个子节点的Y坐标 = 最后一个子节点的底部 + 间距
-                childY = child.getEndY() + SizeConstants.NODE_GAP_Y;
+            if (!childrenOfChild.isEmpty()) {
+                double selfHeight = childNode.getPrefHeight();
+                double childrenHeight = childModel.getTotalChildrenHeight();
+
+                if (selfHeight < childrenHeight) {
+                    adjustChildrenY(childModel, childY);
+                    childModel.setY(childModel.getMidY() - childNode.getPrefHeight() / 2.0);
+                    // 下一个子节点的Y坐标 = 最后一个子节点的底部 + 间距
+                    childY = childModel.getEndY() + SizeConstants.NODE_GAP_Y;
+                } else {
+                    childModel.setY(childY);
+                    // 当前Y + 当前节点高度 + 间距
+                    childY += selfHeight + SizeConstants.NODE_GAP_Y;
+                    adjustChildrenY(childModel, null);
+                }
             } else {
-                child.setY(childY);
-                // 下一个子节点的Y坐标 = 当前Y + 当前节点高度 + 间距
+                childModel.setY(childY);
+                // 当前Y + 当前节点高度 + 间距
                 childY += childNode.getPrefHeight() + SizeConstants.NODE_GAP_Y;
             }
         }

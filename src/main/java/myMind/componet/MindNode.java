@@ -1,6 +1,8 @@
 package myMind.componet;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
@@ -11,6 +13,7 @@ import myMind.constants.SizeConstants;
 import myMind.controller.NodeController;
 import org.fxmisc.richtext.InlineCssTextArea;
 
+import javax.lang.model.SourceVersion;
 import java.util.List;
 
 
@@ -79,6 +82,19 @@ public class MindNode extends StackPane {
         });
     }
 
+    private void adjustX(Number oldVal, Number newVal) {
+        List<NodeModel> children = model.getChildren();
+        if (children.isEmpty()) {
+            return;
+        }
+
+        double delta = newVal.doubleValue() - oldVal.doubleValue();
+        for (NodeModel child : children) {
+            child.setX(child.getX() + delta);
+        }
+        controller.refreshLines();
+    }
+
 
     /**
      * 根据内容动态调整 TextArea 尺寸
@@ -113,15 +129,17 @@ public class MindNode extends StackPane {
         // MindNode 高度 = border(2px) + padding(20px) + textArea 高度
         double nodeHeight = textHeight + 22;
 
+        // y轴 - 高度变动的一半，让中心保持不变
+        double beforeHeight = getPrefHeight();
+        double delta = nodeHeight - beforeHeight;
+        model.setY(model.getY() - delta / 2.0);
+
         textArea.setPrefWidth(textWidth);
         textArea.setPrefHeight(textHeight);
         setPrefWidth(nodeWidth);
         setPrefHeight(nodeHeight);
 
         adjustChildrenX(model);
-        if (!model.getChildren().isEmpty()) {
-            controller.adjustParent(model);
-        }
         controller.adjustChildrenY();
         controller.refreshLines();
     }

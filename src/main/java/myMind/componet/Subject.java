@@ -72,15 +72,15 @@ public class Subject extends Pane {
 
         setOnMouseDragged(e -> {
             if (e.getButton() == MouseButton.PRIMARY && controller.getSelectedNode() != null) {
-                MindNode selectedNode = controller.getSelectedNode();
-                double newX = e.getSceneX() - dragStartX;
-                double newY = e.getSceneY() - dragStartY;
-                // 限制边界防止拖出视野外
-                newX = Math.max(20, Math.min(newX, getWidth() - selectedNode.getWidth()));
-                newY = Math.max(20, Math.min(newY, getHeight() - selectedNode.getHeight()));
-                selectedNode.getModel().setX(newX);
-                selectedNode.getModel().setY(newY);
-                controller.refreshLines();
+//                MindNode selectedNode = controller.getSelectedNode();
+//                double newX = e.getSceneX() - dragStartX;
+//                double newY = e.getSceneY() - dragStartY;
+//                // 限制边界防止拖出视野外
+//                newX = Math.max(20, Math.min(newX, getWidth() - selectedNode.getWidth()));
+//                newY = Math.max(20, Math.min(newY, getHeight() - selectedNode.getHeight()));
+//                selectedNode.getModel().setX(newX);
+//                selectedNode.getModel().setY(newY);
+//                controller.refreshLines();
             }
             // 移动画布
             else if (e.getButton() == MouseButton.PRIMARY) {
@@ -125,13 +125,13 @@ public class Subject extends Pane {
             } else if (isAltDown) {
                 switch (code) {
                     case RIGHT:
-                        controller.addChild();
+                        controller.addChildR();
                         break;
                     case LEFT:
-                        controller.addChild();
+                        controller.addChildL();
                         break;
                     case DOWN:
-                        controller.addSibling();
+                        controller.addSiblingR();
                         break;
                     default:
                         break;
@@ -157,27 +157,27 @@ public class Subject extends Pane {
     private void handleComplexAdd(KeyCode code) {
         // 1个子节点和5个孙节点
         if (code == KeyCode.LEFT) {
-            controller.addChild();
-            controller.addChild();
+            controller.addChildR();
+            controller.addChildR();
             addSibling4();
         } else if (code == KeyCode.RIGHT) {
-            controller.addChild();
-            controller.addChild();
+            controller.addChildR();
+            controller.addChildR();
             addSibling4();
         }
         // 1个兄弟节点和5个孙节点
         else if (code == KeyCode.DOWN) {
-            controller.addSibling();
-            controller.addChild();
+            controller.addSiblingR();
+            controller.addChildR();
             addSibling4();
         }
     }
 
     private void addSibling4() {
-        controller.addSibling();
-        controller.addSibling();
-        controller.addSibling();
-        controller.addSibling();
+        controller.addSiblingR();
+        controller.addSiblingR();
+        controller.addSiblingR();
+        controller.addSiblingR();
     }
 
     @Override

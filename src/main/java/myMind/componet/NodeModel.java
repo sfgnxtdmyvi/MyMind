@@ -16,6 +16,7 @@ public class NodeModel {
     //节点内部属性
     private final int id;
     private MindNode mindNode;
+    private byte pos;
     private final StringProperty text = new SimpleStringProperty();
     private final DoubleProperty x = new SimpleDoubleProperty();
     private final DoubleProperty y = new SimpleDoubleProperty();
@@ -24,11 +25,12 @@ public class NodeModel {
     private NodeModel parent;
     private final List<NodeModel> children = new ArrayList<>();
 
-    public NodeModel(int id, String text, double x, double y) {
+    public NodeModel(int id, String text, double x, double y, byte pos) {
         this.id = id;
         this.text.set(text);
         this.x.set(x);
         this.y.set(y);
+        this.pos = pos;
     }
 
     public String getText() {
@@ -89,10 +91,14 @@ public class NodeModel {
 
     public double getTotalHeight() {
         if (children.isEmpty()) {
-            return getMindNode().getHeight();
+            return getMindNode().getPrefHeight();
         } else {
             return getEndY() - getStartY();
         }
+    }
+
+    public double getTotalChildrenHeight() {
+        return getEndY() - getStartY();
     }
 
     public double getEndY() {
