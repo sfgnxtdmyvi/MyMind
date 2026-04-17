@@ -97,20 +97,26 @@ public class NodeModel {
         return (getStartYL() + getEndYL()) / 2.0;
     }
 
-    public double getTotalHeightR() {
+    public double getChildrenHeightR() {
         if (rightChildren.isEmpty()) {
-            return getMindNode().getPrefHeight();
-        } else {
-            return getEndYR() - getStartYR();
+            return 0;
         }
+        return getEndYR() - getStartYR();
     }
 
-    public double getTotalHeightL() {
+    public double getChildrenHeightL() {
         if (leftChildren.isEmpty()) {
-            return getMindNode().getPrefHeight();
-        } else {
-            return getEndYL() - getStartYL();
+            return 0;
         }
+        return getEndYL() - getStartYL();
+    }
+
+    public double getSelfHeight() {
+        return mindNode.getPrefHeight();
+    }
+
+    public double getSelfWidth() {
+        return mindNode.getPrefWidth();
     }
 
     public double getEndYR() {
@@ -121,6 +127,7 @@ public class NodeModel {
             return lastNodeModel.getY() + lastNodeModel.getMindNode().getHeight();
         }
     }
+
     public double getEndYL() {
         NodeModel lastNodeModel = leftChildren.get(leftChildren.size() - 1);
         if (!lastNodeModel.leftChildren.isEmpty()) {

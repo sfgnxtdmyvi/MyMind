@@ -29,10 +29,11 @@ public class NodeController {
         addNode(rootModel);
     }
 
-    public void addChild(){
+    public void addChild() {
         addChildR();
         addChildL();
     }
+
     public void addChildR() {
         if (selectedNode == null) {
             return;
@@ -319,7 +320,7 @@ public class NodeController {
         double childY;
         if (y == null) {
             double totalHeight = calculateTotalHeightR(children);
-            double parentMidY = parentModel.getY() + parentModel.getMindNode().getPrefHeight() / 2.0;
+            double parentMidY = parentModel.getY() + parentModel.getSelfHeight() / 2.0;
             childY = parentMidY - totalHeight / 2.0;
         } else {
             childY = y;
@@ -327,19 +328,18 @@ public class NodeController {
 
         // 依次调整所有子节点
         for (NodeModel childModel : children) {
-            MindNode childNode = childModel.getMindNode();
             List<NodeModel> childrenOfChild = childModel.getRightChildren();
 
-            double selfHeight = childNode.getPrefHeight();
+            double selfHeight = childModel.getSelfHeight();
             if (childrenOfChild.isEmpty()) {
                 childModel.setY(childY);
                 // 当前Y + 当前节点高度 + 间距
                 childY += selfHeight + SizeConstants.NODE_GAP_Y;
             } else {
-                double childrenHeight = childModel.getTotalHeightR();
+                double childrenHeight = childModel.getChildrenHeightR();
                 if (selfHeight < childrenHeight) {
                     adjustChildrenYR(childModel, childY);
-                    childModel.setY(childModel.getMidYR() - childNode.getPrefHeight() / 2.0);
+                    childModel.setY(childModel.getMidYR() - selfHeight / 2.0);
                     // 下一个子节点的Y坐标 = 最后一个子节点的底部 + 间距
                     childY = childModel.getEndYR() + SizeConstants.NODE_GAP_Y;
                 }
@@ -364,7 +364,7 @@ public class NodeController {
         double childY;
         if (y == null) {
             double totalHeight = calculateTotalHeightL(children);
-            double parentMidY = parentModel.getY() + parentModel.getMindNode().getPrefHeight() / 2.0;
+            double parentMidY = parentModel.getY() + parentModel.getSelfHeight() / 2.0;
             childY = parentMidY - totalHeight / 2.0;
         } else {
             childY = y;
@@ -372,19 +372,18 @@ public class NodeController {
 
         // 依次调整所有子节点
         for (NodeModel childModel : children) {
-            MindNode childNode = childModel.getMindNode();
             List<NodeModel> childrenOfChild = childModel.getLeftChildren();
 
-            double selfHeight = childNode.getPrefHeight();
+            double selfHeight = childModel.getSelfHeight();
             if (childrenOfChild.isEmpty()) {
                 childModel.setY(childY);
                 // 当前Y + 当前节点高度 + 间距
                 childY += selfHeight + SizeConstants.NODE_GAP_Y;
             } else {
-                double childrenHeight = childModel.getTotalHeightL();
+                double childrenHeight = childModel.getChildrenHeightL();
                 if (selfHeight < childrenHeight) {
                     adjustChildrenYL(childModel, childY);
-                    childModel.setY(childModel.getMidYL() - childNode.getPrefHeight() / 2.0);
+                    childModel.setY(childModel.getMidYL() - selfHeight / 2.0);
                     // 下一个子节点的Y坐标 = 最后一个子节点的底部 + 间距
                     childY = childModel.getEndYL() + SizeConstants.NODE_GAP_Y;
                 }
@@ -401,12 +400,12 @@ public class NodeController {
 
     /**
      * 计算所有子孙节点的总高度，
-     * 每个子节点高度 + 间距 * (子节点数量 - 1)
+     * 每个 Math.max(子节点高度, 孙节点高度) + 间距 * (子节点数量 - 1)
      */
     private double calculateTotalHeightR(List<NodeModel> children) {
         double totalHeight = 0;
         for (NodeModel child : children) {
-            totalHeight += child.getTotalHeightR();
+            totalHeight += Math.max(child.getSelfHeight(), child.getChildrenHeightR());
         }
         totalHeight += SizeConstants.NODE_GAP_Y * (children.size() - 1);
 
@@ -416,7 +415,7 @@ public class NodeController {
     private double calculateTotalHeightL(List<NodeModel> children) {
         double totalHeight = 0;
         for (NodeModel child : children) {
-            totalHeight += child.getTotalHeightL();
+            totalHeight += Math.max(child.getSelfHeight(), child.getChildrenHeightL());
         }
         totalHeight += SizeConstants.NODE_GAP_Y * (children.size() - 1);
 

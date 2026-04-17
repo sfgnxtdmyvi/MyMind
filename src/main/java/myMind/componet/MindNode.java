@@ -26,7 +26,7 @@ import java.util.List;
 //@Data 会自动生成 hashCode() 方法
 //循环引用时，会无限递归调用双方的 hashCode() 方法
 @Getter
-public class MindNode extends VBox{
+public class MindNode extends VBox {
     private final NodeModel model;
     private final InlineCssTextArea textArea;
     private final NodeController controller;
@@ -215,9 +215,11 @@ public class MindNode extends VBox{
         double nodeHeight = textHeight + 22;
 
         // y轴 - 高度变动的一半，让中心保持不变
-//        double beforeHeight = getPrefHeight();
-//        double delta = nodeHeight - beforeHeight;
-//        model.setY(model.getY() - delta / 2.0);
+        if (model.getPos() == PosConstants.MIDDLE) {
+            double beforeHeight = getPrefHeight();
+            double delta = nodeHeight - beforeHeight;
+            model.setY(model.getY() - delta / 2.0);
+        }
 
         textArea.setPrefWidth(textWidth);
         textArea.setPrefHeight(textHeight);
@@ -245,7 +247,7 @@ public class MindNode extends VBox{
         }
 
         double parentX = nodeModel.getX();
-        double parentWidth = nodeModel.getMindNode().getPrefWidth();
+        double parentWidth = nodeModel.getSelfWidth();
         double childX = parentX + parentWidth + SizeConstants.NODE_GAP_X;
 
         for (NodeModel child : children) {
@@ -261,7 +263,7 @@ public class MindNode extends VBox{
         }
 
         double parentX = nodeModel.getX();
-        double parentWidth = nodeModel.getMindNode().getPrefWidth();
+        double parentWidth = nodeModel.getSelfWidth();
         double childX = parentX + parentWidth + SizeConstants.NODE_GAP_X;
 
         for (NodeModel child : children) {
