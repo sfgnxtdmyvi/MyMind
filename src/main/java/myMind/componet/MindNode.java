@@ -123,7 +123,7 @@ public class MindNode extends StackPane {
         setPrefHeight(nodeHeight);
 
         adjustChildrenX(model);
-        controller.adjustChildrenY();
+        controller.adjustChildrenYR();
         controller.refreshLines();
     }
 
@@ -131,7 +131,7 @@ public class MindNode extends StackPane {
      * 调整子节点x轴
      */
     private void adjustChildrenX(NodeModel nodeModel) {
-        List<NodeModel> children = nodeModel.getChildren();
+        List<NodeModel> children = nodeModel.getRightChildren();
         if (children.isEmpty()) {
             return;
         }

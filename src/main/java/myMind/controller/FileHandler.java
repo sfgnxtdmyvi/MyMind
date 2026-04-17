@@ -81,7 +81,7 @@ public class FileHandler {
                     newRoot = entry.getValue();
                 } else {
                     NodeModel parent = loadedModels.get(pid);
-                    if (parent != null) parent.addChild(entry.getValue());
+                    if (parent != null) parent.addRightChild(entry.getValue());
                 }
             }
             if (newRoot == null) throw new RuntimeException("没有根节点");

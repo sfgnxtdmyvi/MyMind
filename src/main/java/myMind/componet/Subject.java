@@ -135,7 +135,7 @@ public class Subject extends Pane {
                         controller.addChildL();
                         break;
                     case DOWN:
-                        controller.addSiblingR();
+                        controller.addSibling();
                         break;
                     default:
                         break;
@@ -161,27 +161,29 @@ public class Subject extends Pane {
     private void handleComplexAdd(KeyCode code) {
         // 1个子节点和5个孙节点
         if (code == KeyCode.LEFT) {
-            controller.addChildR();
-            controller.addChildR();
-            addSibling4();
+            controller.addChildL();
+            controller.addChildL();
+            controller.addSiblingL();
+            controller.addSiblingL();
+            controller.addSiblingL();
+            controller.addSiblingL();
         } else if (code == KeyCode.RIGHT) {
             controller.addChildR();
             controller.addChildR();
-            addSibling4();
+            controller.addSiblingR();
+            controller.addSiblingR();
+            controller.addSiblingR();
+            controller.addSiblingR();
         }
         // 1个兄弟节点和5个孙节点
         else if (code == KeyCode.DOWN) {
-            controller.addSiblingR();
-            controller.addChildR();
-            addSibling4();
+            controller.addSibling();
+            controller.addChild();
+            controller.addSibling();
+            controller.addSibling();
+            controller.addSibling();
+            controller.addSibling();
         }
-    }
-
-    private void addSibling4() {
-        controller.addSiblingR();
-        controller.addSiblingR();
-        controller.addSiblingR();
-        controller.addSiblingR();
     }
 
     @Override

@@ -21,7 +21,8 @@ public class NodeModel {
 
     //节点之间的关系
     private NodeModel parent;
-    private final List<NodeModel> children = new ArrayList<>();
+    private final List<NodeModel> rightChildren = new ArrayList<>();
+    private final List<NodeModel> leftChildren = new ArrayList<>();
 
     public NodeModel(int id, String text, double x, double y, byte pos) {
         this.id = id;
@@ -63,52 +64,86 @@ public class NodeModel {
         return y;
     }
 
-    public void addChild(NodeModel child) {
-        children.add(child);
+    public void addRightChild(NodeModel child) {
+        rightChildren.add(child);
+        child.setParent(this);
+    }
+
+    public void addLeftChild(NodeModel child) {
+        leftChildren.add(child);
         child.setParent(this);
     }
 
     public void removeChildren() {
-        for (int i = 0; i < children.size(); i++) {
-            NodeModel remove = children.remove(i);
+        for (int i = 0; i < rightChildren.size(); i++) {
+            NodeModel remove = rightChildren.remove(i);
             remove.setParent(null);
         }
     }
 
     public void removeChild(NodeModel child) {
-        children.remove(child);
+        rightChildren.remove(child);
         child.setParent(null);
     }
 
     /**
      * 获取所有子节点的中间位置
      */
-    public double getMidY() {
-        return (getStartY() + getEndY()) / 2.0;
+    public double getMidYR() {
+        return (getStartYR() + getEndYR()) / 2.0;
     }
 
-    public double getTotalHeight() {
-        if (children.isEmpty()) {
+    public double getMidYL() {
+        return (getStartYL() + getEndYL()) / 2.0;
+    }
+
+    public double getTotalHeightR() {
+        if (rightChildren.isEmpty()) {
             return getMindNode().getPrefHeight();
         } else {
-            return getEndY() - getStartY();
+            return getEndYR() - getStartYR();
         }
     }
 
-    public double getEndY() {
-        NodeModel lastNodeModel = children.get(children.size() - 1);
-        if (!lastNodeModel.children.isEmpty()) {
-            return lastNodeModel.getEndY();
+    public double getTotalHeightL() {
+        if (leftChildren.isEmpty()) {
+            return getMindNode().getPrefHeight();
+        } else {
+            return getEndYL() - getStartYL();
+        }
+    }
+
+    public double getEndYR() {
+        NodeModel lastNodeModel = rightChildren.get(rightChildren.size() - 1);
+        if (!lastNodeModel.rightChildren.isEmpty()) {
+            return lastNodeModel.getEndYR();
+        } else {
+            return lastNodeModel.getY() + lastNodeModel.getMindNode().getHeight();
+        }
+    }
+    public double getEndYL() {
+        NodeModel lastNodeModel = leftChildren.get(leftChildren.size() - 1);
+        if (!lastNodeModel.leftChildren.isEmpty()) {
+            return lastNodeModel.getEndYL();
         } else {
             return lastNodeModel.getY() + lastNodeModel.getMindNode().getHeight();
         }
     }
 
     //———————————————————————————————————————————私有方法———————————————————————————————————————————
-    private double getStartY() {
-        NodeModel fistNodeModel = children.get(0);
-        if (!fistNodeModel.children.isEmpty()) {
-            return fistNodeModel.getStartY();
+    private double getStartYR() {
+        NodeModel fistNodeModel = rightChildren.get(0);
+        if (!fistNodeModel.rightChildren.isEmpty()) {
+            return fistNodeModel.getStartYR();
+        } else {
+            return fistNodeModel.getY();
+        }
+    }
+
+    private double getStartYL() {
+        NodeModel fistNodeModel = leftChildren.get(0);
+        if (!fistNodeModel.leftChildren.isEmpty()) {
+            return fistNodeModel.getStartYL();
         } else {
             return fistNodeModel.getY();
         }
