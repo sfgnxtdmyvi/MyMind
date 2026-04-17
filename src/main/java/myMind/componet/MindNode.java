@@ -2,30 +2,57 @@ package myMind.componet;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.scene.Cursor;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import lombok.Data;
 import lombok.Getter;
+import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 import myMind.controller.NodeController;
 import org.fxmisc.richtext.InlineCssTextArea;
 
 import java.util.List;
 
-
+//@Data 会自动生成 hashCode() 方法
+//循环引用时，会无限递归调用双方的 hashCode() 方法
 @Getter
-public class MindNode extends StackPane {
+public class MindNode extends VBox{
     private final NodeModel model;
     private final InlineCssTextArea textArea;
     private final NodeController controller;
     //用于测量文本尺寸
     private Text measureText;
+    private ImageView imageView; // 新增图片视图
+
+    // 拖拽缩放相关变量
+    private static final double RESIZE_THRESHOLD = 5.0;
+    private boolean isResizing = false;
+    private double startX, startY, startWidth, startHeight;
 
     public MindNode(NodeModel model, NodeController controller) {
         this.model = model;
         model.setMindNode(this);
         this.controller = controller;
+
+        measureText = new Text();
+        measureText.setFont(Font.font("System", SizeConstants.NODE_FONT_SIZE));
+
+        // 初始化图片视图
+        imageView = new ImageView();
+        imageView.setPreserveRatio(true);
+        imageView.setSmooth(true);
+        imageView.setVisible(false);
+        imageView.setManaged(false);
 
         textArea = new InlineCssTextArea();
         textArea.replaceText(0, 0, model.getText());
@@ -35,15 +62,16 @@ public class MindNode extends StackPane {
         textArea.setPrefWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
         textArea.setPrefHeight(SizeConstants.MIN_TEXTAREA_HEIGHT);
 
-        measureText = new Text();
-        measureText.setFont(Font.font("System", SizeConstants.NODE_FONT_SIZE));
-
-        // 样式
         setPrefWidth(SizeConstants.MIN_NODE_WIDTH);
         setPrefHeight(SizeConstants.MIN_NODE_HEIGHT);
         getStyleClass().add("nodeBorder");
         setPadding(new Insets(10, 10, 10, 10));
-        getChildren().add(textArea);
+        // 图片和文本之间的间距
+        setSpacing(5);
+
+        // 将图片和文本加入 VBox
+        getChildren().addAll(imageView, textArea);
+//        VBox.setVgrow(textArea, Priority.ALWAYS);
 
         // 模型x、y变化时，改变位置
         model.xProperty().addListener((obs, oldVal, newVal) -> setLayoutX(newVal.doubleValue()));
@@ -58,29 +86,103 @@ public class MindNode extends StackPane {
     }
 
     private void addListener() {
-        //InlineCssTextArea 内部调用了 e.consume()，MindNode的setOnMousePressed不会触发
-        //addEventFilter 在捕获阶段执行
-        //捕获阶段（Capturing）：从根节点一路向下直到事件源节点
-        //冒泡阶段（Bubbling）：从事件源节点向上传播，如果中间有一个节点调用了 e.consume()，事件将不会继续传播
+        // 选中节点
         addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
             controller.setSelectedNode(this);
         });
 
-        textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) {
-                model.setText(textArea.getText());
-                controller.refreshLines();
+        // 粘贴图片
+        textArea.setOnKeyReleased(e -> {
+            if (e.isControlDown() && e.getCode() == KeyCode.V) {
+                Clipboard clipboard = Clipboard.getSystemClipboard();
+                if (clipboard.hasImage()) {
+                    Image image = clipboard.getImage();
+                    setImage(image);
+                    e.consume();
+                }
             }
         });
 
-        // 监听文本变化，动态调整
+        // 文本变化动态调整
         textArea.textProperty().addListener((obs, oldText, newText) -> {
             Platform.runLater(this::adjustSize);
+        });
+
+        textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) finishEdit(textArea.getText(), controller);
+        });
+
+        // --- 图片缩放逻辑 ---
+        imageView.setOnMousePressed(e -> {
+            if (imageView.isVisible()) {
+                startX = e.getSceneX();
+                startY = e.getSceneY();
+                startWidth = imageView.getFitWidth();
+                startHeight = imageView.getFitHeight();
+
+                // 判断是否点击在右下角区域用于缩放
+                if (e.getX() > imageView.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD &&
+                        e.getY() > imageView.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD) {
+                    isResizing = true;
+                    imageView.setCursor(Cursor.SE_RESIZE);
+                }
+            }
+        });
+
+        imageView.setOnMouseDragged(e -> {
+            if (isResizing) {
+                double deltaX = e.getSceneX() - startX;
+                double deltaY = e.getSceneY() - startY;
+
+                // 简单的等比例缩放或自由缩放，这里演示自由缩放
+                double newWidth = Math.max(20, startWidth + deltaX);
+                double newHeight = Math.max(20, startHeight + deltaY);
+
+                imageView.setFitWidth(newWidth);
+                imageView.setFitHeight(newHeight);
+
+                // 图片大小改变后，需要重新计算节点整体尺寸
+                adjustSize();
+            }
+        });
+
+        imageView.setOnMouseReleased(e -> {
+            isResizing = false;
+            imageView.setCursor(Cursor.DEFAULT);
+        });
+
+        // 鼠标悬停在右下角显示缩放光标
+        imageView.setOnMouseMoved(e -> {
+            if (e.getX() > imageView.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD &&
+                    e.getY() > imageView.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD) {
+                imageView.setCursor(Cursor.SE_RESIZE);
+            } else {
+                imageView.setCursor(Cursor.DEFAULT);
+            }
         });
     }
 
     /**
-     * 根据内容动态调整 TextArea 尺寸
+     * 设置节点图片
+     */
+    public void setImage(Image image) {
+        if (image != null) {
+            imageView.setImage(image);
+            imageView.setVisible(true);
+            imageView.setManaged(true);
+            imageView.setFitWidth(100);
+            imageView.setFitHeight(100);
+            adjustSize();
+        }
+    }
+
+    private void finishEdit(String newText, NodeController controller) {
+        model.setText(newText);
+        controller.refreshLines();
+    }
+
+    /**
+     * 根据内容动态调整尺寸
      */
     private void adjustSize() {
         String text = textArea.getText();
@@ -113,24 +215,30 @@ public class MindNode extends StackPane {
         double nodeHeight = textHeight + 22;
 
         // y轴 - 高度变动的一半，让中心保持不变
-        double beforeHeight = getPrefHeight();
-        double delta = nodeHeight - beforeHeight;
-        model.setY(model.getY() - delta / 2.0);
+//        double beforeHeight = getPrefHeight();
+//        double delta = nodeHeight - beforeHeight;
+//        model.setY(model.getY() - delta / 2.0);
 
         textArea.setPrefWidth(textWidth);
         textArea.setPrefHeight(textHeight);
         setPrefWidth(nodeWidth);
         setPrefHeight(nodeHeight);
 
-        adjustChildrenX(model);
-        controller.adjustChildrenYR();
-        controller.refreshLines();
+        if (model.getPos() == PosConstants.RIGHT) {
+            adjustChildrenXR(model);
+            controller.adjustChildrenYR();
+            controller.refreshLinesR();
+        } else {
+            adjustChildrenXL(model);
+            controller.adjustChildrenYL();
+            controller.refreshLinesL();
+        }
     }
 
     /**
      * 调整子节点x轴
      */
-    private void adjustChildrenX(NodeModel nodeModel) {
+    private void adjustChildrenXR(NodeModel nodeModel) {
         List<NodeModel> children = nodeModel.getRightChildren();
         if (children.isEmpty()) {
             return;
@@ -142,8 +250,23 @@ public class MindNode extends StackPane {
 
         for (NodeModel child : children) {
             child.setX(childX);
-            adjustChildrenX(child);
+            adjustChildrenXR(child);
         }
     }
 
+    private void adjustChildrenXL(NodeModel nodeModel) {
+        List<NodeModel> children = nodeModel.getLeftChildren();
+        if (children.isEmpty()) {
+            return;
+        }
+
+        double parentX = nodeModel.getX();
+        double parentWidth = nodeModel.getMindNode().getPrefWidth();
+        double childX = parentX + parentWidth + SizeConstants.NODE_GAP_X;
+
+        for (NodeModel child : children) {
+            child.setX(childX);
+            adjustChildrenXL(child);
+        }
+    }
 }

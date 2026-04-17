@@ -4,7 +4,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
+import myMind.constants.PosConstants;
 import myMind.controller.NodeController;
+
+import java.util.List;
 
 /**
  * 主控面板，放节点和连线
@@ -113,37 +116,125 @@ public class Subject extends Pane {
 
         // 键盘快捷键
         setOnKeyPressed(e -> {
-            boolean isControl = e.isControlDown();
-            boolean isAltDown = e.isAltDown();
+            //跨平台修饰键
+            //在 Windows / Linux 上：它等同于 e.isControlDown() (即 Ctrl 键)
+            //在 macOS 上：它等同于 e.isMetaDown() (即 Command ⌘ 键)
+            boolean shortcutDown = e.isShortcutDown();
+            boolean altDown = e.isAltDown();
+            boolean shiftDown = e.isShiftDown();
             KeyCode code = e.getCode();
 
-            // 处理删除操作
-            if (isAltDown && code == KeyCode.DELETE) {
+            // 切换选中节点
+            if (shiftDown && altDown) {
+                MindNode selectedNode = controller.getSelectedNode();
+                if (selectedNode == null) {
+                    return;
+                }
+                NodeModel model = selectedNode.getModel();
+                byte pos = model.getPos();
+                MindNode newNode = selectedNode;
+
+                if (code == KeyCode.RIGHT) {
+                    // 左边节点 -> 父节点
+                    // 根、右边节点 -> 中间的右子节点
+                    if (pos == PosConstants.LEFT) {
+                        newNode = model.getParent().getMindNode();
+                    } else {
+                        List<NodeModel> children = model.getRightChildren();
+                        if (!children.isEmpty()) {
+                            newNode = children.get(children.size() / 2).getMindNode();
+                        }
+                    }
+                } else if (code == KeyCode.LEFT) {
+                    // 父节点 <- 右边节点
+                    // 中间的左子节点 <- 左边、根节点
+                    if (pos == PosConstants.RIGHT) {
+                        newNode = model.getParent().getMindNode();
+                    } else {
+                        List<NodeModel> children = model.getLeftChildren();
+                        if (!children.isEmpty()) {
+                            newNode = children.get(children.size() / 2).getMindNode();
+                        }
+                    }
+                } else {
+                    if (pos == PosConstants.MIDDLE) {
+                        return;
+                    }
+
+                    // 得到当前节点的索引
+                    NodeModel parentModel = model.getParent();
+                    List<NodeModel> children;
+                    if (pos == PosConstants.RIGHT) {
+                        children = parentModel.getRightChildren();
+                    } else {
+                        children = parentModel.getLeftChildren();
+                    }
+                    int index = children.indexOf(model);
+
+                    // 切换成上下兄弟节点
+                    if (code == KeyCode.UP) {
+                        if (index != 0) {
+                            newNode = children.get(index - 1).getMindNode();
+                        }
+                    } else if (code == KeyCode.DOWN) {
+                        if (index != children.size() - 1) {
+                            newNode = children.get(index + 1).getMindNode();
+                        }
+                    }
+                }
+
+                controller.setSelectedNode(newNode);
+                return;
+            }
+
+            //新增节点
+            //Ctrl + Alt 批量新增
+            if (shortcutDown && altDown) {
+                // 1个子节点和5个孙节点
+                if (code == KeyCode.LEFT) {
+                    controller.addChildL();
+                    controller.addChildL();
+                    for (int i = 0; i < 4; i++) {
+                        controller.addSiblingL();
+                    }
+                } else if (code == KeyCode.RIGHT) {
+                    controller.addChildR();
+                    controller.addChildR();
+                    for (int i = 0; i < 4; i++) {
+                        controller.addSiblingR();
+                    }
+                }
+                // 1个兄弟节点和5个孙节点
+                else if (code == KeyCode.DOWN) {
+                    controller.addSibling();
+                    controller.addChild();
+                    for (int i = 0; i < 4; i++) {
+                        controller.addSibling();
+                    }
+                }
+                return;
+            } else if (altDown && code == KeyCode.RIGHT) {
+                controller.addChildR();
+                return;
+            } else if (altDown && code == KeyCode.LEFT) {
+                controller.addChildL();
+                return;
+            } else if (altDown && code == KeyCode.DOWN) {
+                controller.addSibling();
+                return;
+            } else if (altDown && code == KeyCode.UP) {
+
+                return;
+            }
+
+            // 删除
+            if (altDown && code == KeyCode.DELETE) {
                 controller.delete();
                 return;
             }
 
-            // 处理节点新增操作
-            if (isControl && isAltDown) {
-                handleComplexAdd(code);
-            } else if (isAltDown) {
-                switch (code) {
-                    case RIGHT:
-                        controller.addChildR();
-                        break;
-                    case LEFT:
-                        controller.addChildL();
-                        break;
-                    case DOWN:
-                        controller.addSibling();
-                        break;
-                    default:
-                        break;
-                }
-            }
-
             // 回到中心
-            if (isControl && code == KeyCode.B) {
+            if (shortcutDown && code == KeyCode.B) {
                 currentTranslateX = 0;
                 currentTranslateY = 0;
 
@@ -153,37 +244,6 @@ public class Subject extends Pane {
                 linesLayerR.setTranslateY(0);
             }
         });
-    }
-
-    /**
-     * 处理 Ctrl + Alt 组合键的复杂节点添加逻辑
-     */
-    private void handleComplexAdd(KeyCode code) {
-        // 1个子节点和5个孙节点
-        if (code == KeyCode.LEFT) {
-            controller.addChildL();
-            controller.addChildL();
-            controller.addSiblingL();
-            controller.addSiblingL();
-            controller.addSiblingL();
-            controller.addSiblingL();
-        } else if (code == KeyCode.RIGHT) {
-            controller.addChildR();
-            controller.addChildR();
-            controller.addSiblingR();
-            controller.addSiblingR();
-            controller.addSiblingR();
-            controller.addSiblingR();
-        }
-        // 1个兄弟节点和5个孙节点
-        else if (code == KeyCode.DOWN) {
-            controller.addSibling();
-            controller.addChild();
-            controller.addSibling();
-            controller.addSibling();
-            controller.addSibling();
-            controller.addSibling();
-        }
     }
 
     @Override
