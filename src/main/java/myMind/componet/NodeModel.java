@@ -5,8 +5,6 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,10 +93,6 @@ public class NodeModel {
         } else {
             return getEndY() - getStartY();
         }
-    }
-
-    public double getTotalChildrenHeight() {
-        return getEndY() - getStartY();
     }
 
     public double getEndY() {

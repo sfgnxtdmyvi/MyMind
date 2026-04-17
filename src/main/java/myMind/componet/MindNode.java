@@ -1,8 +1,6 @@
 package myMind.componet;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
@@ -13,7 +11,6 @@ import myMind.constants.SizeConstants;
 import myMind.controller.NodeController;
 import org.fxmisc.richtext.InlineCssTextArea;
 
-import javax.lang.model.SourceVersion;
 import java.util.List;
 
 
@@ -81,20 +78,6 @@ public class MindNode extends StackPane {
             Platform.runLater(this::adjustSize);
         });
     }
-
-    private void adjustX(Number oldVal, Number newVal) {
-        List<NodeModel> children = model.getChildren();
-        if (children.isEmpty()) {
-            return;
-        }
-
-        double delta = newVal.doubleValue() - oldVal.doubleValue();
-        for (NodeModel child : children) {
-            child.setX(child.getX() + delta);
-        }
-        controller.refreshLines();
-    }
-
 
     /**
      * 根据内容动态调整 TextArea 尺寸

@@ -5,10 +5,10 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import lombok.Data;
-import myMind.componet.RootNodeModel;
-import myMind.componet.Subject;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
+import myMind.componet.RootNodeModel;
+import myMind.componet.Subject;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 
@@ -35,12 +35,14 @@ public class NodeController {
             return;
         }
         NodeModel parentModel = selectedNode.getModel();
+        if (parentModel.getPos() != PosConstants.RIGHT && parentModel != rootModel) {
+            return;
+        }
+
+        double childX = parentModel.getX() + selectedNode.getWidth() + SizeConstants.NODE_GAP_X;
+        double childY;
 
         List<NodeModel> children = parentModel.getChildren();
-        double childX;
-        childX = parentModel.getX() + selectedNode.getWidth() + SizeConstants.NODE_GAP_X;
-        double childY;
-        //
         if (children.isEmpty()) {
             childY = parentModel.getY();
         }
@@ -54,10 +56,41 @@ public class NodeController {
         addNode(childModel);
 
         adjustChildrenY();
+        refreshLinesR();
     }
 
     public void addChildL() {
+        if (selectedNode == null) {
+            return;
+        }
+        NodeModel parentModel = selectedNode.getModel();
+        if (parentModel.getPos() != PosConstants.LEFT && parentModel != rootModel) {
+            return;
+        }
 
+        double childX = parentModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
+        double childY;
+
+        List<NodeModel> children = parentModel.getChildren();
+        if (children.isEmpty()) {
+            childY = parentModel.getY();
+        }
+        // 基于最后一个子节点的位置加上偏移
+        else {
+            childY = parentModel.getEndY() + SizeConstants.NODE_GAP_Y;
+        }
+
+        NodeModel childModel = new NodeModel(nextId(), "", childX, childY, PosConstants.LEFT);
+        if (parentModel instanceof RootNodeModel) {
+            RootNodeModel rootNodeModel = (RootNodeModel) parentModel;
+            rootNodeModel.addLeftChild(childModel);
+        } else {
+            parentModel.addChild(childModel);
+        }
+        addNode(childModel);
+
+        adjustChildrenY();
+        refreshLinesL();
     }
 
     public void addSiblingR() {
@@ -79,6 +112,7 @@ public class NodeController {
         addNode(siblingModel);
 
         adjustChildrenY();
+        refreshLinesR();
     }
 
     public void delete() {
@@ -111,6 +145,11 @@ public class NodeController {
         deleteNode(toDelete);
 
         adjustChildrenY();
+        if (toDelete.getPos() == PosConstants.RIGHT) {
+            refreshLinesR();
+        } else {
+            refreshLinesL();
+        }
     }
 
     public void adjustChildrenY() {
@@ -118,28 +157,76 @@ public class NodeController {
     }
 
     public void refreshLines() {
-        Pane linesLayer = subject.getLinesLayer();
-        linesLayer.getChildren().clear();
+        refreshLinesR();
+        refreshLinesL();
+    }
 
-        // 找到每一个子节点的父节点，创建连接线
-        for (MindNode childNode : nodeMap.values()) {
-            NodeModel parentModel = childNode.getModel().getParent();
+    public void refreshLinesR() {
+        Pane linesLayerR = subject.getLinesLayerR();
+        linesLayerR.getChildren().clear();
+        refreshLinesR(linesLayerR, rootModel);
+    }
 
-            if (parentModel != null) {
-                MindNode parentNode = parentModel.getMindNode();
-                if (parentNode != null) {
-                    Point2D start = getRightPoint(parentNode);
-                    Point2D end = getLeftPoint(childNode);
+    public void refreshLinesL() {
+        Pane linesLayerL = subject.getLinesLayerL();
+        linesLayerL.getChildren().clear();
+        refreshLinesL(linesLayerL, rootModel);
+    }
 
-                    Line line = new Line(start.getX(), start.getY(), end.getX(), end.getY());
-                    line.setStroke(Color.rgb(100, 100, 100));
-                    line.setStrokeWidth(2.5);
-                    line.setStrokeDashOffset(0);
+    private void refreshLinesR(Pane linesLayer, NodeModel parentModel) {
+        List<NodeModel> children = parentModel.getChildren();
+        if (!children.isEmpty()) {
+            for (NodeModel childModel : children) {
+                MindNode childNode = childModel.getMindNode();
+                Point2D start = getRightPoint(parentModel.getMindNode());
+                Point2D end = getLeftPoint(childNode);
 
-                    linesLayer.getChildren().add(line);
-                }
+                Line line = new Line(start.getX(), start.getY(), end.getX(), end.getY());
+                line.setStroke(Color.rgb(100, 100, 100));
+                line.setStrokeWidth(2.5);
+                line.setStrokeDashOffset(0);
+
+                linesLayer.getChildren().add(line);
+                refreshLinesR(linesLayer, childModel);
             }
         }
+    }
+
+    private void refreshLinesL(Pane linesLayer, NodeModel parentModel) {
+        List<NodeModel> children;
+        if (parentModel instanceof RootNodeModel) {
+            children = ((RootNodeModel) parentModel).getLeftChildren();
+        } else {
+            children = parentModel.getChildren();
+        }
+
+        if (!children.isEmpty()) {
+            for (NodeModel childModel : children) {
+                MindNode childNode = childModel.getMindNode();
+                Point2D start = getLeftPoint(parentModel.getMindNode());
+                Point2D end = getRightPoint(childNode);
+
+                Line line = new Line(start.getX(), start.getY(), end.getX(), end.getY());
+                line.setStroke(Color.rgb(100, 100, 100));
+                line.setStrokeWidth(2.5);
+                line.setStrokeDashOffset(0);
+
+                linesLayer.getChildren().add(line);
+                refreshLinesL(linesLayer, childModel);
+            }
+        }
+    }
+
+    private Point2D getRightPoint(MindNode node) {
+        double x = node.getLayoutX() + node.getPrefWidth();
+        double y = node.getLayoutY() + node.getPrefHeight() / 2;
+        return new Point2D(x, y);
+    }
+
+    private Point2D getLeftPoint(MindNode node) {
+        double x = node.getLayoutX();
+        double y = node.getLayoutY() + node.getPrefHeight() / 2;
+        return new Point2D(x, y);
     }
 
     public void setSelectedNode(MindNode node) {
@@ -151,7 +238,7 @@ public class NodeController {
 
     public void clearAll() {
         subject.getNodesLayer().getChildren().clear();
-        subject.getLinesLayer().getChildren().clear();
+        subject.getLinesLayerR().getChildren().clear();
         nodeMap.clear();
         selectedNode = null;
     }
@@ -218,29 +305,28 @@ public class NodeController {
             MindNode childNode = childModel.getMindNode();
             List<NodeModel> childrenOfChild = childModel.getChildren();
 
-            if (!childrenOfChild.isEmpty()) {
-                double selfHeight = childNode.getPrefHeight();
-                double childrenHeight = childModel.getTotalChildrenHeight();
-
+            double selfHeight = childNode.getPrefHeight();
+            if (childrenOfChild.isEmpty()) {
+                childModel.setY(childY);
+                // 当前Y + 当前节点高度 + 间距
+                childY += selfHeight + SizeConstants.NODE_GAP_Y;
+            } else {
+                double childrenHeight = childModel.getTotalHeight();
                 if (selfHeight < childrenHeight) {
                     adjustChildrenY(childModel, childY);
                     childModel.setY(childModel.getMidY() - childNode.getPrefHeight() / 2.0);
                     // 下一个子节点的Y坐标 = 最后一个子节点的底部 + 间距
                     childY = childModel.getEndY() + SizeConstants.NODE_GAP_Y;
-                } else {
+                }
+                //当前节点的高度 > 子节点的总高度
+                else {
                     childModel.setY(childY);
                     // 当前Y + 当前节点高度 + 间距
                     childY += selfHeight + SizeConstants.NODE_GAP_Y;
                     adjustChildrenY(childModel, null);
                 }
-            } else {
-                childModel.setY(childY);
-                // 当前Y + 当前节点高度 + 间距
-                childY += childNode.getPrefHeight() + SizeConstants.NODE_GAP_Y;
             }
         }
-
-        refreshLines();
     }
 
     /**
@@ -255,18 +341,6 @@ public class NodeController {
         totalHeight += SizeConstants.NODE_GAP_Y * (children.size() - 1);
 
         return totalHeight;
-    }
-
-    private Point2D getRightPoint(MindNode node) {
-        double x = node.getLayoutX() + node.getPrefWidth();
-        double y = node.getLayoutY() + node.getPrefHeight() / 2;
-        return new Point2D(x, y);
-    }
-
-    private Point2D getLeftPoint(MindNode node) {
-        double x = node.getLayoutX();
-        double y = node.getLayoutY() + node.getPrefHeight() / 2;
-        return new Point2D(x, y);
     }
 
     private int nextId() {

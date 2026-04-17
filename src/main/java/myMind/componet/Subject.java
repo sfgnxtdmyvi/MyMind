@@ -18,7 +18,8 @@ public class Subject extends Pane {
     /**
      * 连线层
      */
-    private final Pane linesLayer = new Pane();
+    private final Pane linesLayerR = new Pane();
+    private final Pane linesLayerL = new Pane();
     private final NodeController controller;
 
     private double dragStartX, dragStartY;
@@ -32,9 +33,10 @@ public class Subject extends Pane {
         this.controller = controller;
 
         // 让连线不干扰鼠标事件
-        linesLayer.setMouseTransparent(true);
+        linesLayerL.setMouseTransparent(true);
+        linesLayerR.setMouseTransparent(true);
         nodesLayer.setMouseTransparent(false);
-        getChildren().addAll(linesLayer, nodesLayer);
+        getChildren().addAll(linesLayerL, linesLayerR, nodesLayer);
 
         addListener();
     }
@@ -92,9 +94,11 @@ public class Subject extends Pane {
 
                 // 应用偏移量到图层
                 nodesLayer.setTranslateX(currentTranslateX);
-                linesLayer.setTranslateX(currentTranslateX);
+                linesLayerR.setTranslateX(currentTranslateX);
+                linesLayerL.setTranslateX(currentTranslateX);
                 nodesLayer.setTranslateY(currentTranslateY);
-                linesLayer.setTranslateY(currentTranslateY);
+                linesLayerR.setTranslateY(currentTranslateY);
+                linesLayerL.setTranslateY(currentTranslateY);
 
                 panStartX = e.getSceneX();
                 panStartY = e.getSceneY();
@@ -142,11 +146,11 @@ public class Subject extends Pane {
             if (isControl && code == KeyCode.B) {
                 currentTranslateX = 0;
                 currentTranslateY = 0;
-                
+
                 nodesLayer.setTranslateX(0);
-                linesLayer.setTranslateX(0);
+                linesLayerR.setTranslateX(0);
                 nodesLayer.setTranslateY(0);
-                linesLayer.setTranslateY(0);
+                linesLayerR.setTranslateY(0);
             }
         });
     }
@@ -185,6 +189,6 @@ public class Subject extends Pane {
         super.layoutChildren();
         //确保两个图层始终填满整个 Subject
         nodesLayer.resizeRelocate(0, 0, getWidth(), getHeight());
-        linesLayer.resizeRelocate(0, 0, getWidth(), getHeight());
+        linesLayerR.resizeRelocate(0, 0, getWidth(), getHeight());
     }
 }

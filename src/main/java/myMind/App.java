@@ -13,7 +13,7 @@ import myMind.controller.NodeController;
 
 import java.io.IOException;
 
-public class MindApp extends Application {
+public class App extends Application {
     private MenuController menuController;
     private Workspace workspace;
 

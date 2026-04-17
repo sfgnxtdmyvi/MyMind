@@ -15,4 +15,9 @@ public class RootNodeModel extends NodeModel {
     public RootNodeModel(int id, String text, double x, double y) {
         super(id, text, x, y, PosConstants.MIDDLE);
     }
+
+    public void addLeftChild(NodeModel child) {
+        leftChildren.add(child);
+        child.setParent(this);
+    }
 }
