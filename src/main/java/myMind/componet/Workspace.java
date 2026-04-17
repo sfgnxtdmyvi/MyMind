@@ -3,6 +3,7 @@ package myMind.componet;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
@@ -12,8 +13,28 @@ import myMind.controller.NodeController;
 public class Workspace extends TabPane {
 
     public Workspace() {
+        //关闭按钮的显示策略
+        //SELECTED_TAB：只在当前被选中的标签页显示
+        //ALL_TABS：在所有标签页上都显示
+        //UNAVAILABLE：完全不显示
+        setTabClosingPolicy(TabClosingPolicy.ALL_TABS);
+        getStyleClass().add("hide-tabs");
         addNewTab();
 
+        addListener();
+    }
+
+    private void addListener() {
+        getTabs().addListener((ListChangeListener.Change<? extends Tab> c) -> {
+            //只有一个主题时，隐藏标签栏
+            if (getTabs().size() <= 1) {
+                getStyleClass().add("hide-tabs");
+            } else {
+                getStyleClass().remove("hide-tabs");
+            }
+        });
+
+        //新增主题
         setOnKeyPressed(e -> {
             if (e.isControlDown() && e.getCode() == KeyCode.M) {
                 addNewTab();
