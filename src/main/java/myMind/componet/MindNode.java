@@ -1,26 +1,31 @@
 package myMind.componet;
 
 import javafx.application.Platform;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
-import javafx.scene.Cursor;
+import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import lombok.Data;
 import lombok.Getter;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 import myMind.controller.NodeController;
 import org.fxmisc.richtext.InlineCssTextArea;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 //@Data 会自动生成 hashCode() 方法
@@ -32,7 +37,7 @@ public class MindNode extends VBox {
     private final NodeController controller;
     //用于测量文本尺寸
     private Text measureText;
-    private ImageView imageView; // 新增图片视图
+    private ImageView image; // 新增图片视图
 
     // 拖拽缩放相关变量
     private static final double RESIZE_THRESHOLD = 5.0;
@@ -47,12 +52,14 @@ public class MindNode extends VBox {
         measureText = new Text();
         measureText.setFont(Font.font("System", SizeConstants.NODE_FONT_SIZE));
 
-        // 初始化图片视图
-        imageView = new ImageView();
-        imageView.setPreserveRatio(true);
-        imageView.setSmooth(true);
-        imageView.setVisible(false);
-        imageView.setManaged(false);
+        image = new ImageView();
+        //当改变宽度或高度时，另一个维度会自动按比例缩放
+        image.setPreserveRatio(true);
+        image.setSmooth(true);
+        image.setVisible(false);
+        //true：组件会参与布局计算
+        //false：组件脱离布局管理
+        image.setManaged(false);
 
         textArea = new InlineCssTextArea();
         textArea.replaceText(0, 0, model.getText());
@@ -62,25 +69,21 @@ public class MindNode extends VBox {
         textArea.setPrefWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
         textArea.setPrefHeight(SizeConstants.MIN_TEXTAREA_HEIGHT);
 
+        setAlignment(Pos.CENTER);
         setPrefWidth(SizeConstants.MIN_NODE_WIDTH);
         setPrefHeight(SizeConstants.MIN_NODE_HEIGHT);
         getStyleClass().add("nodeBorder");
         setPadding(new Insets(10, 10, 10, 10));
-        // 图片和文本之间的间距
-        setSpacing(5);
 
-        // 将图片和文本加入 VBox
-        getChildren().addAll(imageView, textArea);
-//        VBox.setVgrow(textArea, Priority.ALWAYS);
+        getChildren().addAll(image, textArea);
+        VBox.setVgrow(textArea, Priority.ALWAYS);
 
         // 模型x、y变化时，改变位置
+        textArea.textProperty().addListener((obs, oldText, newText) -> model.setText(newText));
         model.xProperty().addListener((obs, oldVal, newVal) -> setLayoutX(newVal.doubleValue()));
         model.yProperty().addListener((obs, oldVal, newVal) -> setLayoutY(newVal.doubleValue()));
         setLayoutX(model.getX());
         setLayoutY(model.getY());
-
-        // 初始调整尺寸
-        Platform.runLater(this::adjustSize);
 
         addListener();
     }
@@ -91,102 +94,101 @@ public class MindNode extends VBox {
             controller.setSelectedNode(this);
         });
 
+        // 文本变化动态调整
+        textArea.textProperty().addListener((obs, oldText, newText) -> {
+            Platform.runLater(this::adjustSizeR);
+        });
+
         // 粘贴图片
         textArea.setOnKeyReleased(e -> {
             if (e.isControlDown() && e.getCode() == KeyCode.V) {
-                Clipboard clipboard = Clipboard.getSystemClipboard();
-                if (clipboard.hasImage()) {
-                    Image image = clipboard.getImage();
-                    setImage(image);
-                    e.consume();
+                // javafx 的剪贴板获取不了图片，只能用 awt 的
+                Transferable transferable = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
+                if (transferable != null && transferable.isDataFlavorSupported(DataFlavor.imageFlavor)) {
+                    try {
+                        BufferedImage bufferedImage = (BufferedImage) transferable.getTransferData(DataFlavor.imageFlavor);
+                        Image clipboardImage = SwingFXUtils.toFXImage(bufferedImage, null);
+                        image.setImage(clipboardImage);
+//                        saveImage(bufferedImage);
+                    } catch (UnsupportedFlavorException | IOException ex) {
+                        ex.printStackTrace();
+                    }
+                    image.setFitWidth(100);
+                    image.setFitHeight(100);
+                    image.setVisible(true);
+                    image.setManaged(true);
+                    adjustSizeR();
                 }
+
+                e.consume();
             }
-        });
-
-        // 文本变化动态调整
-        textArea.textProperty().addListener((obs, oldText, newText) -> {
-            Platform.runLater(this::adjustSize);
-        });
-
-        textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) finishEdit(textArea.getText(), controller);
         });
 
         // --- 图片缩放逻辑 ---
-        imageView.setOnMousePressed(e -> {
-            if (imageView.isVisible()) {
-                startX = e.getSceneX();
-                startY = e.getSceneY();
-                startWidth = imageView.getFitWidth();
-                startHeight = imageView.getFitHeight();
-
-                // 判断是否点击在右下角区域用于缩放
-                if (e.getX() > imageView.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD &&
-                        e.getY() > imageView.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD) {
-                    isResizing = true;
-                    imageView.setCursor(Cursor.SE_RESIZE);
-                }
-            }
-        });
-
-        imageView.setOnMouseDragged(e -> {
-            if (isResizing) {
-                double deltaX = e.getSceneX() - startX;
-                double deltaY = e.getSceneY() - startY;
-
-                // 简单的等比例缩放或自由缩放，这里演示自由缩放
-                double newWidth = Math.max(20, startWidth + deltaX);
-                double newHeight = Math.max(20, startHeight + deltaY);
-
-                imageView.setFitWidth(newWidth);
-                imageView.setFitHeight(newHeight);
-
-                // 图片大小改变后，需要重新计算节点整体尺寸
-                adjustSize();
-            }
-        });
-
-        imageView.setOnMouseReleased(e -> {
-            isResizing = false;
-            imageView.setCursor(Cursor.DEFAULT);
-        });
-
-        // 鼠标悬停在右下角显示缩放光标
-        imageView.setOnMouseMoved(e -> {
-            if (e.getX() > imageView.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD &&
-                    e.getY() > imageView.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD) {
-                imageView.setCursor(Cursor.SE_RESIZE);
-            } else {
-                imageView.setCursor(Cursor.DEFAULT);
-            }
-        });
+//        image.setOnMousePressed(e -> {
+//            if (image.isVisible()) {
+//                startX = e.getSceneX();
+//                startY = e.getSceneY();
+//                startWidth = image.getFitWidth();
+//                startHeight = image.getFitHeight();
+//
+//                // 判断是否点击在右下角区域用于缩放
+//                if (e.getX() > image.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD &&
+//                        e.getY() > image.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD) {
+//                    isResizing = true;
+//                    image.setCursor(Cursor.SE_RESIZE);
+//                }
+//            }
+//        });
+//
+//        image.setOnMouseDragged(e -> {
+//            if (isResizing) {
+//                double deltaX = e.getSceneX() - startX;
+//                double deltaY = e.getSceneY() - startY;
+//
+//                // 简单的等比例缩放或自由缩放，这里演示自由缩放
+//                double newWidth = Math.max(20, startWidth + deltaX);
+//                double newHeight = Math.max(20, startHeight + deltaY);
+//
+//                image.setFitWidth(newWidth);
+//                image.setFitHeight(newHeight);
+//
+//                // 图片大小改变后，需要重新计算节点整体尺寸
+//                adjustSizeR();
+//            }
+//        });
+//
+//        image.setOnMouseReleased(e -> {
+//            isResizing = false;
+//            image.setCursor(Cursor.DEFAULT);
+//        });
+//
+//        // 鼠标悬停在右下角显示缩放光标
+//        image.setOnMouseMoved(e -> {
+//            if (e.getX() > image.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD &&
+//                    e.getY() > image.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD) {
+//                image.setCursor(Cursor.SE_RESIZE);
+//            } else {
+//                image.setCursor(Cursor.DEFAULT);
+//            }
+//        });
     }
 
-    /**
-     * 设置节点图片
-     */
-    public void setImage(Image image) {
-        if (image != null) {
-            imageView.setImage(image);
-            imageView.setVisible(true);
-            imageView.setManaged(true);
-            imageView.setFitWidth(100);
-            imageView.setFitHeight(100);
-            adjustSize();
+    private static void saveImage(BufferedImage bufferedImage) {
+        File output = new File("C:\\Users\\k8255\\Desktop", "clipboard_image.png");
+        try {
+            ImageIO.write(bufferedImage, "png", output);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
-    }
-
-    private void finishEdit(String newText, NodeController controller) {
-        model.setText(newText);
-        controller.refreshLines();
     }
 
     /**
      * 根据内容动态调整尺寸
      */
-    private void adjustSize() {
+    private void adjustSizeR() {
         String text = textArea.getText();
-        if (text == null || text.isEmpty()) {
+        if (!image.isVisible() && text.isEmpty()) {
             textArea.setPrefWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
             textArea.setPrefHeight(SizeConstants.MIN_TEXTAREA_HEIGHT);
             setPrefWidth(SizeConstants.MIN_NODE_WIDTH);
@@ -211,8 +213,9 @@ public class MindNode extends VBox {
 
         double totalPadding = (contentHeight / 25.4) * 2.6;
         double textHeight = contentHeight + totalPadding;
-        // MindNode 高度 = border(2px) + padding(20px) + textArea 高度
-        double nodeHeight = textHeight + 22;
+        // MindNode 高度 = border(2px) + padding(20px) + image高度 + textArea 高度
+        double imageHeight = image.getFitHeight();
+        double nodeHeight = imageHeight + textHeight + 22;
 
         // y轴 - 高度变动的一半，让中心保持不变
         if (model.getPos() == PosConstants.MIDDLE) {
@@ -226,15 +229,9 @@ public class MindNode extends VBox {
         setPrefWidth(nodeWidth);
         setPrefHeight(nodeHeight);
 
-        if (model.getPos() == PosConstants.RIGHT) {
-            adjustChildrenXR(model);
-            controller.adjustChildrenYR();
-            controller.refreshLinesR();
-        } else {
-            adjustChildrenXL(model);
-            controller.adjustChildrenYL();
-            controller.refreshLinesL();
-        }
+        adjustChildrenXR(model);
+        controller.adjustChildrenYR();
+        controller.refreshLinesR();
     }
 
     /**

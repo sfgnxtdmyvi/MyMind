@@ -234,7 +234,7 @@ public class Subject extends Pane {
             }
 
             // 回到中心
-            if (shortcutDown && code == KeyCode.B) {
+            if (shortcutDown && code == KeyCode.G) {
                 currentTranslateX = 0;
                 currentTranslateY = 0;
 
