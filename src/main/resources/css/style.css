@@ -2,7 +2,12 @@
     -fx-background-color: white;
 }
 
-.nodeContent {
+.nodeImage{
+    -fx-border-width: 1;
+    -fx-border-color: #88adf7;
+}
+
+.nodeTextArea {
     -fx-font-size: 20;
     -fx-background-color: transparent;
     -fx-border-width: 0;
