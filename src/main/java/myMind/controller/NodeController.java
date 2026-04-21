@@ -151,10 +151,55 @@ public class NodeController {
         if (toDelete == rootModel) {
             return;
         }
+        if (toDelete.getPos() == PosConstants.RIGHT) {
+            deleteR(toDelete);
+        }else {
+            deleteL(toDelete);
+        }
+    }
+
+    private void deleteR(NodeModel toDelete) {
         NodeModel parent = toDelete.getParent();
 
         //变化选中节点
         List<NodeModel> children = parent.getRightChildren();
+        changeSelectedNode(toDelete, parent, children);
+
+        // 从父节点中移除
+        parent.removeChildR(toDelete);
+        // 从nodeMap和mindPane中删除
+        deleteChildrenR(toDelete);
+        deleteNode(toDelete);
+
+        adjustChildrenYR();
+        refreshLinesR();
+
+    }
+
+    private void deleteL(NodeModel toDelete) {
+        NodeModel parent = toDelete.getParent();
+
+        //变化选中节点
+        List<NodeModel> children = parent.getLeftChildren();
+        changeSelectedNode(toDelete, parent, children);
+
+        // 从父节点中移除
+        parent.removeChildL(toDelete);
+        // 从nodeMap和mindPane中删除
+        deleteChildrenL(toDelete);
+        deleteNode(toDelete);
+
+        adjustChildrenYL();
+        refreshLinesL();
+    }
+
+    /**
+     * 改变选中节点
+     * @param toDelete
+     * @param parent
+     * @param children
+     */
+    private void changeSelectedNode(NodeModel toDelete, NodeModel parent, List<NodeModel> children) {
         if (children.size() == 1) {
             setSelectedNode(parent.getMindNode());
         } else {
@@ -164,19 +209,6 @@ public class NodeController {
             } else {
                 setSelectedNode(children.get(index - 1).getMindNode());
             }
-        }
-
-        // 从父节点中移除
-        parent.removeChild(toDelete);
-        // 从nodeMap和mindPane中删除
-        deleteChildren(toDelete);
-        deleteNode(toDelete);
-
-        adjustChildrenYR();
-        if (toDelete.getPos() == PosConstants.RIGHT) {
-            refreshLinesR();
-        } else {
-            refreshLinesL();
         }
     }
 
@@ -288,13 +320,22 @@ public class NodeController {
         subject.layout();
     }
 
-    private void deleteChildren(NodeModel parentNodeModel) {
+    private void deleteChildrenR(NodeModel parentNodeModel) {
         for (NodeModel childNodeModel : parentNodeModel.getRightChildren()) {
             deleteNode(childNodeModel);
-            deleteChildren(childNodeModel);
+            deleteChildrenR(childNodeModel);
         }
 
-        parentNodeModel.removeChildren();
+        parentNodeModel.removeChildrenR();
+    }
+
+    private void deleteChildrenL(NodeModel parentNodeModel) {
+        for (NodeModel childNodeModel : parentNodeModel.getLeftChildren()) {
+            deleteNode(childNodeModel);
+            deleteChildrenL(childNodeModel);
+        }
+
+        parentNodeModel.removeChildrenL();
     }
 
     /**

@@ -244,7 +244,7 @@ public class MindNode extends VBox {
         nodeWidth = Math.max(SizeConstants.MIN_NODE_WIDTH,
                 Math.min(nodeWidth, SizeConstants.MAX_NODE_WIDTH));
         if (imageVisible) {
-            nodeWidth = Math.max(nodeWidth, image.getFitWidth()+24);
+            nodeWidth = Math.max(nodeWidth+2, image.getFitWidth() + 24);
         }
 
         // 设置换行
@@ -266,14 +266,22 @@ public class MindNode extends VBox {
             model.setY(model.getY() - delta / 2.0);
         }
 
+        double originalWidth = getPrefWidth();
         textArea.setPrefWidth(textWidth);
         textArea.setPrefHeight(textHeight);
         setPrefWidth(nodeWidth);
         setPrefHeight(nodeHeight);
 
-        adjustChildrenXR(model);
-        controller.adjustChildrenYR();
-        controller.refreshLinesR();
+        if (model.getPos() == PosConstants.LEFT) {
+            model.setX(model.getX() - (nodeWidth - originalWidth));
+            adjustChildrenXL(model);
+            controller.adjustChildrenYL();
+            controller.refreshLinesL();
+        } else {
+            adjustChildrenXR(model);
+            controller.adjustChildrenYR();
+            controller.refreshLinesR();
+        }
     }
 
     /**
@@ -284,12 +292,9 @@ public class MindNode extends VBox {
         if (children.isEmpty()) {
             return;
         }
-        System.out.println("getFitWidth = " + image.getFitWidth());
-
 
         double parentX = nodeModel.getX();
         double parentWidth = nodeModel.getSelfWidth();
-        System.out.println("parentWidth = " + parentWidth);
         double childX = parentX + parentWidth + SizeConstants.NODE_GAP_X;
 
         for (NodeModel child : children) {
@@ -305,11 +310,10 @@ public class MindNode extends VBox {
         }
 
         double parentX = nodeModel.getX();
-        double parentWidth = nodeModel.getSelfWidth();
-        double childX = parentX + parentWidth + SizeConstants.NODE_GAP_X;
+        double childX = parentX - SizeConstants.NODE_GAP_X;
 
         for (NodeModel child : children) {
-            child.setX(childX);
+            child.setX(childX - child.getSelfWidth());
             adjustChildrenXL(child);
         }
     }
