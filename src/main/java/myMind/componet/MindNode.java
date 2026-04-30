@@ -222,7 +222,7 @@ public class MindNode extends VBox {
     /**
      * 根据内容动态调整尺寸
      */
-    private void adjustSize() {
+    public void adjustSize() {
         String text = textArea.getText();
         boolean imageVisible = image.isVisible();
         if (!imageVisible && text.isEmpty()) {
@@ -287,7 +287,7 @@ public class MindNode extends VBox {
     /**
      * 调整子节点x轴
      */
-    private void adjustChildrenXR(NodeModel nodeModel) {
+    public void adjustChildrenXR(NodeModel nodeModel) {
         List<NodeModel> children = nodeModel.getRightChildren();
         if (children.isEmpty()) {
             return;
@@ -303,7 +303,7 @@ public class MindNode extends VBox {
         }
     }
 
-    private void adjustChildrenXL(NodeModel nodeModel) {
+    public void adjustChildrenXL(NodeModel nodeModel) {
         List<NodeModel> children = nodeModel.getLeftChildren();
         if (children.isEmpty()) {
             return;

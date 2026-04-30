@@ -156,7 +156,7 @@ public class Subject extends Pane {
                             newNode = children.get(children.size() / 2).getMindNode();
                         }
                     }
-                } else {
+                } else if (code == KeyCode.UP || code == KeyCode.DOWN) {
                     if (pos == PosConstants.MIDDLE) {
                         return;
                     }

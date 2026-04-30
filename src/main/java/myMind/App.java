@@ -26,7 +26,6 @@ public class App extends Application {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
             MenuBar menuBar = loader.load();
             menuController = loader.getController();
-            // 指向第一个标签页
             updateMenuController();
             root.setTop(menuBar);
         } catch (IOException e) {

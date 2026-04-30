@@ -24,7 +24,8 @@ public class MenuController {
     @FXML
     private void handleLoad() {
         FileChooser fc = new FileChooser();
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON 文件", "*.json"));
+        fc.setInitialDirectory(new File("C:\\Users\\k8255\\Documents\\MindLine"));
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showOpenDialog(nodeController.getSubject().getScene().getWindow());
         if (file != null) {
             fileHandler.loadFromFile(file);
@@ -39,7 +40,7 @@ public class MenuController {
     private void handleSave() {
         FileChooser fc = new FileChooser();
         fc.setInitialFileName("mindmap.json");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON 文件", "*.json"));
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showSaveDialog(nodeController.getSubject().getScene().getWindow());
         if (file != null) {
             fileHandler.saveToFile(file);
@@ -49,6 +50,17 @@ public class MenuController {
     @FXML
     public void handleSaveAs(ActionEvent actionEvent) {
 
+    }
+
+    @FXML
+    private void handleImport() {
+        FileChooser fc = new FileChooser();
+        fc.setInitialDirectory(new File("C:\\Users\\k8255\\Documents\\MindLine"));
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
+        File file = fc.showOpenDialog(nodeController.getSubject().getScene().getWindow());
+        if (file != null) {
+            fileHandler.importFile(file);
+        }
     }
 
     //—————————————————————————————————————————编辑—————————————————————————————————————————

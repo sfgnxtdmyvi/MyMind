@@ -153,7 +153,7 @@ public class NodeController {
         }
         if (toDelete.getPos() == PosConstants.RIGHT) {
             deleteR(toDelete);
-        }else {
+        } else {
             deleteL(toDelete);
         }
     }
@@ -195,9 +195,6 @@ public class NodeController {
 
     /**
      * 改变选中节点
-     * @param toDelete
-     * @param parent
-     * @param children
      */
     private void changeSelectedNode(NodeModel toDelete, NodeModel parent, List<NodeModel> children) {
         if (children.size() == 1) {
@@ -218,6 +215,38 @@ public class NodeController {
 
     public void adjustChildrenYL() {
         adjustChildrenYL(rootModel, null);
+    }
+
+    public void adjustChildrenSize() {
+        adjustChildrenSizeR(rootModel);
+        adjustChildrenSizeL(rootModel);
+    }
+
+    public void adjustChildrenSizeR(NodeModel nodeModel) {
+        List<NodeModel> rightChildren = nodeModel.getRightChildren();
+        for (NodeModel rightChild : rightChildren) {
+            rightChild.getMindNode().adjustSize();
+            List<NodeModel> childrenOfChild = rightChild.getRightChildren();
+            if(!childrenOfChild.isEmpty()){
+                adjustChildrenSizeR(rightChild);
+            }
+        }
+    }
+    public void adjustChildrenSizeL(NodeModel nodeModel) {
+        List<NodeModel> leftChildren = nodeModel.getLeftChildren();
+        for (NodeModel leftChild : leftChildren) {
+            leftChild.getMindNode().adjustSize();
+            List<NodeModel> childrenOfChild = leftChild.getLeftChildren();
+            if(!childrenOfChild.isEmpty()){
+                adjustChildrenSizeL(leftChild);
+            }
+        }
+    }
+
+    public void adjustChildrenX() {
+        MindNode mindNode = rootModel.getMindNode();
+        mindNode.adjustChildrenXR(rootModel);
+        mindNode.adjustChildrenXL(rootModel);
     }
 
     public void refreshLines() {
@@ -304,6 +333,9 @@ public class NodeController {
     public void rebuildViewFromModel(NodeModel node) {
         addNode(node);
         for (NodeModel child : node.getRightChildren()) {
+            rebuildViewFromModel(child);
+        }
+        for (NodeModel child : node.getLeftChildren()) {
             rebuildViewFromModel(child);
         }
     }

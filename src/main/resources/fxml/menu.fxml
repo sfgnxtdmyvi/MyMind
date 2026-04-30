@@ -16,6 +16,8 @@
                 <SeparatorMenuItem mnemonicParsing="false" />
                 <MenuItem onAction="#handleSave" text="保存" />
                 <MenuItem onAction="#handleSave" text="另存为" />
+                <SeparatorMenuItem mnemonicParsing="false" />
+                <MenuItem onAction="#handleImport" text="导入" />
             </items>
         </Menu>
         <Menu text="编辑">
