@@ -16,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import lombok.Getter;
+import lombok.Setter;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 import myMind.controller.NodeController;
@@ -34,9 +35,10 @@ import java.util.List;
 //@Data 会自动生成 hashCode() 方法
 //循环引用时，会无限递归调用双方的 hashCode() 方法
 @Getter
-public class MindNode extends VBox {
-    private final NodeModel model;
-    private final InlineCssTextArea textArea;
+public class MindNode extends VBox{
+    @Setter
+    private NodeModel model;
+    private InlineCssTextArea textArea;
     private final NodeController controller;
     //用于测量文本尺寸
     private Text measureText;
@@ -79,7 +81,7 @@ public class MindNode extends VBox {
         imageContainer.setManaged(false);
 
         textArea = new InlineCssTextArea();
-        textArea.replaceText(0, 0, model.getText());
+        textArea.replaceText(model.getText());
         textArea.setWrapText(true);
         textArea.getStyleClass().add("nodeTextArea");
         // 让绘制连线时，能获取节点位置
@@ -96,12 +98,16 @@ public class MindNode extends VBox {
         VBox.setVgrow(textArea, Priority.ALWAYS);
 
         // 模型x、y变化时，改变位置
-        textArea.textProperty().addListener((obs, oldText, newText) -> model.setText(newText));
-        model.xProperty().addListener((obs, oldVal, newVal) -> setLayoutX(newVal.doubleValue()));
-        model.yProperty().addListener((obs, oldVal, newVal) -> setLayoutY(newVal.doubleValue()));
+        textArea.textProperty()
+                .addListener((obs, oldText, newText) -> model.setText(newText));
+        model.xProperty()
+                .addListener((obs, oldVal, newVal) -> setLayoutX(newVal.doubleValue()));
+        model.yProperty()
+                .addListener((obs, oldVal, newVal) -> setLayoutY(newVal.doubleValue()));
         setLayoutX(model.getX());
         setLayoutY(model.getY());
 
+        adjustSize();
         addListener();
     }
 
@@ -244,7 +250,7 @@ public class MindNode extends VBox {
         nodeWidth = Math.max(SizeConstants.MIN_NODE_WIDTH,
                 Math.min(nodeWidth, SizeConstants.MAX_NODE_WIDTH));
         if (imageVisible) {
-            nodeWidth = Math.max(nodeWidth+2, image.getFitWidth() + 24);
+            nodeWidth = Math.max(nodeWidth + 2, image.getFitWidth() + 24);
         }
 
         // 设置换行
@@ -317,4 +323,21 @@ public class MindNode extends VBox {
             adjustChildrenXL(child);
         }
     }
+
+    public MindNode clone()  {
+        NodeModel originalModel = this.getModel();
+        NodeModel newModel = new NodeModel(
+                controller.nextId(),
+                originalModel.getText(),
+                0,
+                0,
+                originalModel.getPos()
+        );
+
+        MindNode mindNode = new MindNode(newModel, controller);
+        // todo 复制子节点
+
+        return mindNode;
+    }
+
 }

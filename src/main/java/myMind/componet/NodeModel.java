@@ -74,14 +74,14 @@ public class NodeModel {
         child.setParent(this);
     }
 
-    public void removeChildrenR() {
+    public void clearChildrenR() {
         for (int i = 0; i < rightChildren.size(); i++) {
             NodeModel remove = rightChildren.remove(i);
             remove.setParent(null);
         }
     }
 
-    public void removeChildrenL() {
+    public void clearChildrenL() {
         for (int i = 0; i < leftChildren.size(); i++) {
             NodeModel remove = leftChildren.remove(i);
             remove.setParent(null);

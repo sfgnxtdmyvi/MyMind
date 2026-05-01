@@ -1,6 +1,7 @@
 package myMind.componet;
 
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
@@ -24,6 +25,7 @@ public class Subject extends Pane {
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
     private final NodeController controller;
+    private MindNode copyNode;
 
     private double dragStartX, dragStartY;
     private double mousePressedX;
@@ -192,14 +194,14 @@ public class Subject extends Pane {
             if (shortcutDown && altDown) {
                 // 1个子节点和5个孙节点
                 if (code == KeyCode.LEFT) {
-                    controller.addChildL();
-                    controller.addChildL();
+                    controller.addChildL(null);
+                    controller.addChildL(null);
                     for (int i = 0; i < 4; i++) {
                         controller.addSiblingL();
                     }
                 } else if (code == KeyCode.RIGHT) {
-                    controller.addChildR();
-                    controller.addChildR();
+                    controller.addChildR(null);
+                    controller.addChildR(null);
                     for (int i = 0; i < 4; i++) {
                         controller.addSiblingR();
                     }
@@ -214,10 +216,10 @@ public class Subject extends Pane {
                 }
                 return;
             } else if (altDown && code == KeyCode.RIGHT) {
-                controller.addChildR();
+                controller.addChildR(null);
                 return;
             } else if (altDown && code == KeyCode.LEFT) {
-                controller.addChildL();
+                controller.addChildL(null);
                 return;
             } else if (altDown && code == KeyCode.DOWN) {
                 controller.addSibling();
@@ -231,6 +233,24 @@ public class Subject extends Pane {
             if (altDown && code == KeyCode.DELETE) {
                 controller.delete();
                 return;
+            }
+
+            // 节点的复制粘贴
+            if (altDown) {
+                if (e.getCode() == KeyCode.C) {
+                    MindNode selectedNode = controller.getSelectedNode();
+                    if (selectedNode.getTextArea().getSelectedText().isEmpty()) {
+                        copyNode = selectedNode;
+                    }
+                } else if (e.getCode() == KeyCode.X) {
+                    MindNode selectedNode = controller.getSelectedNode();
+                    if (selectedNode.getTextArea().getSelectedText().isEmpty()) {
+                        copyNode = selectedNode;
+                    }
+                    controller.delete();
+                } else if (e.getCode() == KeyCode.V) {
+                    controller.pasteChild(copyNode);
+                }
             }
 
             // 回到中心

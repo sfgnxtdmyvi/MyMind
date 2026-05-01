@@ -65,8 +65,8 @@ public class MenuController {
 
     //—————————————————————————————————————————编辑—————————————————————————————————————————
     @FXML
-    private void handleAddChild() {
-        nodeController.addChildR();
+    private void handleAddChild(){
+        nodeController.addChildR(null);
     }
 
     @FXML

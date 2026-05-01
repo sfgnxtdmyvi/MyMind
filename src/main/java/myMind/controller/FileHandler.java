@@ -24,10 +24,7 @@ public class FileHandler {
 
     //保存为 JSON 文件
     public void saveToFile(File file) {
-        List<NodeModel> allNodes = new ArrayList<>(nodeController.getNodeMap().size());
-        for (MindNode view : nodeController.getNodeMap().values()) {
-            allNodes.add(view.getModel());
-        }
+
 
         StringBuilder sb = new StringBuilder();
 
@@ -108,19 +105,14 @@ public class FileHandler {
             JSONObject json = JSONObject.parseObject(jsonStr);
             JSONObject rootJson = json.getJSONObject("root");
             JSONObject children = rootJson.getJSONObject("children");
+            JSONObject children2 = rootJson.getJSONObject("children2");
 
             double centerX = (nodeController.getSubject().getWidth() - SizeConstants.MIN_NODE_WIDTH) / 2.0;
             double centerY = nodeController.getSubject().getHeight() / 2.0 - SizeConstants.MIN_NODE_HEIGHT;
             NodeModel rootModel = new NodeModel(-1, rootJson.getString("text"), centerX, centerY, PosConstants.MIDDLE);
-            //children里有一个"objectClass": "NSArray"
-            for (int i = 0; i < children.size()-1; i++) {
-                JSONObject node = children.getJSONObject(""+i);
-                int id = i;
-                String text = node.getString("text");
 
-                NodeModel model = new NodeModel(id, text, 0,0, PosConstants.RIGHT);
-                rootModel.addRightChild(model);
-            }
+            addChildren(children, rootModel);
+            addChildren(children2, rootModel);
 
             nodeController.clearAll();
             nodeController.setRootModel(rootModel);
@@ -132,6 +124,18 @@ public class FileHandler {
             nodeController.refreshLines();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void addChildren(JSONObject children2, NodeModel rootModel) {
+        //children里有一个"objectClass": "NSArray"
+        for (int i = 0; i < children2.size() - 1; i++) {
+            JSONObject node = children2.getJSONObject("" + i);
+            int id = i;
+            String text = node.getString("text");
+
+            NodeModel model = new NodeModel(id, text, 0, 0, PosConstants.RIGHT);
+            rootModel.addRightChild(model);
         }
     }
 
