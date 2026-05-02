@@ -20,25 +20,22 @@ import lombok.Setter;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 import myMind.controller.NodeController;
-import org.fxmisc.richtext.InlineCssTextArea;
+import org.fxmisc.richtext.StyleClassedTextArea;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 //@Data 会自动生成 hashCode() 方法
 //循环引用时，会无限递归调用双方的 hashCode() 方法
 @Getter
-public class MindNode extends VBox{
+public class MindNode extends VBox {
     @Setter
     private NodeModel model;
-    private InlineCssTextArea textArea;
+    private StyleClassedTextArea textArea;
     private final NodeController controller;
     //用于测量文本尺寸
     private Text measureText;
@@ -80,9 +77,9 @@ public class MindNode extends VBox{
         imageContainer.setVisible(false);
         imageContainer.setManaged(false);
 
-        textArea = new InlineCssTextArea();
-        textArea.replaceText(model.getText());
-        textArea.setWrapText(true);
+        textArea = new StyleClassedTextArea();
+//        textArea.replaceText(model.getText());
+//        textArea.setWrapText(true);
         textArea.getStyleClass().add("nodeTextArea");
         // 让绘制连线时，能获取节点位置
         textArea.setPrefWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
@@ -216,15 +213,6 @@ public class MindNode extends VBox{
         });
     }
 
-    private static void saveImage(BufferedImage bufferedImage) {
-        File output = new File("C:\\Users\\k8255\\Desktop", "clipboard_image.png");
-        try {
-            ImageIO.write(bufferedImage, "png", output);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
     /**
      * 根据内容动态调整尺寸
      */
@@ -280,51 +268,17 @@ public class MindNode extends VBox{
 
         if (model.getPos() == PosConstants.LEFT) {
             model.setX(model.getX() - (nodeWidth - originalWidth));
-            adjustChildrenXL(model);
+            controller.adjustChildrenXL(model);
             controller.adjustChildrenYL();
             controller.refreshLinesL();
         } else {
-            adjustChildrenXR(model);
+            controller.adjustChildrenXR(model);
             controller.adjustChildrenYR();
             controller.refreshLinesR();
         }
     }
 
-    /**
-     * 调整子节点x轴
-     */
-    public void adjustChildrenXR(NodeModel nodeModel) {
-        List<NodeModel> children = nodeModel.getRightChildren();
-        if (children.isEmpty()) {
-            return;
-        }
-
-        double parentX = nodeModel.getX();
-        double parentWidth = nodeModel.getSelfWidth();
-        double childX = parentX + parentWidth + SizeConstants.NODE_GAP_X;
-
-        for (NodeModel child : children) {
-            child.setX(childX);
-            adjustChildrenXR(child);
-        }
-    }
-
-    public void adjustChildrenXL(NodeModel nodeModel) {
-        List<NodeModel> children = nodeModel.getLeftChildren();
-        if (children.isEmpty()) {
-            return;
-        }
-
-        double parentX = nodeModel.getX();
-        double childX = parentX - SizeConstants.NODE_GAP_X;
-
-        for (NodeModel child : children) {
-            child.setX(childX - child.getSelfWidth());
-            adjustChildrenXL(child);
-        }
-    }
-
-    public MindNode clone()  {
+    public MindNode clone() {
         NodeModel originalModel = this.getModel();
         NodeModel newModel = new NodeModel(
                 controller.nextId(),

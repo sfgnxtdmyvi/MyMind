@@ -39,7 +39,7 @@
             <version>${javafx.version}</version>
         </dependency>
 
-<!--        富文本框-->
+        <!--富文本框-->
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
             <artifactId>richtextfx</artifactId>

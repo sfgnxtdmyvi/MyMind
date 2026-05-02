@@ -8,6 +8,8 @@ import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 import myMind.util.AlertUtil;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -136,6 +138,15 @@ public class FileHandler {
 
             NodeModel model = new NodeModel(id, text, 0, 0, PosConstants.RIGHT);
             rootModel.addRightChild(model);
+        }
+    }
+
+    public void saveImage(BufferedImage bufferedImage) {
+        File output = new File("C:\\Users\\k8255\\Desktop", "clipboard_image.png");
+        try {
+            ImageIO.write(bufferedImage, "png", output);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
     }
 

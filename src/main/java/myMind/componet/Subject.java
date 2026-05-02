@@ -25,7 +25,6 @@ public class Subject extends Pane {
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
     private final NodeController controller;
-    private MindNode copyNode;
 
     private double dragStartX, dragStartY;
     private double mousePressedX;
@@ -118,143 +117,8 @@ public class Subject extends Pane {
 
         // 键盘快捷键
         setOnKeyPressed(e -> {
-            //跨平台修饰键
-            //在 Windows / Linux 上：它等同于 e.isControlDown() (即 Ctrl 键)
-            //在 macOS 上：它等同于 e.isMetaDown() (即 Command ⌘ 键)
-            boolean shortcutDown = e.isShortcutDown();
-            boolean altDown = e.isAltDown();
-            boolean shiftDown = e.isShiftDown();
-            KeyCode code = e.getCode();
-
-            // 切换选中节点
-            if (shiftDown && altDown) {
-                MindNode selectedNode = controller.getSelectedNode();
-                if (selectedNode == null) {
-                    return;
-                }
-                NodeModel model = selectedNode.getModel();
-                byte pos = model.getPos();
-                MindNode newNode = selectedNode;
-
-                if (code == KeyCode.RIGHT) {
-                    // 左边节点 -> 父节点
-                    // 根、右边节点 -> 中间的右子节点
-                    if (pos == PosConstants.LEFT) {
-                        newNode = model.getParent().getMindNode();
-                    } else {
-                        List<NodeModel> children = model.getRightChildren();
-                        if (!children.isEmpty()) {
-                            newNode = children.get(children.size() / 2).getMindNode();
-                        }
-                    }
-                } else if (code == KeyCode.LEFT) {
-                    // 父节点 <- 右边节点
-                    // 中间的左子节点 <- 左边、根节点
-                    if (pos == PosConstants.RIGHT) {
-                        newNode = model.getParent().getMindNode();
-                    } else {
-                        List<NodeModel> children = model.getLeftChildren();
-                        if (!children.isEmpty()) {
-                            newNode = children.get(children.size() / 2).getMindNode();
-                        }
-                    }
-                } else if (code == KeyCode.UP || code == KeyCode.DOWN) {
-                    if (pos == PosConstants.MIDDLE) {
-                        return;
-                    }
-
-                    // 得到当前节点的索引
-                    NodeModel parentModel = model.getParent();
-                    List<NodeModel> children;
-                    if (pos == PosConstants.RIGHT) {
-                        children = parentModel.getRightChildren();
-                    } else {
-                        children = parentModel.getLeftChildren();
-                    }
-                    int index = children.indexOf(model);
-
-                    // 切换成上下兄弟节点
-                    if (code == KeyCode.UP) {
-                        if (index != 0) {
-                            newNode = children.get(index - 1).getMindNode();
-                        }
-                    } else if (code == KeyCode.DOWN) {
-                        if (index != children.size() - 1) {
-                            newNode = children.get(index + 1).getMindNode();
-                        }
-                    }
-                }
-
-                controller.setSelectedNode(newNode);
-                return;
-            }
-
-            //新增节点
-            //Ctrl + Alt 批量新增
-            if (shortcutDown && altDown) {
-                // 1个子节点和5个孙节点
-                if (code == KeyCode.LEFT) {
-                    controller.addChildL(null);
-                    controller.addChildL(null);
-                    for (int i = 0; i < 4; i++) {
-                        controller.addSiblingL();
-                    }
-                } else if (code == KeyCode.RIGHT) {
-                    controller.addChildR(null);
-                    controller.addChildR(null);
-                    for (int i = 0; i < 4; i++) {
-                        controller.addSiblingR();
-                    }
-                }
-                // 1个兄弟节点和5个孙节点
-                else if (code == KeyCode.DOWN) {
-                    controller.addSibling();
-                    controller.addChild();
-                    for (int i = 0; i < 4; i++) {
-                        controller.addSibling();
-                    }
-                }
-                return;
-            } else if (altDown && code == KeyCode.RIGHT) {
-                controller.addChildR(null);
-                return;
-            } else if (altDown && code == KeyCode.LEFT) {
-                controller.addChildL(null);
-                return;
-            } else if (altDown && code == KeyCode.DOWN) {
-                controller.addSibling();
-                return;
-            } else if (altDown && code == KeyCode.UP) {
-
-                return;
-            }
-
-            // 删除
-            if (altDown && code == KeyCode.DELETE) {
-                controller.delete();
-                return;
-            }
-
-            // 节点的复制粘贴
-            if (altDown) {
-                if (e.getCode() == KeyCode.C) {
-                    MindNode selectedNode = controller.getSelectedNode();
-                    if (selectedNode.getTextArea().getSelectedText().isEmpty()) {
-                        copyNode = selectedNode;
-                    }
-                } else if (e.getCode() == KeyCode.X) {
-                    MindNode selectedNode = controller.getSelectedNode();
-                    if (selectedNode.getTextArea().getSelectedText().isEmpty()) {
-                        copyNode = selectedNode;
-                    }
-                    controller.delete();
-                } else if (e.getCode() == KeyCode.V) {
-                    controller.pasteChild(copyNode);
-                }
-            }
-
             // 回到中心
-            if (shortcutDown && code == KeyCode.G) {
+            if (e.isShortcutDown() && e.getCode() == KeyCode.G) {
                 currentTranslateX = 0;
                 currentTranslateY = 0;
 

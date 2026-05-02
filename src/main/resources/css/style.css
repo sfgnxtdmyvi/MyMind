@@ -27,3 +27,16 @@
     -fx-max-height: 0;
     -fx-opacity: 0;
 }
+
+.bold-text {
+    -fx-font-weight: bold;
+}
+
+.red-text {
+    -fx-fill: red;
+}
+
+/* 选中文本的背景色 */
+.styled-text-area .selection {
+    -fx-fill: #aad1ff;
+}
