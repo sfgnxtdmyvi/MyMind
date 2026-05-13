@@ -2,7 +2,6 @@ package myMind.controller;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
@@ -10,10 +9,12 @@ import myMind.util.AlertUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class FileHandler {
@@ -141,12 +142,23 @@ public class FileHandler {
         }
     }
 
-    public void saveImage(BufferedImage bufferedImage) {
-        File output = new File("C:\\Users\\k8255\\Desktop", "clipboard_image.png");
+    public static String saveImage(BufferedImage bufferedImage, String imagePath) {
+        if (imagePath == null) {
+            imagePath = "D:\\MyMind\\iamges\\" + System.currentTimeMillis() + ".png";
+        }
+        File output = new File(imagePath);
         try {
             ImageIO.write(bufferedImage, "png", output);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
+        }
+        return imagePath;
+    }
+
+    public static void deleteImage(String imagePath) {
+        File file = new File(imagePath);
+        if (file.exists()) {
+            file.delete();
         }
     }
 
