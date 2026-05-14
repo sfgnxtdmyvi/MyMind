@@ -123,6 +123,18 @@ public class MindNode extends VBox {
         image.setFitHeight(imageHeight / SizeConstants.SCALE);
     }
 
+    public void addImage(String imagePath, double imageWidth, double imageHeight) {
+        this.imagePath = imagePath;
+        ratio = imageWidth / imageHeight;
+
+        imageContainer.setVisible(true);
+        imageContainer.setManaged(true);
+        File file = new File(imagePath);
+        image.setImage(new Image(file.toURI().toString()));
+        image.setFitWidth(imageWidth / SizeConstants.SCALE);
+        image.setFitHeight(imageHeight / SizeConstants.SCALE);
+    }
+
     private void addListener() {
         // 选中节点
         addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
@@ -290,13 +302,14 @@ public class MindNode extends VBox {
             model.setY(model.getY() - delta / 2.0);
         }
 
+        double originalWidth = getPrefWidth();
+
         textArea.setPrefWidth(textWidth);
         textArea.setPrefHeight(textHeight);
         setPrefWidth(nodeWidth);
         setPrefHeight(nodeHeight);
 
         if (model.getPos() == PosConstants.LEFT) {
-            double originalWidth = getPrefWidth();
             model.setX(model.getX() - (nodeWidth - originalWidth));
             controller.adjustChildrenXL(model);
             controller.adjustChildrenYL();

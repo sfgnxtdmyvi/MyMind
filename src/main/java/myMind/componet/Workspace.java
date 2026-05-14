@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Workspace extends TabPane {
-    private SubjectController controller;
+    private SubjectController subjectController;
     private MindNode copyNode;
 
     public Workspace() {
@@ -29,6 +29,13 @@ public class Workspace extends TabPane {
     }
 
     private void addListener() {
+        getSelectionModel().selectedItemProperty().addListener((observable, oldtab, newTab) -> {
+            if (newTab == null) {
+                return;
+            }
+            subjectController = ((Subject) newTab.getContent()).getSubjectController();
+        });
+
         getTabs().addListener((ListChangeListener.Change<? extends Tab> c) -> {
             //只有一个主题时，隐藏标签栏
             if (getTabs().size() == 1) {
@@ -50,7 +57,7 @@ public class Workspace extends TabPane {
 
             // 切换选中节点
             if (shiftDown && altDown) {
-                MindNode selectedNode = controller.getSelectedNode();
+                MindNode selectedNode = subjectController.getSelectedNode();
                 if (selectedNode == null) {
                     return;
                 }
@@ -107,7 +114,7 @@ public class Workspace extends TabPane {
                     }
                 }
 
-                controller.setSelectedNode(newNode);
+                subjectController.setSelectedNode(newNode);
                 return;
             }
 
@@ -116,35 +123,35 @@ public class Workspace extends TabPane {
             if (shortcutDown && altDown) {
                 // 1个子节点和5个孙节点
                 if (code == KeyCode.LEFT) {
-                    controller.addChildL(null);
-                    controller.addChildL(null);
+                    subjectController.addChildL(null);
+                    subjectController.addChildL(null);
                     for (int i = 0; i < 4; i++) {
-                        controller.addSiblingL();
+                        subjectController.addSiblingL();
                     }
                 } else if (code == KeyCode.RIGHT) {
-                    controller.addChildR(null);
-                    controller.addChildR(null);
+                    subjectController.addChildR(null);
+                    subjectController.addChildR(null);
                     for (int i = 0; i < 4; i++) {
-                        controller.addSiblingR();
+                        subjectController.addSiblingR();
                     }
                 }
                 // 1个兄弟节点和5个孙节点
                 else if (code == KeyCode.DOWN) {
-                    controller.addSibling();
-                    controller.addChild();
+                    subjectController.addSibling();
+                    subjectController.addChild();
                     for (int i = 0; i < 4; i++) {
-                        controller.addSibling();
+                        subjectController.addSibling();
                     }
                 }
                 return;
             } else if (altDown && code == KeyCode.RIGHT) {
-                controller.addChildR(null);
+                subjectController.addChildR(null);
                 return;
             } else if (altDown && code == KeyCode.LEFT) {
-                controller.addChildL(null);
+                subjectController.addChildL(null);
                 return;
             } else if (altDown && code == KeyCode.DOWN) {
-                controller.addSibling();
+                subjectController.addSibling();
                 return;
             } else if (altDown && code == KeyCode.UP) {
 
@@ -153,31 +160,31 @@ public class Workspace extends TabPane {
 
             // 删除
             if (altDown && code == KeyCode.DELETE) {
-                controller.delete();
+                subjectController.delete();
                 return;
             }
 
             // 节点的复制粘贴
             if (altDown) {
                 if (code == KeyCode.C) {
-                    MindNode selectedNode = controller.getSelectedNode();
+                    MindNode selectedNode = subjectController.getSelectedNode();
                     if (selectedNode.getTextArea().getSelectedText().isEmpty()) {
                         copyNode = selectedNode;
                     }
                 } else if (code == KeyCode.X) {
-                    MindNode selectedNode = controller.getSelectedNode();
+                    MindNode selectedNode = subjectController.getSelectedNode();
                     if (selectedNode.getTextArea().getSelectedText().isEmpty()) {
                         copyNode = selectedNode;
                     }
-                    controller.delete();
+                    subjectController.delete();
                 } else if (code == KeyCode.V) {
-                    controller.pasteChild(copyNode);
+                    subjectController.pasteChild(copyNode);
                 }
             }
 
             // 文本样式
             if (shortcutDown && (code == KeyCode.B || code == KeyCode.R)) {
-                MindNode selectedNode = controller.getSelectedNode();
+                MindNode selectedNode = subjectController.getSelectedNode();
                 StyleClassedTextArea textArea = selectedNode.getTextArea();
                 IndexRange selection = textArea.getSelection();
 
@@ -214,7 +221,7 @@ public class Workspace extends TabPane {
     }
 
     public void addSubject() {
-        SubjectController subjectController = new SubjectController();
+        subjectController = new SubjectController();
         Subject subject = subjectController.getSubject();
 
         int index = getTabs().size() + 1;
@@ -237,7 +244,7 @@ public class Workspace extends TabPane {
      */
     public SubjectController getCurrentController() {
         Tab selectedTab = getSelectionModel().getSelectedItem();
-        controller = ((Subject) selectedTab.getContent()).getController();
-        return controller;
+        subjectController = ((Subject) selectedTab.getContent()).getSubjectController();
+        return subjectController;
     }
 }

@@ -1,5 +1,6 @@
 package myMind.controller;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
@@ -14,6 +15,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FileHandler {
 
@@ -98,17 +101,17 @@ public class FileHandler {
                 content.append(line);
             }
             String jsonStr = content.toString();
-
             JSONObject json = JSONObject.parseObject(jsonStr);
 
             workspace.getTabs().clear();
 
             importSubjet(json, workspace);
+
             JSONObject subjects = json.getJSONObject("subjects");
             if (subjects != null) {
                 for (int i = 0; i < subjects.size() - 1; i++) {
-                    JSONObject jsonNode = subjects.getJSONObject(Integer.toString(i));
-                    importSubjet(jsonNode, workspace);
+                    JSONObject subject = subjects.getJSONObject(Integer.toString(i));
+                    importSubjet(subject, workspace);
                 }
             }
         } catch (Exception e) {
@@ -127,6 +130,7 @@ public class FileHandler {
         NodeModel rootModel = subjectController.getRootModel();
         rootModel.setText(rootJson.getString("text"));
         rootModel.getMindNode().getTextArea().replaceText(rootJson.getString("text"));
+        fillMindNode(rootJson, rootModel.getMindNode());
 
         addRightChild(children, rootModel);
         addLeftChild(children2, rootModel);
@@ -150,18 +154,7 @@ public class FileHandler {
 
             NodeModel model = new NodeModel(subjectController.nextId(), text, 0, 0, PosConstants.RIGHT);
             parentModel.addRightChild(model);
-
-            MindNode node;
-            String imageName = jsonNode.getString("imageName");
-            if (imageName != null) {
-                String imagePath = "C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName;
-                JSONObject imageSize = jsonNode.getJSONObject("imageSize");
-                node = new MindNode(model, subjectController, imagePath, imageSize.getDouble("width"), imageSize.getDouble("height"));
-            } else {
-                node = new MindNode(model, subjectController);
-            }
-
-            subjectController.addNode(node);
+            subjectController.addNode(fillMindNode(jsonNode, new MindNode(model, subjectController)));
 
             addRightChild(jsonNode.getJSONObject("children"), model);
         }
@@ -177,14 +170,46 @@ public class FileHandler {
             String text = jsonNode.getString("text");
 
             NodeModel model = new NodeModel(subjectController.nextId(), text, 0, 0, PosConstants.LEFT);
-            subjectController.addNode(model);
             parentModel.addLeftChild(model);
+            subjectController.addNode(fillMindNode(jsonNode, new MindNode(model, subjectController)));
 
             addLeftChild(jsonNode.getJSONObject("children"), model);
         }
     }
 
+    private static MindNode fillMindNode(JSONObject json, MindNode node) {
+        // 填充图片
+        String imageName = json.getString("imageName");
+        if (imageName != null) {
+            String imagePath = "C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName;
+            JSONObject imageSize = json.getJSONObject("imageSize");
+            node.addImage(imagePath, imageSize.getDouble("width"), imageSize.getDouble("height"));
+        }
 
+        // 文本样式
+        JSONArray style = json.getJSONArray("style");
+        if (style != null) {
+            for (int i = 0; i < style.size(); i++) {
+                JSONObject styleItem = style.getJSONObject(i);
+                Boolean bold = styleItem.getBoolean("bold");
+                List<String> styleList = new ArrayList<>();
+                String color = styleItem.getString("color");
+                if (bold != null) {
+                    styleList.add("bold-text");
+                } else if (color != null && color.equals("#FF0000")) {
+                    styleList.add("red-text");
+                }
+
+                node.getTextArea().setStyle(styleItem.getIntValue("start"),
+                        styleItem.getIntValue("end"),
+                        styleList);
+            }
+        }
+
+        return node;
+    }
+
+    //—————————————————————————————————————————图片—————————————————————————————————————————
     public static String saveImage(BufferedImage bufferedImage, String imagePath) {
         if (imagePath == null) {
             imagePath = "D:\\MyMind\\iamges\\" + System.currentTimeMillis() + ".png";
