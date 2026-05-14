@@ -1,7 +1,7 @@
 package myMind.controller;
 
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
@@ -14,8 +14,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class FileHandler {
 
@@ -41,58 +39,58 @@ public class FileHandler {
 
     //加载 JSON 文件并重建界面
     public void loadFromFile(File file) {
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                content.append(line);
-            }
-            String jsonStr = content.toString();
-            Map<Integer, NodeModel> loadedModels = new HashMap<>();
-            Map<Integer, Integer> parentRelations = new HashMap<>();
-
-            // 提取节点数组
-            JSONObject json = JSONObject.parseObject(jsonStr);
-            JSONArray nodes = json.getJSONArray("nodes");
-
-            for (int i = 0; i < nodes.size(); i++) {
-                JSONObject node = nodes.getJSONObject(i);
-                int id = node.getInteger("id");
-                String text = node.getString("text");
-                double x = node.getInteger("x");
-                double y = node.getInteger("y");
-                Integer parentId = node.getInteger("parentId");
-
-                NodeModel model = new NodeModel(id, text, x, y, PosConstants.RIGHT);
-                loadedModels.put(id, model);
-                if (parentId != null) {
-                    parentRelations.put(id, parentId);
-                }
-            }
-
-            // 重建树结构
-            NodeModel newRoot = null;
-            for (Map.Entry<Integer, NodeModel> entry : loadedModels.entrySet()) {
-                Integer pid = parentRelations.get(entry.getKey());
-                if (pid == null) {
-                    newRoot = entry.getValue();
-                } else {
-                    NodeModel parent = loadedModels.get(pid);
-                    parent.addRightChild(entry.getValue());
-                }
-            }
-
-            nodeController.clearAll();
-            nodeController.setRootModel(newRoot);
-            nodeController.rebuildViewFromModel(newRoot);
-            nodeController.adjustChildrenYR();
-            nodeController.adjustChildrenYL();
-            nodeController.adjustChildrenX();
-            nodeController.adjustChildrenSize();
-            nodeController.refreshLines();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+//            StringBuilder content = new StringBuilder();
+//            String line;
+//            while ((line = br.readLine()) != null) {
+//                content.append(line);
+//            }
+//            String jsonStr = content.toString();
+//            Map<Integer, NodeModel> loadedModels = new HashMap<>();
+//            Map<Integer, Integer> parentRelations = new HashMap<>();
+//
+//            // 提取节点数组
+//            JSONObject json = JSONObject.parseObject(jsonStr);
+//            JSONArray nodes = json.getJSONArray("nodes");
+//
+//            for (int i = 0; i < nodes.size(); i++) {
+//                JSONObject node = nodes.getJSONObject(i);
+//                int id = node.getInteger("id");
+//                String text = node.getString("text");
+//                double x = node.getInteger("x");
+//                double y = node.getInteger("y");
+//                Integer parentId = node.getInteger("parentId");
+//
+//                NodeModel model = new NodeModel(id, text, x, y, PosConstants.RIGHT);
+//                loadedModels.put(id, model);
+//                if (parentId != null) {
+//                    parentRelations.put(id, parentId);
+//                }
+//            }
+//
+//            // 重建树结构
+//            NodeModel newRoot = null;
+//            for (Map.Entry<Integer, NodeModel> entry : loadedModels.entrySet()) {
+//                Integer pid = parentRelations.get(entry.getKey());
+//                if (pid == null) {
+//                    newRoot = entry.getValue();
+//                } else {
+//                    NodeModel parent = loadedModels.get(pid);
+//                    parent.addRightChild(entry.getValue());
+//                }
+//            }
+//
+//            nodeController.clearAll();
+//            nodeController.setRootModel(newRoot);
+//            nodeController.rebuildViewFromModel(newRoot);
+//            nodeController.adjustChildrenYR();
+//            nodeController.adjustChildrenYL();
+//            nodeController.adjustChildrenX();
+//            nodeController.adjustChildrenSize();
+//            nodeController.refreshLines();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 
     public void importFile(File file) {
@@ -104,6 +102,7 @@ public class FileHandler {
             }
             String jsonStr = content.toString();
 
+            nodeController.clearAll();
             // 提取节点数组
             JSONObject json = JSONObject.parseObject(jsonStr);
             JSONObject rootJson = json.getJSONObject("root");
@@ -112,14 +111,13 @@ public class FileHandler {
 
             double centerX = (nodeController.getSubject().getWidth() - SizeConstants.MIN_NODE_WIDTH) / 2.0;
             double centerY = nodeController.getSubject().getHeight() / 2.0 - SizeConstants.MIN_NODE_HEIGHT;
-            NodeModel rootModel = new NodeModel(-1, rootJson.getString("text"), centerX, centerY, PosConstants.MIDDLE);
+            NodeModel rootModel = new NodeModel(0, rootJson.getString("text"), centerX, centerY, PosConstants.MIDDLE);
+            nodeController.addNode(rootModel);
 
-            addChildren(children, rootModel);
-            addChildren(children2, rootModel);
+            addRightChild(children, rootModel);
+            addLeftChild(children2, rootModel);
 
-            nodeController.clearAll();
             nodeController.setRootModel(rootModel);
-            nodeController.rebuildViewFromModel(rootModel);
             nodeController.adjustChildrenYR();
             nodeController.adjustChildrenYL();
             nodeController.adjustChildrenX();
@@ -130,17 +128,52 @@ public class FileHandler {
         }
     }
 
-    private void addChildren(JSONObject children2, NodeModel rootModel) {
-        //children里有一个"objectClass": "NSArray"
-        for (int i = 0; i < children2.size() - 1; i++) {
-            JSONObject node = children2.getJSONObject("" + i);
-            int id = i;
-            String text = node.getString("text");
+    private void addRightChild(JSONObject children, NodeModel parentModel) {
+        if (children == null) {
+            return;
+        }
 
-            NodeModel model = new NodeModel(id, text, 0, 0, PosConstants.RIGHT);
-            rootModel.addRightChild(model);
+        //children里有一个"objectClass": "NSArray"
+        for (int i = 0; i < children.size() - 1; i++) {
+            JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
+            String text = jsonNode.getString("text");
+
+            NodeModel model = new NodeModel(nodeController.nextId(), text, 0, 0, PosConstants.RIGHT);
+            parentModel.addRightChild(model);
+
+            MindNode node;
+            String imageName = jsonNode.getString("imageName");
+            if(imageName != null){
+                String imagePath = "C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName;
+                JSONObject imageSize = jsonNode.getJSONObject("imageSize");
+                node = new MindNode(model, nodeController, imagePath, imageSize.getDouble("width"), imageSize.getDouble("height"));
+            }else {
+                node = new MindNode(model, nodeController);
+            }
+
+            nodeController.addNode(node);
+
+            addRightChild(jsonNode.getJSONObject("children"), model);
         }
     }
+
+    private void addLeftChild(JSONObject children, NodeModel parentModel) {
+        if (children == null) {
+            return;
+        }
+
+        for (int i = 0; i < children.size() - 1; i++) {
+            JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
+            String text = jsonNode.getString("text");
+
+            NodeModel model = new NodeModel(nodeController.nextId(), text, 0, 0, PosConstants.LEFT);
+            nodeController.addNode(model);
+            parentModel.addLeftChild(model);
+
+            addLeftChild(jsonNode.getJSONObject("children"), model);
+        }
+    }
+
 
     public static String saveImage(BufferedImage bufferedImage, String imagePath) {
         if (imagePath == null) {

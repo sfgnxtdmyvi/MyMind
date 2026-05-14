@@ -136,7 +136,7 @@ public class NodeModel {
         if (!lastNodeModel.rightChildren.isEmpty()) {
             return lastNodeModel.getEndYR();
         } else {
-            return lastNodeModel.getY() + lastNodeModel.getMindNode().getHeight();
+            return lastNodeModel.getY() + lastNodeModel.getMindNode().getPrefHeight();
         }
     }
 
@@ -145,7 +145,7 @@ public class NodeModel {
         if (!lastNodeModel.leftChildren.isEmpty()) {
             return lastNodeModel.getEndYL();
         } else {
-            return lastNodeModel.getY() + lastNodeModel.getMindNode().getHeight();
+            return lastNodeModel.getY() + lastNodeModel.getMindNode().getPrefHeight();
         }
     }
 

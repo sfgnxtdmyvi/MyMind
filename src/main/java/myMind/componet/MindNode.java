@@ -39,6 +39,7 @@ public class MindNode extends VBox {
     @Setter
     private NodeModel model;
     private StyleClassedTextArea textArea;
+    @Setter
     private String imagePath;
     private final NodeController controller;
     private Text measureText = MeasureTextUtil.getMeasureText();
@@ -52,9 +53,6 @@ public class MindNode extends VBox {
     private double startX;
     private double startY;
     private double startWidth;
-    private double startHeight;
-    private double minImageWidth;
-    private double minImageHeight;
     private double ratio;
 
     public MindNode(NodeModel model, NodeController controller) {
@@ -77,16 +75,10 @@ public class MindNode extends VBox {
         imageContainer = new StackPane(image, closeButton);
         // 在一个会拉伸子节点的布局容器中，如果子节点没有设置最大尺寸限制，它会填满可用空间
         imageContainer.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-        if (imagePath == null) {
-            imageContainer.setVisible(false);
-            //true：组件会参与布局计算
-            //false：组件脱离布局管理
-            imageContainer.setManaged(false);
-        } else {
-            File file = new File(imagePath);
-            image.setImage(new Image(file.toURI().toString()));
-            // todo 图片缩放
-        }
+        imageContainer.setVisible(false);
+        //true：组件会参与布局计算
+        //false：组件脱离布局管理
+        imageContainer.setManaged(false);
 
         textArea = new StyleClassedTextArea();
         textArea.replaceText(model.getText());
@@ -115,8 +107,20 @@ public class MindNode extends VBox {
         setLayoutX(model.getX());
         setLayoutY(model.getY());
 
-        adjustSize();
         addListener();
+    }
+
+    public MindNode(NodeModel model, NodeController controller, String imagePath, double imageWidth, double imageHeight) {
+        this(model, controller);
+        this.imagePath = imagePath;
+        ratio = imageWidth / imageHeight;
+
+        imageContainer.setVisible(true);
+        imageContainer.setManaged(true);
+        File file = new File(imagePath);
+        image.setImage(new Image(file.toURI().toString()));
+        image.setFitWidth(imageWidth / SizeConstants.SCALE);
+        image.setFitHeight(imageHeight / SizeConstants.SCALE);
     }
 
     private void addListener() {
@@ -143,20 +147,16 @@ public class MindNode extends VBox {
                         //如果开启了 150% 缩放
                         //截图时，系统记录的是逻辑像素，比如 100x100，按 150% 缩放渲染出来是 150x150
                         //但 awt 剪贴板拿到的是物理像素，就是 150x150，再按 150% 缩放渲染出来是 225x225
-                        double scale = this.getScene().getWindow().getOutputScaleX();
                         image.setImage(clipboardImage);
-                        double width = clipboardImage.getWidth() / scale;
-                        double height = clipboardImage.getHeight() / scale;
-                        minImageWidth = width / 2;
-                        minImageHeight = height / 2;
-                        image.setFitWidth(width);
-                        image.setFitHeight(height);
-                        ratio = minImageWidth / minImageHeight;
+                        double imageWidth = clipboardImage.getWidth();
+                        double imageHeight = clipboardImage.getHeight();
+                        image.setFitWidth(imageWidth / SizeConstants.SCALE);
+                        image.setFitHeight(imageHeight / SizeConstants.SCALE);
+                        ratio = imageWidth / imageHeight;
                         imagePath = FileHandler.saveImage(bufferedImage, imagePath);
 
                         imageContainer.setVisible(true);
                         imageContainer.setManaged(true);
-
                     } catch (UnsupportedFlavorException | IOException ex) {
                         ex.printStackTrace();
                     }
@@ -211,7 +211,6 @@ public class MindNode extends VBox {
                 startX = e.getSceneX();
                 startY = e.getSceneY();
                 startWidth = image.getFitWidth();
-                startHeight = image.getFitHeight();
 
                 if (e.getX() > image.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD
                         && e.getY() > image.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD) {
@@ -223,14 +222,12 @@ public class MindNode extends VBox {
 
         imageContainer.setOnMouseDragged(e -> {
             if (isResizing) {
-                double deltaX = e.getSceneX() - startX;
-
                 // 根据宽度的变化量，按宽高比计算高度
-                double newWidth = Math.max(minImageWidth, startWidth + deltaX);
-                double newHeight = Math.max(minImageHeight, startHeight + deltaX / ratio);
+                double imageWidth = startWidth + e.getSceneX() - startX;
+                double imageHeight = imageWidth / ratio;
 
-                image.setFitWidth(newWidth);
-                image.setFitHeight(newHeight);
+                image.setFitWidth(imageWidth);
+                image.setFitHeight(imageHeight);
 
                 adjustSize();
             }
@@ -321,7 +318,7 @@ public class MindNode extends VBox {
                 originalModel.getPos()
         );
 
-        MindNode mindNode = new MindNode(newModel, controller);
+        MindNode mindNode = new MindNode(newModel, controller, imagePath, image.getFitWidth(), image.getFitHeight());
         // todo 复制子节点
 
         return mindNode;

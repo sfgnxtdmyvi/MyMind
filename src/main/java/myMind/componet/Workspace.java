@@ -25,7 +25,7 @@ public class Workspace extends TabPane {
         //UNAVAILABLE：完全不显示
         setTabClosingPolicy(TabClosingPolicy.ALL_TABS);
         getStyleClass().add("hide-tabs");
-        addNewTab();
+        addSubject();
 
         addListener();
     }
@@ -210,12 +210,12 @@ public class Workspace extends TabPane {
 
             //新增主题
             if (shortcutDown && code == KeyCode.M) {
-                addNewTab();
+                addSubject();
             }
         });
     }
 
-    public void addNewTab() {
+    public void addSubject() {
         NodeController nodeController = new NodeController();
         Subject subject = nodeController.getSubject();
 

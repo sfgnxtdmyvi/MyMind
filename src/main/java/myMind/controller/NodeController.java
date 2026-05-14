@@ -19,7 +19,7 @@ public class NodeController {
     private final Subject subject = new Subject(this);
     private NodeModel rootModel;
     private MindNode selectedNode = null;
-    private final AtomicInteger idGenerator = new AtomicInteger(1);
+    private final AtomicInteger idGenerator = new AtomicInteger(0);
 
     public void initRootNode(double centerX, double centerY) {
         rootModel = new NodeModel(nextId(), "", centerX, centerY, PosConstants.MIDDLE);
@@ -27,14 +27,14 @@ public class NodeController {
     }
 
     public void addChild() {
-        if (selectedNode == null) {
-            return;
-        }
         addChildR(null);
         addChildL(null);
     }
 
     public void addChildR(MindNode copyNode) {
+        if (selectedNode == null) {
+            return;
+        }
         NodeModel parentModel = selectedNode.getModel();
         if (parentModel.getPos() != PosConstants.RIGHT && parentModel != rootModel) {
             return;
@@ -70,6 +70,9 @@ public class NodeController {
     }
 
     public void addChildL(MindNode copyNode) {
+        if (selectedNode == null) {
+            return;
+        }
         NodeModel parentModel = selectedNode.getModel();
         if (parentModel.getPos() != PosConstants.LEFT && parentModel != rootModel) {
             return;
@@ -472,37 +475,20 @@ public class NodeController {
     public void clearAll() {
         subject.getNodesLayer().getChildren().clear();
         subject.getLinesLayerR().getChildren().clear();
+        subject.getLinesLayerL().getChildren().clear();
         selectedNode = null;
     }
 
-    public void rebuildViewFromModel(NodeModel node) {
-        addNode(node);
-        for (NodeModel child : node.getRightChildren()) {
-            rebuildViewFromModel(child);
-        }
-        for (NodeModel child : node.getLeftChildren()) {
-            rebuildViewFromModel(child);
-        }
-    }
-
     //———————————————————————————————————————————私有方法———————————————————————————————————————————
-    private void addNode(NodeModel model) {
+    public void addNode(NodeModel model) {
         MindNode node = new MindNode(model, this);
         subject.getNodesLayer().getChildren().add(node);
         setSelectedNode(node);
-
-        // 强制刷新布局，确保尺寸计算正确，否则node.getHeight()返回0
-        subject.applyCss();
-        subject.layout();
     }
 
-    private void addNode(MindNode node) {
+    public void addNode(MindNode node) {
         subject.getNodesLayer().getChildren().add(node);
         setSelectedNode(node);
-
-        // 强制刷新布局，确保尺寸计算正确，否则node.getHeight()返回0
-        subject.applyCss();
-        subject.layout();
     }
 
     private void deleteChildrenR(NodeModel parentModel) {
