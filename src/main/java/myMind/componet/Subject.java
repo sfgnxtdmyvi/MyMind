@@ -1,14 +1,10 @@
 package myMind.componet;
 
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
-import myMind.constants.PosConstants;
-import myMind.controller.NodeController;
-
-import java.util.List;
+import myMind.controller.SubjectController;
 
 /**
  * 主控面板，放节点和连线
@@ -24,7 +20,7 @@ public class Subject extends Pane {
      */
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
-    private final NodeController controller;
+    private final SubjectController controller;
 
     private double dragStartX, dragStartY;
     private double mousePressedX;
@@ -33,7 +29,7 @@ public class Subject extends Pane {
     private double currentTranslateX = 0;
     private double currentTranslateY = 0;
 
-    public Subject(NodeController controller) {
+    public Subject(SubjectController controller) {
         this.controller = controller;
 
         // 让连线不干扰鼠标事件

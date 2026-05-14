@@ -1,21 +1,19 @@
 package myMind.componet;
 
-import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
 import myMind.constants.PosConstants;
-import myMind.constants.SizeConstants;
-import myMind.controller.NodeController;
+import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Workspace extends TabPane {
-    private NodeController controller;
+    private SubjectController controller;
     private MindNode copyNode;
 
     public Workspace() {
@@ -33,7 +31,7 @@ public class Workspace extends TabPane {
     private void addListener() {
         getTabs().addListener((ListChangeListener.Change<? extends Tab> c) -> {
             //只有一个主题时，隐藏标签栏
-            if (getTabs().size() <= 1) {
+            if (getTabs().size() == 1) {
                 getStyleClass().add("hide-tabs");
             } else {
                 getStyleClass().remove("hide-tabs");
@@ -216,8 +214,8 @@ public class Workspace extends TabPane {
     }
 
     public void addSubject() {
-        NodeController nodeController = new NodeController();
-        Subject subject = nodeController.getSubject();
+        SubjectController subjectController = new SubjectController();
+        Subject subject = subjectController.getSubject();
 
         int index = getTabs().size() + 1;
         Tab tab = new Tab("主题" + index);
@@ -226,17 +224,18 @@ public class Workspace extends TabPane {
         getTabs().add(tab);
         getSelectionModel().select(tab);
 
-        Platform.runLater(() -> {
-            double centerX = (getWidth() - SizeConstants.MIN_NODE_WIDTH) / 2.0;
-            double centerY = getHeight() / 2.0 - SizeConstants.MIN_NODE_HEIGHT;
-            nodeController.initRootNode(centerX, centerY);
-        });
+        // todo 动态计算中心点
+//        Platform.runLater(() -> {
+//            double centerX = (getWidth() - SizeConstants.MIN_NODE_WIDTH) / 2.0;
+//            double centerY = getHeight() / 2.0 - SizeConstants.MIN_NODE_HEIGHT;
+//        });
+        subjectController.initRootNode(670, 311);
     }
 
     /**
      * 获取当前选中标签页的控制器
      */
-    public NodeController getCurrentController() {
+    public SubjectController getCurrentController() {
         Tab selectedTab = getSelectionModel().getSelectedItem();
         controller = ((Subject) selectedTab.getContent()).getController();
         return controller;

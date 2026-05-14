@@ -3,8 +3,8 @@ package myMind.controller;
 import com.alibaba.fastjson2.JSONObject;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
+import myMind.componet.Workspace;
 import myMind.constants.PosConstants;
-import myMind.constants.SizeConstants;
 import myMind.util.AlertUtil;
 
 import javax.imageio.ImageIO;
@@ -17,14 +17,10 @@ import java.io.IOException;
 
 public class FileHandler {
 
-    private final NodeController nodeController;
-
-    public FileHandler(NodeController nodeController) {
-        this.nodeController = nodeController;
-    }
+    private static SubjectController subjectController;
 
     //保存为 JSON 文件
-    public void saveToFile(File file) {
+    public static void saveToFile(File file, SubjectController subjectController) {
 
 
         StringBuilder sb = new StringBuilder();
@@ -38,7 +34,7 @@ public class FileHandler {
     }
 
     //加载 JSON 文件并重建界面
-    public void loadFromFile(File file) {
+    public static void loadFromFile(File file, SubjectController subjectController) {
 //        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 //            StringBuilder content = new StringBuilder();
 //            String line;
@@ -80,20 +76,21 @@ public class FileHandler {
 //                }
 //            }
 //
-//            nodeController.clearAll();
-//            nodeController.setRootModel(newRoot);
-//            nodeController.rebuildViewFromModel(newRoot);
-//            nodeController.adjustChildrenYR();
-//            nodeController.adjustChildrenYL();
-//            nodeController.adjustChildrenX();
-//            nodeController.adjustChildrenSize();
-//            nodeController.refreshLines();
+//            subjectController.clearAll();
+//            subjectController.setRootModel(newRoot);
+//            subjectController.rebuildViewFromModel(newRoot);
+//            subjectController.adjustChildrenYR();
+//            subjectController.adjustChildrenYL();
+//            subjectController.adjustChildrenX();
+//            subjectController.adjustChildrenSize();
+//            subjectController.refreshLines();
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
     }
 
-    public void importFile(File file) {
+    public static void importFile(File file, SubjectController subjectController, Workspace workspace) {
+        FileHandler.subjectController = subjectController;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             StringBuilder content = new StringBuilder();
             String line;
@@ -102,33 +99,46 @@ public class FileHandler {
             }
             String jsonStr = content.toString();
 
-            nodeController.clearAll();
-            // 提取节点数组
             JSONObject json = JSONObject.parseObject(jsonStr);
-            JSONObject rootJson = json.getJSONObject("root");
-            JSONObject children = rootJson.getJSONObject("children");
-            JSONObject children2 = rootJson.getJSONObject("children2");
 
-            double centerX = (nodeController.getSubject().getWidth() - SizeConstants.MIN_NODE_WIDTH) / 2.0;
-            double centerY = nodeController.getSubject().getHeight() / 2.0 - SizeConstants.MIN_NODE_HEIGHT;
-            NodeModel rootModel = new NodeModel(0, rootJson.getString("text"), centerX, centerY, PosConstants.MIDDLE);
-            nodeController.addNode(rootModel);
+            workspace.getTabs().clear();
 
-            addRightChild(children, rootModel);
-            addLeftChild(children2, rootModel);
-
-            nodeController.setRootModel(rootModel);
-            nodeController.adjustChildrenYR();
-            nodeController.adjustChildrenYL();
-            nodeController.adjustChildrenX();
-            nodeController.adjustChildrenSize();
-            nodeController.refreshLines();
+            importSubjet(json, workspace);
+            JSONObject subjects = json.getJSONObject("subjects");
+            if (subjects != null) {
+                for (int i = 0; i < subjects.size() - 1; i++) {
+                    JSONObject jsonNode = subjects.getJSONObject(Integer.toString(i));
+                    importSubjet(jsonNode, workspace);
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void addRightChild(JSONObject children, NodeModel parentModel) {
+    private static void importSubjet(JSONObject json, Workspace workspace) {
+        workspace.addSubject();
+        FileHandler.subjectController = workspace.getCurrentController();
+
+        JSONObject rootJson = json.getJSONObject("root");
+        JSONObject children = rootJson.getJSONObject("children");
+        JSONObject children2 = rootJson.getJSONObject("children2");
+
+        NodeModel rootModel = subjectController.getRootModel();
+        rootModel.setText(rootJson.getString("text"));
+        rootModel.getMindNode().getTextArea().replaceText(rootJson.getString("text"));
+
+        addRightChild(children, rootModel);
+        addLeftChild(children2, rootModel);
+
+        subjectController.adjustChildrenYR();
+        subjectController.adjustChildrenYL();
+        subjectController.adjustChildrenX();
+        subjectController.adjustChildrenSize();
+        subjectController.refreshLines();
+    }
+
+    private static void addRightChild(JSONObject children, NodeModel parentModel) {
         if (children == null) {
             return;
         }
@@ -138,26 +148,26 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(nodeController.nextId(), text, 0, 0, PosConstants.RIGHT);
+            NodeModel model = new NodeModel(subjectController.nextId(), text, 0, 0, PosConstants.RIGHT);
             parentModel.addRightChild(model);
 
             MindNode node;
             String imageName = jsonNode.getString("imageName");
-            if(imageName != null){
+            if (imageName != null) {
                 String imagePath = "C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName;
                 JSONObject imageSize = jsonNode.getJSONObject("imageSize");
-                node = new MindNode(model, nodeController, imagePath, imageSize.getDouble("width"), imageSize.getDouble("height"));
-            }else {
-                node = new MindNode(model, nodeController);
+                node = new MindNode(model, subjectController, imagePath, imageSize.getDouble("width"), imageSize.getDouble("height"));
+            } else {
+                node = new MindNode(model, subjectController);
             }
 
-            nodeController.addNode(node);
+            subjectController.addNode(node);
 
             addRightChild(jsonNode.getJSONObject("children"), model);
         }
     }
 
-    private void addLeftChild(JSONObject children, NodeModel parentModel) {
+    private static void addLeftChild(JSONObject children, NodeModel parentModel) {
         if (children == null) {
             return;
         }
@@ -166,8 +176,8 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(nodeController.nextId(), text, 0, 0, PosConstants.LEFT);
-            nodeController.addNode(model);
+            NodeModel model = new NodeModel(subjectController.nextId(), text, 0, 0, PosConstants.LEFT);
+            subjectController.addNode(model);
             parentModel.addLeftChild(model);
 
             addLeftChild(jsonNode.getJSONObject("children"), model);

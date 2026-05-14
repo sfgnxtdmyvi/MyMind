@@ -7,9 +7,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import myMind.componet.Workspace;
-import myMind.controller.FileHandler;
 import myMind.controller.MenuController;
-import myMind.controller.NodeController;
 
 import java.io.IOException;
 
@@ -26,7 +24,7 @@ public class App extends Application {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
             MenuBar menuBar = loader.load();
             menuController = loader.getController();
-            updateMenuController();
+            menuController.setWorkspace(workspace);
             root.setTop(menuBar);
         } catch (IOException e) {
             e.printStackTrace();
@@ -35,11 +33,6 @@ public class App extends Application {
         root.setCenter(workspace);
         root.getStyleClass().add("root");
 
-        // 监听标签页切换，动态更新菜单绑定的控制器
-        workspace.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
-            updateMenuController();
-        });
-
         Scene scene = new Scene(root, 1450, 740);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
@@ -47,12 +40,6 @@ public class App extends Application {
         primaryStage.setTitle("MyMind");
         primaryStage.setMaximized(true);
         primaryStage.show();
-    }
-
-    private void updateMenuController() {
-        NodeController nc = workspace.getCurrentController();
-        FileHandler fc = new FileHandler(nc);
-        menuController.setControllers(nc, fc);
     }
 
     public static void main(String[] args) {

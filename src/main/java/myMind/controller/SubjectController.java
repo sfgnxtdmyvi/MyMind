@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
-public class NodeController {
+public class SubjectController {
     private final Subject subject = new Subject(this);
     private NodeModel rootModel;
     private MindNode selectedNode = null;

@@ -20,7 +20,7 @@ import lombok.Setter;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 import myMind.controller.FileHandler;
-import myMind.controller.NodeController;
+import myMind.controller.SubjectController;
 import myMind.util.MeasureTextUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
@@ -41,7 +41,7 @@ public class MindNode extends VBox {
     private StyleClassedTextArea textArea;
     @Setter
     private String imagePath;
-    private final NodeController controller;
+    private final SubjectController controller;
     private Text measureText = MeasureTextUtil.getMeasureText();
     private final StackPane imageContainer;
     private ImageView image;
@@ -55,7 +55,7 @@ public class MindNode extends VBox {
     private double startWidth;
     private double ratio;
 
-    public MindNode(NodeModel model, NodeController controller) {
+    public MindNode(NodeModel model, SubjectController controller) {
         this.model = model;
         model.setMindNode(this);
         this.controller = controller;
@@ -110,7 +110,7 @@ public class MindNode extends VBox {
         addListener();
     }
 
-    public MindNode(NodeModel model, NodeController controller, String imagePath, double imageWidth, double imageHeight) {
+    public MindNode(NodeModel model, SubjectController controller, String imagePath, double imageWidth, double imageHeight) {
         this(model, controller);
         this.imagePath = imagePath;
         ratio = imageWidth / imageHeight;
