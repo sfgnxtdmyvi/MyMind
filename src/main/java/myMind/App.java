@@ -31,7 +31,7 @@ public class App extends Application {
         }
 
         root.setCenter(workspace);
-        root.getStyleClass().add("root");
+        root.getStyleClass().add("workspace");
 
         Scene scene = new Scene(root, 1450, 740);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());

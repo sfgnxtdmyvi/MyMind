@@ -469,6 +469,8 @@ public class SubjectController {
         this.selectedNode = node;
         if (node != null) {
             selectedNode.getTextArea().requestFocus();
+        }else{
+            subject.requestFocus();
         }
     }
 

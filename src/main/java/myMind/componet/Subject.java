@@ -1,8 +1,11 @@
 package myMind.componet;
 
+import javafx.animation.PauseTransition;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
+import javafx.util.Duration;
 import lombok.Getter;
 import myMind.controller.SubjectController;
 
@@ -21,6 +24,8 @@ public class Subject extends Pane {
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
     private final SubjectController subjectController;
+    // 缩放提示标签
+    private Label scaleLabel;
 
     private double dragStartX, dragStartY;
     private double mousePressedX;
@@ -33,16 +38,37 @@ public class Subject extends Pane {
     public Subject(SubjectController subjectController) {
         this.subjectController = subjectController;
 
+        scaleLabel = new Label("100%");
+        scaleLabel.getStyleClass().add("scale-label");
+        scaleLabel.setVisible(false);
+        scaleLabel.setManaged(false);
+
         // 让连线不干扰鼠标事件
         linesLayerL.setMouseTransparent(true);
         linesLayerR.setMouseTransparent(true);
         nodesLayer.setMouseTransparent(false);
-        getChildren().addAll(linesLayerL, linesLayerR, nodesLayer);
+
+        getChildren().addAll(linesLayerL, linesLayerR, nodesLayer, scaleLabel);
 
         addListener();
     }
 
     private void addListener() {
+        setOnScroll(e -> {
+            double deltaY = e.getDeltaY();
+            if (e.isShortcutDown()) {
+                double scale = nodesLayer.getScaleX() + (deltaY > 0 ? 0.1 : -0.1);
+
+                changeScale(scale);
+            } else {
+                currentTranslateY += deltaY;
+
+                nodesLayer.setTranslateY(currentTranslateY);
+                linesLayerR.setTranslateY(currentTranslateY);
+                linesLayerL.setTranslateY(currentTranslateY);
+            }
+        });
+
         setOnMousePressed(e -> {
             //PRIMARY = 左键
             //SECONDARY = 右键
@@ -114,8 +140,46 @@ public class Subject extends Pane {
 
         // 键盘快捷键
         setOnKeyPressed(e -> {
+            KeyCode code = e.getCode();
+            boolean shortcutDown = e.isShortcutDown();
+
+            if (code == KeyCode.PAGE_UP) {
+                currentTranslateY += 300;
+
+                nodesLayer.setTranslateY(currentTranslateY);
+                linesLayerR.setTranslateY(currentTranslateY);
+                linesLayerL.setTranslateY(currentTranslateY);
+                return;
+            }
+
+            if (code == KeyCode.PAGE_DOWN || code == KeyCode.SPACE) {
+                currentTranslateY -= 300;
+
+                nodesLayer.setTranslateY(currentTranslateY);
+                linesLayerR.setTranslateY(currentTranslateY);
+                linesLayerL.setTranslateY(currentTranslateY);
+                return;
+            }
+
+            if (shortcutDown && code == KeyCode.DIGIT0) {
+                changeScale(1.0);
+                return;
+            }
+
+            if (shortcutDown && code == KeyCode.MINUS) {
+                double scale = nodesLayer.getScaleX() - 0.1;
+                changeScale(scale);
+                return;
+            }
+
+            if (shortcutDown && code == KeyCode.EQUALS) {
+                double scale = nodesLayer.getScaleX() + 0.1;
+                changeScale(scale);
+                return;
+            }
+
             // 回到中心
-            if (e.isShortcutDown() && e.getCode() == KeyCode.G) {
+            if (shortcutDown && code == KeyCode.G) {
                 currentTranslateX = 0;
                 currentTranslateY = 0;
 
@@ -127,6 +191,32 @@ public class Subject extends Pane {
                 linesLayerL.setTranslateY(0);
             }
         });
+    }
+
+    private void changeScale(double scale) {
+        nodesLayer.setScaleX(scale);
+        nodesLayer.setScaleY(scale);
+        linesLayerR.setScaleX(scale);
+        linesLayerR.setScaleY(scale);
+        linesLayerL.setScaleX(scale);
+        linesLayerL.setScaleY(scale);
+
+        int percentage = (int) (scale * 100);
+        scaleLabel.setText(percentage + "%");
+        scaleLabel.setVisible(true);
+        scaleLabel.setManaged(true);
+
+        // 定位到中间上方
+        scaleLabel.setLayoutX((getWidth() - scaleLabel.prefWidth(-1)) / 2);
+        scaleLabel.setLayoutY(scaleLabel.prefHeight(-1));
+
+        // 3秒后隐藏
+        PauseTransition pause = new PauseTransition(Duration.seconds(3));
+        pause.setOnFinished(event -> {
+            scaleLabel.setVisible(false);
+            scaleLabel.setManaged(false);
+        });
+        pause.play();
     }
 
     @Override

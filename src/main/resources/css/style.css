@@ -1,8 +1,32 @@
-.root {
+.workspace {
     -fx-background-color: white;
 }
 
-.nodeImage{
+.hide-tabs .tab-header-area {
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+    -fx-max-height: 0;
+    -fx-opacity: 0;
+}
+
+/* 缩放标签 */
+.scale-label {
+    -fx-background-color:rgba(0, 0, 0, 0.7);
+    -fx-text-fill:white;
+    -fx-font-size:17;
+    -fx-padding:5 10;
+    -fx-background-radius:8;
+}
+
+/*——————————————————————————————————节点——————————————————————————————————*/
+.nodeBorder {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #c2c2c2;
+    -fx-border-width: 1;
+}
+
+.nodeImage {
     -fx-border-width: 1;
     -fx-border-color: #88adf7;
 }
@@ -26,20 +50,6 @@
     -fx-background-color: transparent;
     -fx-border-width: 0;
     -fx-border-radius: 8;
-}
-
-.nodeBorder {
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-border-color: #c2c2c2;
-    -fx-border-width: 1;
-}
-
-.hide-tabs .tab-header-area {
-    -fx-pref-height: 0;
-    -fx-min-height: 0;
-    -fx-max-height: 0;
-    -fx-opacity: 0;
 }
 
 .bold-text {
