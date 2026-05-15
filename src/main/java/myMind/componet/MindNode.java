@@ -55,7 +55,7 @@ public class MindNode extends VBox {
     private double startWidth;
     private double ratio;
 
-    public MindNode(NodeModel model, SubjectController controller) {
+    public MindNode(NodeModel model, SubjectController controller, String text) {
         this.model = model;
         model.setMindNode(this);
         this.controller = controller;
@@ -81,7 +81,7 @@ public class MindNode extends VBox {
         imageContainer.setManaged(false);
 
         textArea = new StyleClassedTextArea();
-        textArea.replaceText(model.getText());
+        textArea.replaceText(text);
         textArea.setWrapText(true);
         textArea.getStyleClass().add("nodeTextArea");
         // 让绘制连线时，能获取节点位置
@@ -98,8 +98,6 @@ public class MindNode extends VBox {
         VBox.setVgrow(textArea, Priority.ALWAYS);
 
         // 模型x、y变化时，改变位置
-        textArea.textProperty()
-                .addListener((obs, oldText, newText) -> model.setText(newText));
         model.xProperty()
                 .addListener((obs, oldVal, newVal) -> setLayoutX(newVal.doubleValue()));
         model.yProperty()
@@ -111,7 +109,7 @@ public class MindNode extends VBox {
     }
 
     public MindNode(NodeModel model, SubjectController controller, String imagePath, double imageWidth, double imageHeight) {
-        this(model, controller);
+        this(model, controller, "");
         this.imagePath = imagePath;
         ratio = imageWidth / imageHeight;
 
@@ -324,8 +322,6 @@ public class MindNode extends VBox {
     public MindNode clone() {
         NodeModel originalModel = this.getModel();
         NodeModel newModel = new NodeModel(
-                controller.nextId(),
-                originalModel.getText(),
                 0,
                 0,
                 originalModel.getPos()

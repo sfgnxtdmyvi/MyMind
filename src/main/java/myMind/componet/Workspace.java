@@ -107,7 +107,7 @@ public class Workspace extends TabPane {
                         if (index != 0) {
                             newNode = children.get(index - 1).getMindNode();
                         }
-                    } else if (code == KeyCode.DOWN) {
+                    } else {
                         if (index != children.size() - 1) {
                             newNode = children.get(index + 1).getMindNode();
                         }
@@ -122,17 +122,23 @@ public class Workspace extends TabPane {
             //Ctrl + Alt 批量新增
             if (shortcutDown && altDown) {
                 // 1个子节点和5个孙节点
-                if (code == KeyCode.LEFT) {
-                    subjectController.addChildL(null);
-                    subjectController.addChildL(null);
-                    for (int i = 0; i < 4; i++) {
-                        subjectController.addSiblingL();
+                if (code == KeyCode.RIGHT) {
+                    if (subjectController.getSelectedNode().getModel().getPos() == PosConstants.LEFT) {
+                        return;
                     }
-                } else if (code == KeyCode.RIGHT) {
                     subjectController.addChildR(null);
                     subjectController.addChildR(null);
                     for (int i = 0; i < 4; i++) {
                         subjectController.addSiblingR();
+                    }
+                } else if (code == KeyCode.LEFT) {
+                    if (subjectController.getSelectedNode().getModel().getPos() == PosConstants.RIGHT) {
+                        return;
+                    }
+                    subjectController.addChildL(null);
+                    subjectController.addChildL(null);
+                    for (int i = 0; i < 4; i++) {
+                        subjectController.addSiblingL();
                     }
                 }
                 // 1个兄弟节点和5个孙节点

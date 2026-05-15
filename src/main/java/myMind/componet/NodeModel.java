@@ -2,8 +2,6 @@ package myMind.componet;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -12,10 +10,8 @@ import java.util.List;
 @Data
 public class NodeModel {
     //节点内部属性
-    private final int id;
     private MindNode mindNode;
     private byte pos;
-    private final StringProperty text = new SimpleStringProperty();
     private final DoubleProperty x = new SimpleDoubleProperty();
     private final DoubleProperty y = new SimpleDoubleProperty();
 
@@ -24,20 +20,10 @@ public class NodeModel {
     private final List<NodeModel> rightChildren = new ArrayList<>();
     private final List<NodeModel> leftChildren = new ArrayList<>();
 
-    public NodeModel(int id, String text, double x, double y, byte pos) {
-        this.id = id;
-        this.text.set(text);
+    public NodeModel(double x, double y, byte pos) {
         this.x.set(x);
         this.y.set(y);
         this.pos = pos;
-    }
-
-    public String getText() {
-        return text.get();
-    }
-
-    public void setText(String text) {
-        this.text.set(text);
     }
 
     public double getX() {

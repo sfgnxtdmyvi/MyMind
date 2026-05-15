@@ -6,7 +6,8 @@ import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
 import myMind.componet.Workspace;
 import myMind.constants.PosConstants;
-import myMind.util.AlertUtil;
+import myMind.util.MessageUtil;
+import org.fxmisc.richtext.StyleClassedTextArea;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -24,15 +25,20 @@ public class FileHandler {
 
     //保存为 JSON 文件
     public static void saveToFile(File file, SubjectController subjectController) {
+        JSONObject root = new JSONObject();
+        NodeModel rootModel = subjectController.getRootModel();
+        MindNode mindNode = rootModel.getMindNode();
+        StyleClassedTextArea textArea = mindNode.getTextArea();
+        root.put("text", textArea.getText());
 
-
-        StringBuilder sb = new StringBuilder();
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("root", root);
 
         try (FileWriter fw = new FileWriter(file)) {
-            AlertUtil.showAlert("成功", "思维导图已保存到 " + file.getName());
-            fw.write(sb.toString());
+            fw.write(jsonObject.toString());
+            MessageUtil.show("保存成功");
         } catch (IOException e) {
-            AlertUtil.showAlert("错误", "保存失败：" + e.getMessage());
+            MessageUtil.show("保存失败");
         }
     }
 
@@ -128,7 +134,6 @@ public class FileHandler {
         JSONObject children2 = rootJson.getJSONObject("children2");
 
         NodeModel rootModel = subjectController.getRootModel();
-        rootModel.setText(rootJson.getString("text"));
         rootModel.getMindNode().getTextArea().replaceText(rootJson.getString("text"));
         fillMindNode(rootJson, rootModel.getMindNode());
 
@@ -152,9 +157,9 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(subjectController.nextId(), text, 0, 0, PosConstants.RIGHT);
+            NodeModel model = new NodeModel(0, 0, PosConstants.RIGHT);
             parentModel.addRightChild(model);
-            subjectController.addNode(fillMindNode(jsonNode, new MindNode(model, subjectController)));
+            subjectController.addNode(fillMindNode(jsonNode, new MindNode(model, subjectController, text)));
 
             addRightChild(jsonNode.getJSONObject("children"), model);
         }
@@ -169,9 +174,9 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(subjectController.nextId(), text, 0, 0, PosConstants.LEFT);
+            NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
             parentModel.addLeftChild(model);
-            subjectController.addNode(fillMindNode(jsonNode, new MindNode(model, subjectController)));
+            subjectController.addNode(fillMindNode(jsonNode, new MindNode(model, subjectController, text)));
 
             addLeftChild(jsonNode.getJSONObject("children"), model);
         }

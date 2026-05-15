@@ -12,17 +12,15 @@ import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
 public class SubjectController {
     private final Subject subject = new Subject(this);
     private NodeModel rootModel;
     private MindNode selectedNode = null;
-    private final AtomicInteger idGenerator = new AtomicInteger(0);
 
     public void initRootNode(double centerX, double centerY) {
-        rootModel = new NodeModel(nextId(), "", centerX, centerY, PosConstants.MIDDLE);
+        rootModel = new NodeModel(centerX, centerY, PosConstants.MIDDLE);
         addNode(rootModel);
     }
 
@@ -36,11 +34,11 @@ public class SubjectController {
             return;
         }
         NodeModel parentModel = selectedNode.getModel();
-        if (parentModel.getPos() != PosConstants.RIGHT && parentModel != rootModel) {
+        if (parentModel.getPos() == PosConstants.LEFT) {
             return;
         }
 
-        double childX = parentModel.getX() + selectedNode.getWidth() + SizeConstants.NODE_GAP_X;
+        double childX = parentModel.getX() + selectedNode.getPrefWidth() + SizeConstants.NODE_GAP_X;
         double childY;
 
         List<NodeModel> children = parentModel.getRightChildren();
@@ -53,7 +51,7 @@ public class SubjectController {
         }
 
         if (copyNode == null) {
-            NodeModel childModel = new NodeModel(nextId(), "", childX, childY, PosConstants.RIGHT);
+            NodeModel childModel = new NodeModel(childX, childY, PosConstants.RIGHT);
             parentModel.addRightChild(childModel);
             addNode(childModel);
         } else {
@@ -74,7 +72,7 @@ public class SubjectController {
             return;
         }
         NodeModel parentModel = selectedNode.getModel();
-        if (parentModel.getPos() != PosConstants.LEFT && parentModel != rootModel) {
+        if (parentModel.getPos() == PosConstants.RIGHT) {
             return;
         }
 
@@ -91,7 +89,7 @@ public class SubjectController {
         }
 
         if (copyNode == null) {
-            NodeModel childModel = new NodeModel(nextId(), "", childX, childY, PosConstants.LEFT);
+            NodeModel childModel = new NodeModel(childX, childY, PosConstants.LEFT);
             parentModel.addLeftChild(childModel);
             addNode(childModel);
         } else {
@@ -121,8 +119,7 @@ public class SubjectController {
             return;
         }
 
-        NodeModel nodeModel = selectedNode.getModel();
-        if (nodeModel.getPos() == PosConstants.RIGHT) {
+        if (selectedNode.getModel().getPos() == PosConstants.RIGHT) {
             addSiblingR();
         } else {
             addSiblingL();
@@ -138,9 +135,9 @@ public class SubjectController {
 
         // 基于当前节点位置加上偏移
         double siblingX = nodeModel.getX();
-        double siblingY = nodeModel.getY() + selectedNode.getLayoutBounds().getHeight() + SizeConstants.NODE_GAP_Y;
+        double siblingY = nodeModel.getY() + selectedNode.getPrefHeight() + SizeConstants.NODE_GAP_Y;
 
-        NodeModel siblingModel = new NodeModel(nextId(), "", siblingX, siblingY, PosConstants.RIGHT);
+        NodeModel siblingModel = new NodeModel(siblingX, siblingY, PosConstants.RIGHT);
         parentModel.addRightChild(siblingModel);
         addNode(siblingModel);
 
@@ -157,9 +154,9 @@ public class SubjectController {
 
         // 基于当前节点位置加上偏移
         double siblingX = nodeModel.getX();
-        double siblingY = nodeModel.getY() + selectedNode.getLayoutBounds().getHeight() + SizeConstants.NODE_GAP_Y;
+        double siblingY = nodeModel.getY() + selectedNode.getPrefHeight() + SizeConstants.NODE_GAP_Y;
 
-        NodeModel siblingModel = new NodeModel(nextId(), "", siblingX, siblingY, PosConstants.LEFT);
+        NodeModel siblingModel = new NodeModel(siblingX, siblingY, PosConstants.LEFT);
         parentModel.addLeftChild(siblingModel);
         addNode(siblingModel);
 
@@ -483,7 +480,7 @@ public class SubjectController {
 
     //———————————————————————————————————————————私有方法———————————————————————————————————————————
     public void addNode(NodeModel model) {
-        MindNode node = new MindNode(model, this);
+        MindNode node = new MindNode(model, this, "");
         subject.getNodesLayer().getChildren().add(node);
         setSelectedNode(node);
     }
@@ -533,9 +530,5 @@ public class SubjectController {
         totalHeight += SizeConstants.NODE_GAP_Y * (children.size() - 1);
 
         return totalHeight;
-    }
-
-    public int nextId() {
-        return idGenerator.getAndIncrement();
     }
 }
