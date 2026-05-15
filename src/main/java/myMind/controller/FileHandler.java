@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.ResourceBundle;
 
 public class FileHandler {
 
@@ -31,6 +32,12 @@ public class FileHandler {
 
     @Setter
     private static Workspace workspace;
+    private static String imageDir;
+
+    static {
+        ResourceBundle config = ResourceBundle.getBundle("config");
+        imageDir = config.getString("directory.image");
+    }
 
     //保存为 JSON 文件
     public static void saveToFile(File file) {
@@ -43,7 +50,7 @@ public class FileHandler {
             NodeModel rootModel = subjectController.getRootModel();
 
             JSONObject subject = saveSubject(rootModel);
-            subjects.put(tab.getText(), subject);
+            subjects.put(Integer.toString(i), subject);
         }
 
         try (FileWriter fw = new FileWriter(file)) {
@@ -160,36 +167,106 @@ public class FileHandler {
             while ((line = br.readLine()) != null) {
                 content.append(line);
             }
-            String jsonStr = content.toString();
-            JSONObject json = JSONObject.parseObject(jsonStr);
+            JSONObject json = JSONObject.parseObject(content.toString());
 
             workspace.getTabs().clear();
 
-            importSubjet(json);
+            for (int i = 0; i < json.size(); i++) {
+                workspace.addSubject();
+                subjectController = workspace.getCurrentController();
+                JSONObject subject = json.getJSONObject(Integer.toString(i));
 
-            JSONObject subjects = json.getJSONObject("subjects");
-            if (subjects != null) {
-                for (int i = 0; i < subjects.size() - 1; i++) {
-                    JSONObject subject = subjects.getJSONObject(Integer.toString(i));
-                    importSubjet(subject);
-                }
+                NodeModel rootModel = subjectController.getRootModel();
+                rootModel.getMindNode().getTextArea().replaceText(subject.getString("text"));
+                loadNode(subject, rootModel.getMindNode());
+
+                JSONObject rightChildren = subject.getJSONObject("rightChildren");
+                JSONObject leftChildren = subject.getJSONObject("leftChildren");
+                loadRightChild(rightChildren, rootModel);
+                loadLeftChild(leftChildren, rootModel);
+
+                subjectController.adjustChildrenYR();
+                subjectController.adjustChildrenYL();
+                subjectController.adjustChildrenX();
+                subjectController.adjustChildrenSize();
+                subjectController.refreshLines();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void importFile(File file) {
-        subjectController = workspace.getCurrentController();
+    private static void loadRightChild(JSONObject children, NodeModel parentModel) {
+        if (children == null) {
+            return;
+        }
 
+        for (int i = 0; i < children.size(); i++) {
+            JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
+            String text = jsonNode.getString("text");
+
+            NodeModel model = new NodeModel(0, 0, PosConstants.RIGHT);
+            parentModel.addRightChild(model);
+            MindNode node = new MindNode(model, subjectController, text);
+            loadNode(jsonNode, node);
+            subjectController.addNode(node);
+
+            loadRightChild(jsonNode.getJSONObject("rightChildren"), model);
+        }
+    }
+    private static void loadLeftChild(JSONObject children, NodeModel parentModel) {
+        if (children == null) {
+            return;
+        }
+
+        for (int i = 0; i < children.size(); i++) {
+            JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
+            String text = jsonNode.getString("text");
+
+            NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
+            parentModel.addLeftChild(model);
+            MindNode node = new MindNode(model, subjectController, text);
+            loadNode(jsonNode, node);
+            subjectController.addNode(node);
+
+            loadLeftChild(jsonNode.getJSONObject("leftChildren"), model);
+        }
+    }
+
+    private static void loadNode(JSONObject json, MindNode node) {
+        // 填充图片
+        String imageName = json.getString("imageName");
+        if (imageName != null) {
+            String imagePath = imageDir + imageName;
+            node.addImage(imagePath, json.getDouble("imageWidth"), json.getDouble("imageHeight"));
+        }
+
+        // 文本样式
+        JSONArray styles = json.getJSONArray("styles");
+        if (styles != null) {
+            for (int i = 0; i < styles.size(); i++) {
+                JSONObject styleItem = styles.getJSONObject(i);
+                JSONArray styleArray = styleItem.getJSONArray("style");
+                List<String> styleList = new ArrayList<>();
+                for (int j = 0; j < styleArray.size(); j++) {
+                    styleList.add(styleArray.getString(j));
+                }
+
+                node.getTextArea().setStyle(styleItem.getIntValue("start"),
+                        styleItem.getIntValue("end"),
+                        styleList);
+            }
+        }
+    }
+
+    public static void importFile(File file) {
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             StringBuilder content = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) {
                 content.append(line);
             }
-            String jsonStr = content.toString();
-            JSONObject json = JSONObject.parseObject(jsonStr);
+            JSONObject json = JSONObject.parseObject(content.toString());
 
             workspace.getTabs().clear();
 
@@ -209,17 +286,18 @@ public class FileHandler {
 
     private static void importSubjet(JSONObject json) {
         workspace.addSubject();
+        subjectController = workspace.getCurrentController();
 
         JSONObject rootJson = json.getJSONObject("root");
-        JSONObject children = rootJson.getJSONObject("children");
-        JSONObject children2 = rootJson.getJSONObject("children2");
 
         NodeModel rootModel = subjectController.getRootModel();
         rootModel.getMindNode().getTextArea().replaceText(rootJson.getString("text"));
-        fillMindNode(rootJson, rootModel.getMindNode());
+        importNode(rootJson, rootModel.getMindNode());
 
-        addRightChild(children, rootModel);
-        addLeftChild(children2, rootModel);
+        JSONObject children = rootJson.getJSONObject("children");
+        JSONObject children2 = rootJson.getJSONObject("children2");
+        importRightChild(children, rootModel);
+        importLeftChild(children2, rootModel);
 
         subjectController.adjustChildrenYR();
         subjectController.adjustChildrenYL();
@@ -228,7 +306,7 @@ public class FileHandler {
         subjectController.refreshLines();
     }
 
-    private static void addRightChild(JSONObject children, NodeModel parentModel) {
+    private static void importRightChild(JSONObject children, NodeModel parentModel) {
         if (children == null) {
             return;
         }
@@ -240,13 +318,15 @@ public class FileHandler {
 
             NodeModel model = new NodeModel(0, 0, PosConstants.RIGHT);
             parentModel.addRightChild(model);
-            subjectController.addNode(fillMindNode(jsonNode, new MindNode(model, subjectController, text)));
+            MindNode node = new MindNode(model, subjectController, text);
+            importNode(jsonNode, node);
+            subjectController.addNode(node);
 
-            addRightChild(jsonNode.getJSONObject("children"), model);
+            importRightChild(jsonNode.getJSONObject("children"), model);
         }
     }
 
-    private static void addLeftChild(JSONObject children, NodeModel parentModel) {
+    private static void importLeftChild(JSONObject children, NodeModel parentModel) {
         if (children == null) {
             return;
         }
@@ -257,13 +337,15 @@ public class FileHandler {
 
             NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
             parentModel.addLeftChild(model);
-            subjectController.addNode(fillMindNode(jsonNode, new MindNode(model, subjectController, text)));
+            MindNode node = new MindNode(model, subjectController, text);
+            importNode(jsonNode, node);
+            subjectController.addNode(node);
 
-            addLeftChild(jsonNode.getJSONObject("children"), model);
+            importLeftChild(jsonNode.getJSONObject("children"), model);
         }
     }
 
-    private static MindNode fillMindNode(JSONObject json, MindNode node) {
+    private static void importNode(JSONObject json, MindNode node) {
         // 填充图片
         String imageName = json.getString("imageName");
         if (imageName != null) {
@@ -291,17 +373,15 @@ public class FileHandler {
                         styleList);
             }
         }
-
-        return node;
     }
 
     //—————————————————————————————————————————图片—————————————————————————————————————————
     public static String saveImage(BufferedImage bufferedImage, String imageName) {
-        String imagePath = "D:\\MyMind\\iamges\\";
         if (imageName == null) {
             imageName = System.currentTimeMillis() + ".png";
-            imagePath += imageName;
         }
+        String imagePath = imageDir + imageName;
+
         File output = new File(imagePath);
         try {
             ImageIO.write(bufferedImage, "png", output);
