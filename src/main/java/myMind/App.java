@@ -8,6 +8,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import myMind.componet.Workspace;
+import myMind.controller.FileHandler;
 import myMind.controller.MenuController;
 import myMind.util.MessageUtil;
 
@@ -27,6 +28,7 @@ public class App extends Application {
             MenuBar menuBar = loader.load();
             menuController = loader.getController();
             menuController.setWorkspace(workspace);
+            FileHandler.setWorkspace(workspace);
             borderPane.setTop(menuBar);
         } catch (IOException e) {
             e.printStackTrace();

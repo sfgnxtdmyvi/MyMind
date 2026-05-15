@@ -38,14 +38,14 @@ import java.io.IOException;
 public class MindNode extends VBox {
     @Setter
     private NodeModel model;
-    private StyleClassedTextArea textArea;
+    private final StyleClassedTextArea textArea;
     @Setter
-    private String imagePath;
+    private String imageName;
     private final SubjectController controller;
-    private Text measureText = MeasureTextUtil.getMeasureText();
+    private final Text measureText = MeasureTextUtil.getMeasureText();
     private final StackPane imageContainer;
-    private ImageView image;
-    private Button closeButton;
+    private final ImageView image;
+    private final Button closeButton;
 
     // 拖拽缩放相关变量
     private static final double RESIZE_THRESHOLD = 8.0;
@@ -108,21 +108,21 @@ public class MindNode extends VBox {
         addListener();
     }
 
-    public MindNode(NodeModel model, SubjectController controller, String imagePath, double imageWidth, double imageHeight) {
+    public MindNode(NodeModel model, SubjectController controller, String imageName, double imageWidth, double imageHeight) {
         this(model, controller, "");
-        this.imagePath = imagePath;
+        this.imageName = imageName;
         ratio = imageWidth / imageHeight;
 
         imageContainer.setVisible(true);
         imageContainer.setManaged(true);
-        File file = new File(imagePath);
+        File file = new File(imageName);
         image.setImage(new Image(file.toURI().toString()));
         image.setFitWidth(imageWidth / SizeConstants.SCALE);
         image.setFitHeight(imageHeight / SizeConstants.SCALE);
     }
 
     public void addImage(String imagePath, double imageWidth, double imageHeight) {
-        this.imagePath = imagePath;
+        this.imageName = imagePath;
         ratio = imageWidth / imageHeight;
 
         imageContainer.setVisible(true);
@@ -135,14 +135,11 @@ public class MindNode extends VBox {
 
     private void addListener() {
         // 选中节点
-        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
-            controller.setSelectedNode(this);
-        });
+        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> controller.setSelectedNode(this));
 
         // 文本变化动态调整
-        textArea.textProperty().addListener((obs, oldText, newText) -> {
-            Platform.runLater(this::adjustSize);
-        });
+        textArea.textProperty().addListener((obs, oldText, newText) ->
+                Platform.runLater(this::adjustSize));
 
         // 粘贴图片
         textArea.setOnKeyReleased(e -> {
@@ -163,7 +160,7 @@ public class MindNode extends VBox {
                         image.setFitWidth(imageWidth / SizeConstants.SCALE);
                         image.setFitHeight(imageHeight / SizeConstants.SCALE);
                         ratio = imageWidth / imageHeight;
-                        imagePath = FileHandler.saveImage(bufferedImage, imagePath);
+                        imageName = FileHandler.saveImage(bufferedImage, imageName);
 
                         imageContainer.setVisible(true);
                         imageContainer.setManaged(true);
@@ -211,8 +208,8 @@ public class MindNode extends VBox {
             image.setImage(null);
             imageContainer.setVisible(false);
             imageContainer.setManaged(false);
-            FileHandler.deleteImage(imagePath);
-            imagePath = null;
+            FileHandler.deleteImage(imageName);
+            imageName = null;
             adjustSize();
         });
 
@@ -327,7 +324,7 @@ public class MindNode extends VBox {
                 originalModel.getPos()
         );
 
-        MindNode mindNode = new MindNode(newModel, controller, imagePath, image.getFitWidth(), image.getFitHeight());
+        MindNode mindNode = new MindNode(newModel, controller, imageName, image.getFitWidth(), image.getFitHeight());
         // todo 复制子节点
 
         return mindNode;

@@ -198,7 +198,7 @@ public class Workspace extends TabPane {
                     int start = selection.getStart();
                     List<String> styles = new ArrayList<>(textArea.getStyleOfChar(start));
                     // getStyleAtPosition(p) is equivalent to getStyleOfChar(p-1)
-                    // 用于getStyleAtPosition获取的是指定位置的前一个位置的样式
+                    // 用getStyleAtPosition获取的是指定位置的前一个位置的样式
 //                    List<String> styles = new ArrayList<>(textArea.getStyleAtPosition(start + 1));
                     if (code == KeyCode.B) {
                         if (styles.contains("bold-text")) {

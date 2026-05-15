@@ -2,6 +2,8 @@ package myMind.controller;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import javafx.scene.image.ImageView;
+import lombok.Setter;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
 import myMind.componet.Workspace;
@@ -17,89 +19,93 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class FileHandler {
 
     private static SubjectController subjectController;
 
+    @Setter
+    private static Workspace workspace;
+
     //保存为 JSON 文件
-    public static void saveToFile(File file, SubjectController subjectController) {
+    public static void saveToFile(File file) {
+        subjectController = workspace.getCurrentController();
+
         JSONObject root = new JSONObject();
         NodeModel rootModel = subjectController.getRootModel();
         MindNode mindNode = rootModel.getMindNode();
         StyleClassedTextArea textArea = mindNode.getTextArea();
-        root.put("text", textArea.getText());
+        String text = textArea.getText();
+        root.put("text", text);
+        if (!text.isEmpty()) {
+            root.put("styles", extractStyles(textArea, text.length()));
+        }
 
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("root", root);
+        String imageName = mindNode.getImageName();
+        if(imageName != null){
+            root.put("imageName", imageName);
+            ImageView image = mindNode.getImage();
+            root.put("imageWidth", image.getFitWidth());
+            root.put("imageHeight", image.getFitHeight());
+        }
+
+        JSONObject rightChildren = new JSONObject();
+        JSONObject leftChildren = new JSONObject();
+        root.put("rightChildren", rightChildren);
+        root.put("leftChildren", leftChildren);
 
         try (FileWriter fw = new FileWriter(file)) {
-            fw.write(jsonObject.toString());
+            fw.write(root.toString());
             MessageUtil.show("保存成功");
         } catch (IOException e) {
             MessageUtil.show("保存失败");
         }
     }
 
-    //加载 JSON 文件并重建界面
-    public static void loadFromFile(File file, SubjectController subjectController) {
-//        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-//            StringBuilder content = new StringBuilder();
-//            String line;
-//            while ((line = br.readLine()) != null) {
-//                content.append(line);
-//            }
-//            String jsonStr = content.toString();
-//            Map<Integer, NodeModel> loadedModels = new HashMap<>();
-//            Map<Integer, Integer> parentRelations = new HashMap<>();
-//
-//            // 提取节点数组
-//            JSONObject json = JSONObject.parseObject(jsonStr);
-//            JSONArray nodes = json.getJSONArray("nodes");
-//
-//            for (int i = 0; i < nodes.size(); i++) {
-//                JSONObject node = nodes.getJSONObject(i);
-//                int id = node.getInteger("id");
-//                String text = node.getString("text");
-//                double x = node.getInteger("x");
-//                double y = node.getInteger("y");
-//                Integer parentId = node.getInteger("parentId");
-//
-//                NodeModel model = new NodeModel(id, text, x, y, PosConstants.RIGHT);
-//                loadedModels.put(id, model);
-//                if (parentId != null) {
-//                    parentRelations.put(id, parentId);
-//                }
-//            }
-//
-//            // 重建树结构
-//            NodeModel newRoot = null;
-//            for (Map.Entry<Integer, NodeModel> entry : loadedModels.entrySet()) {
-//                Integer pid = parentRelations.get(entry.getKey());
-//                if (pid == null) {
-//                    newRoot = entry.getValue();
-//                } else {
-//                    NodeModel parent = loadedModels.get(pid);
-//                    parent.addRightChild(entry.getValue());
-//                }
-//            }
-//
-//            subjectController.clearAll();
-//            subjectController.setRootModel(newRoot);
-//            subjectController.rebuildViewFromModel(newRoot);
-//            subjectController.adjustChildrenYR();
-//            subjectController.adjustChildrenYL();
-//            subjectController.adjustChildrenX();
-//            subjectController.adjustChildrenSize();
-//            subjectController.refreshLines();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+    public static JSONArray extractStyles(StyleClassedTextArea textArea, int length) {
+        JSONArray styles = new JSONArray();
+
+        int start = 0;
+        Collection<String> lastStyles = textArea.getStyleOfChar(0);
+
+        for (int i = 1; i < length; i++) {
+            Collection<String> currentStyles = textArea.getStyleOfChar(i);
+
+            // 样式变化时保存前一段
+            if (!currentStyles.equals(lastStyles)) {
+                if (!lastStyles.isEmpty()) {
+                    JSONObject styleItem = new JSONObject();
+                    styleItem.put("start", start);
+                    styleItem.put("end", i);
+                    styleItem.put("style", lastStyles);
+
+                    styles.add(styleItem);
+                }
+
+                lastStyles = currentStyles;
+                start = i;
+            }
+        }
+
+        // 由于最后一段不会变化，额外保存
+        if (!lastStyles.isEmpty()) {
+            JSONObject styleItem = new JSONObject();
+            styleItem.put("start", start);
+            styleItem.put("end", length);
+            styleItem.put("style", lastStyles);
+
+            styles.add(styleItem);
+        }
+
+        return styles;
     }
 
-    public static void importFile(File file, SubjectController subjectController, Workspace workspace) {
-        FileHandler.subjectController = subjectController;
+    //加载 JSON 文件并重建界面
+    public static void loadFromFile(File file) {
+        subjectController = workspace.getCurrentController();
+
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             StringBuilder content = new StringBuilder();
             String line;
@@ -111,13 +117,13 @@ public class FileHandler {
 
             workspace.getTabs().clear();
 
-            importSubjet(json, workspace);
+            importSubjet(json);
 
             JSONObject subjects = json.getJSONObject("subjects");
             if (subjects != null) {
                 for (int i = 0; i < subjects.size() - 1; i++) {
                     JSONObject subject = subjects.getJSONObject(Integer.toString(i));
-                    importSubjet(subject, workspace);
+                    importSubjet(subject);
                 }
             }
         } catch (Exception e) {
@@ -125,9 +131,36 @@ public class FileHandler {
         }
     }
 
-    private static void importSubjet(JSONObject json, Workspace workspace) {
+    public static void importFile(File file) {
+        subjectController = workspace.getCurrentController();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                content.append(line);
+            }
+            String jsonStr = content.toString();
+            JSONObject json = JSONObject.parseObject(jsonStr);
+
+            workspace.getTabs().clear();
+
+            importSubjet(json);
+
+            JSONObject subjects = json.getJSONObject("subjects");
+            if (subjects != null) {
+                for (int i = 0; i < subjects.size() - 1; i++) {
+                    JSONObject subject = subjects.getJSONObject(Integer.toString(i));
+                    importSubjet(subject);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void importSubjet(JSONObject json) {
         workspace.addSubject();
-        FileHandler.subjectController = workspace.getCurrentController();
 
         JSONObject rootJson = json.getJSONObject("root");
         JSONObject children = rootJson.getJSONObject("children");
@@ -215,9 +248,11 @@ public class FileHandler {
     }
 
     //—————————————————————————————————————————图片—————————————————————————————————————————
-    public static String saveImage(BufferedImage bufferedImage, String imagePath) {
-        if (imagePath == null) {
-            imagePath = "D:\\MyMind\\iamges\\" + System.currentTimeMillis() + ".png";
+    public static String saveImage(BufferedImage bufferedImage, String imageName) {
+        String imagePath = "D:\\MyMind\\iamges\\";
+        if (imageName == null) {
+            imageName = System.currentTimeMillis() + ".png";
+            imagePath += imageName;
         }
         File output = new File(imagePath);
         try {

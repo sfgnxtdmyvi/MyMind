@@ -10,7 +10,6 @@ import java.io.File;
 
 public class MenuController {
 
-    @Setter
     private SubjectController subjectController;
 
     @Setter
@@ -30,7 +29,7 @@ public class MenuController {
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
-            FileHandler.loadFromFile(file, subjectController);
+            FileHandler.loadFromFile(file);
         }
     }
 
@@ -43,11 +42,11 @@ public class MenuController {
         subjectController = workspace.getCurrentController();
 
         FileChooser fc = new FileChooser();
-        fc.setInitialFileName("mindmap.json");
+        fc.setInitialDirectory(new File("D:\\MyMind"));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showSaveDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
-            FileHandler.saveToFile(file, subjectController);
+            FileHandler.saveToFile(file);
         }
     }
 
@@ -65,7 +64,7 @@ public class MenuController {
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
-            FileHandler.importFile(file, subjectController, workspace);
+            FileHandler.importFile(file);
         }
     }
 
