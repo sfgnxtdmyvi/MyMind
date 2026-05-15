@@ -9,8 +9,8 @@
     -fx-opacity: 0;
 }
 
-/* 缩放标签 */
-.scale-label {
+/* 消息提示 */
+.message {
     -fx-background-color:rgba(0, 0, 0, 0.7);
     -fx-text-fill:white;
     -fx-font-size:17;

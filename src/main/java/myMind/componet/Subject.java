@@ -1,13 +1,12 @@
 package myMind.componet;
 
-import javafx.animation.PauseTransition;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
-import javafx.util.Duration;
 import lombok.Getter;
 import myMind.controller.SubjectController;
+import myMind.util.MessageUtil;
 
 /**
  * 主控面板，放节点和连线
@@ -39,7 +38,7 @@ public class Subject extends Pane {
         this.subjectController = subjectController;
 
         scaleLabel = new Label("100%");
-        scaleLabel.getStyleClass().add("scale-label");
+        scaleLabel.getStyleClass().add("message");
         scaleLabel.setVisible(false);
         scaleLabel.setManaged(false);
 
@@ -58,14 +57,10 @@ public class Subject extends Pane {
             double deltaY = e.getDeltaY();
             if (e.isShortcutDown()) {
                 double scale = nodesLayer.getScaleX() + (deltaY > 0 ? 0.1 : -0.1);
-
                 changeScale(scale);
             } else {
                 currentTranslateY += deltaY;
-
-                nodesLayer.setTranslateY(currentTranslateY);
-                linesLayerR.setTranslateY(currentTranslateY);
-                linesLayerL.setTranslateY(currentTranslateY);
+                translateY(currentTranslateY);
             }
         });
 
@@ -120,12 +115,8 @@ public class Subject extends Pane {
                 currentTranslateY += deltaY;
 
                 // 应用偏移量到图层
-                nodesLayer.setTranslateX(currentTranslateX);
-                linesLayerR.setTranslateX(currentTranslateX);
-                linesLayerL.setTranslateX(currentTranslateX);
-                nodesLayer.setTranslateY(currentTranslateY);
-                linesLayerR.setTranslateY(currentTranslateY);
-                linesLayerL.setTranslateY(currentTranslateY);
+                translateX(currentTranslateX);
+                translateY(currentTranslateY);
 
                 paneStartX = e.getSceneX();
                 paneStartY = e.getSceneY();
@@ -145,19 +136,13 @@ public class Subject extends Pane {
 
             if (code == KeyCode.PAGE_UP) {
                 currentTranslateY += 300;
-
-                nodesLayer.setTranslateY(currentTranslateY);
-                linesLayerR.setTranslateY(currentTranslateY);
-                linesLayerL.setTranslateY(currentTranslateY);
+                translateY(currentTranslateY);
                 return;
             }
 
             if (code == KeyCode.PAGE_DOWN || code == KeyCode.SPACE) {
                 currentTranslateY -= 300;
-
-                nodesLayer.setTranslateY(currentTranslateY);
-                linesLayerR.setTranslateY(currentTranslateY);
-                linesLayerL.setTranslateY(currentTranslateY);
+                translateY(currentTranslateY);
                 return;
             }
 
@@ -183,17 +168,39 @@ public class Subject extends Pane {
                 currentTranslateX = 0;
                 currentTranslateY = 0;
 
-                nodesLayer.setTranslateX(0);
-                linesLayerR.setTranslateX(0);
-                linesLayerL.setTranslateX(0);
-                nodesLayer.setTranslateY(0);
-                linesLayerR.setTranslateY(0);
-                linesLayerL.setTranslateY(0);
+                translateX(0);
+                translateY(0);
             }
         });
     }
 
-    private void changeScale(double scale) {
+    /**
+     * 左右移动画布
+     * @param currentTranslateX
+     */
+    private void translateX(double currentTranslateX) {
+        nodesLayer.setTranslateX(currentTranslateX);
+        linesLayerR.setTranslateX(currentTranslateX);
+        linesLayerL.setTranslateX(currentTranslateX);
+    }
+
+    /**
+     * 上下移动画布
+     * @param currentTranslateY
+     */
+    private void translateY(double currentTranslateY) {
+        nodesLayer.setTranslateY(currentTranslateY);
+        linesLayerR.setTranslateY(currentTranslateY);
+        linesLayerL.setTranslateY(currentTranslateY);
+    }
+
+    /**
+     * 改变缩放比例
+     * @param scale
+     */
+    private void changeScale(Double scale) {
+        scale = Math.round(scale * 10.0) / 10.0;
+        scale = Math.max(0.1, Math.min(scale, 3.0));
         nodesLayer.setScaleX(scale);
         nodesLayer.setScaleY(scale);
         linesLayerR.setScaleX(scale);
@@ -201,22 +208,7 @@ public class Subject extends Pane {
         linesLayerL.setScaleX(scale);
         linesLayerL.setScaleY(scale);
 
-        int percentage = (int) (scale * 100);
-        scaleLabel.setText(percentage + "%");
-        scaleLabel.setVisible(true);
-        scaleLabel.setManaged(true);
-
-        // 定位到中间上方
-        scaleLabel.setLayoutX((getWidth() - scaleLabel.prefWidth(-1)) / 2);
-        scaleLabel.setLayoutY(scaleLabel.prefHeight(-1));
-
-        // 3秒后隐藏
-        PauseTransition pause = new PauseTransition(Duration.seconds(3));
-        pause.setOnFinished(event -> {
-            scaleLabel.setVisible(false);
-            scaleLabel.setManaged(false);
-        });
-        pause.play();
+        MessageUtil.show(scale);
     }
 
     @Override

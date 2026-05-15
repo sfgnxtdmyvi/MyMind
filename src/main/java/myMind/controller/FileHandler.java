@@ -29,8 +29,8 @@ public class FileHandler {
         StringBuilder sb = new StringBuilder();
 
         try (FileWriter fw = new FileWriter(file)) {
-            fw.write(sb.toString());
             AlertUtil.showAlert("成功", "思维导图已保存到 " + file.getName());
+            fw.write(sb.toString());
         } catch (IOException e) {
             AlertUtil.showAlert("错误", "保存失败：" + e.getMessage());
         }
