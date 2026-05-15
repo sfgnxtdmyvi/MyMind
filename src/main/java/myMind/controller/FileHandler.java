@@ -2,10 +2,13 @@ package myMind.controller;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import javafx.collections.ObservableList;
+import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
 import lombok.Setter;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
+import myMind.componet.Subject;
 import myMind.componet.Workspace;
 import myMind.constants.PosConstants;
 import myMind.util.MessageUtil;
@@ -31,36 +34,81 @@ public class FileHandler {
 
     //保存为 JSON 文件
     public static void saveToFile(File file) {
-        subjectController = workspace.getCurrentController();
+        ObservableList<Tab> tabs = workspace.getTabs();
 
-        JSONObject root = new JSONObject();
-        NodeModel rootModel = subjectController.getRootModel();
-        MindNode mindNode = rootModel.getMindNode();
-        StyleClassedTextArea textArea = mindNode.getTextArea();
-        String text = textArea.getText();
-        root.put("text", text);
-        if (!text.isEmpty()) {
-            root.put("styles", extractStyles(textArea, text.length()));
+        JSONObject subjects = new JSONObject();
+        for (int i = 0; i < tabs.size(); i++) {
+            Tab tab = tabs.get(i);
+            subjectController = ((Subject) tab.getContent()).getSubjectController();
+            NodeModel rootModel = subjectController.getRootModel();
+
+            JSONObject subject = saveSubject(rootModel);
+            subjects.put(tab.getText(), subject);
         }
-
-        String imageName = mindNode.getImageName();
-        if(imageName != null){
-            root.put("imageName", imageName);
-            ImageView image = mindNode.getImage();
-            root.put("imageWidth", image.getFitWidth());
-            root.put("imageHeight", image.getFitHeight());
-        }
-
-        JSONObject rightChildren = new JSONObject();
-        JSONObject leftChildren = new JSONObject();
-        root.put("rightChildren", rightChildren);
-        root.put("leftChildren", leftChildren);
 
         try (FileWriter fw = new FileWriter(file)) {
-            fw.write(root.toString());
+            fw.write(subjects.toString());
             MessageUtil.show("保存成功");
         } catch (IOException e) {
             MessageUtil.show("保存失败");
+        }
+    }
+
+    private static JSONObject saveSubject(NodeModel model) {
+        JSONObject rootJson = saveNode(model);
+        saveRightChildren(rootJson, model.getRightChildren());
+        saveLeftChildren(rootJson, model.getLeftChildren());
+        return rootJson;
+    }
+
+    private static JSONObject saveNode(NodeModel model) {
+        JSONObject json = new JSONObject();
+
+        MindNode mindNode = model.getMindNode();
+        StyleClassedTextArea textArea = mindNode.getTextArea();
+        String text = textArea.getText();
+        json.put("text", text);
+        if (!text.isEmpty()) {
+            JSONArray styles = extractStyles(textArea, text.length());
+            if (!styles.isEmpty()) {
+                json.put("styles", extractStyles(textArea, text.length()));
+            }
+        }
+
+        String imageName = mindNode.getImageName();
+        if (imageName != null) {
+            json.put("imageName", imageName);
+            ImageView image = mindNode.getImage();
+            json.put("imageWidth", image.getFitWidth());
+            json.put("imageHeight", image.getFitHeight());
+        }
+
+        return json;
+    }
+
+    private static void saveRightChildren(JSONObject parentJson, List<NodeModel> rightChildren) {
+        if (!rightChildren.isEmpty()) {
+            JSONObject rightChildrenJson = new JSONObject();
+            for (int i = 0; i < rightChildren.size(); i++) {
+                NodeModel childModel = rightChildren.get(i);
+                JSONObject childJson = saveNode(childModel);
+                saveRightChildren(childJson, childModel.getRightChildren());
+                rightChildrenJson.put(Integer.toString(i), childJson);
+            }
+            parentJson.put("rightChildren", rightChildrenJson);
+        }
+    }
+
+    private static void saveLeftChildren(JSONObject parentJson, List<NodeModel> leftChildren) {
+        if (!leftChildren.isEmpty()) {
+            JSONObject leftChildrenJson = new JSONObject();
+            for (int i = 0; i < leftChildren.size(); i++) {
+                NodeModel childModel = leftChildren.get(i);
+                JSONObject childJson = saveNode(childModel);
+                saveLeftChildren(childJson, childModel.getLeftChildren());
+                leftChildrenJson.put(Integer.toString(i), childJson);
+            }
+            parentJson.put("leftChildren", leftChildrenJson);
         }
     }
 
@@ -260,7 +308,7 @@ public class FileHandler {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
-        return imagePath;
+        return imageName;
     }
 
     public static void deleteImage(String imagePath) {
