@@ -17,8 +17,8 @@ public class NodeModel {
 
     //节点之间的关系
     private NodeModel parent;
-    private final List<NodeModel> rightChildren = new ArrayList<>();
-    private final List<NodeModel> leftChildren = new ArrayList<>();
+    private final List<NodeModel> childrenR = new ArrayList<>();
+    private final List<NodeModel> childrenL = new ArrayList<>();
 
     public NodeModel(double x, double y, byte pos) {
         this.x.set(x);
@@ -50,37 +50,23 @@ public class NodeModel {
         return y;
     }
 
-    public void addRightChild(NodeModel child) {
-        rightChildren.add(child);
+    public void addChildR(NodeModel child) {
+        childrenR.add(child);
         child.setParent(this);
     }
 
-    public void addLeftChild(NodeModel child) {
-        leftChildren.add(child);
+    public void addChildL(NodeModel child) {
+        childrenL.add(child);
         child.setParent(this);
-    }
-
-    public void clearChildrenR() {
-        for (int i = 0; i < rightChildren.size(); i++) {
-            NodeModel remove = rightChildren.remove(i);
-            remove.setParent(null);
-        }
-    }
-
-    public void clearChildrenL() {
-        for (int i = 0; i < leftChildren.size(); i++) {
-            NodeModel remove = leftChildren.remove(i);
-            remove.setParent(null);
-        }
     }
 
     public void removeChildR(NodeModel child) {
-        rightChildren.remove(child);
+        childrenR.remove(child);
         child.setParent(null);
     }
 
     public void removeChildL(NodeModel child) {
-        leftChildren.remove(child);
+        childrenL.remove(child);
         child.setParent(null);
     }
 
@@ -96,14 +82,14 @@ public class NodeModel {
     }
 
     public double getChildrenHeightR() {
-        if (rightChildren.isEmpty()) {
+        if (childrenR.isEmpty()) {
             return 0;
         }
         return getEndYR() - getStartYR();
     }
 
     public double getChildrenHeightL() {
-        if (leftChildren.isEmpty()) {
+        if (childrenL.isEmpty()) {
             return 0;
         }
         return getEndYL() - getStartYL();
@@ -118,8 +104,8 @@ public class NodeModel {
     }
 
     public double getEndYR() {
-        NodeModel lastNodeModel = rightChildren.get(rightChildren.size() - 1);
-        if (!lastNodeModel.rightChildren.isEmpty()) {
+        NodeModel lastNodeModel = childrenR.get(childrenR.size() - 1);
+        if (!lastNodeModel.childrenR.isEmpty()) {
             return lastNodeModel.getEndYR();
         } else {
             return lastNodeModel.getY() + lastNodeModel.getMindNode().getPrefHeight();
@@ -127,8 +113,8 @@ public class NodeModel {
     }
 
     public double getEndYL() {
-        NodeModel lastNodeModel = leftChildren.get(leftChildren.size() - 1);
-        if (!lastNodeModel.leftChildren.isEmpty()) {
+        NodeModel lastNodeModel = childrenL.get(childrenL.size() - 1);
+        if (!lastNodeModel.childrenL.isEmpty()) {
             return lastNodeModel.getEndYL();
         } else {
             return lastNodeModel.getY() + lastNodeModel.getMindNode().getPrefHeight();
@@ -137,8 +123,8 @@ public class NodeModel {
 
     //———————————————————————————————————————————私有方法———————————————————————————————————————————
     private double getStartYR() {
-        NodeModel fistNodeModel = rightChildren.get(0);
-        if (!fistNodeModel.rightChildren.isEmpty()) {
+        NodeModel fistNodeModel = childrenR.get(0);
+        if (!fistNodeModel.childrenR.isEmpty()) {
             return fistNodeModel.getStartYR();
         } else {
             return fistNodeModel.getY();
@@ -146,8 +132,8 @@ public class NodeModel {
     }
 
     private double getStartYL() {
-        NodeModel fistNodeModel = leftChildren.get(0);
-        if (!fistNodeModel.leftChildren.isEmpty()) {
+        NodeModel fistNodeModel = childrenL.get(0);
+        if (!fistNodeModel.childrenL.isEmpty()) {
             return fistNodeModel.getStartYL();
         } else {
             return fistNodeModel.getY();

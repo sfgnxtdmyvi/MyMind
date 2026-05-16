@@ -147,7 +147,7 @@ public class MindNode extends VBox {
 
     private void addListener() {
         // 选中节点
-        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> subjectController.setSelectedNode(this));
+        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> subjectController.setSelectedModel(model));
 
         // 文本变化动态调整
         textArea.textProperty().addListener((obs, oldText, newText) ->
@@ -332,7 +332,7 @@ public class MindNode extends VBox {
     }
 
     public MindNode clone() {
-        NodeModel originalModel = this.getModel();
+        NodeModel originalModel = model;
         NodeModel newModel = new NodeModel(
                 0,
                 0,

@@ -84,7 +84,7 @@ public class MenuController {
     private void handleAddChild() {
         subjectController = workspace.getCurrentController();
 
-        subjectController.addChildR(null);
+        subjectController.addChildR();
     }
 
     @FXML

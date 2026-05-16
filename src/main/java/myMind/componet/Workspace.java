@@ -57,34 +57,32 @@ public class Workspace extends TabPane {
 
             // 切换选中节点
             if (shiftDown && altDown) {
-                MindNode selectedNode = subjectController.getSelectedNode();
-                if (selectedNode == null) {
+                NodeModel selectedModel = subjectController.getSelectedModel();
+                if (selectedModel == null) {
                     return;
                 }
-                NodeModel model = selectedNode.getModel();
-                byte pos = model.getPos();
-                MindNode newNode = selectedNode;
+                byte pos = selectedModel.getPos();
 
                 if (code == KeyCode.RIGHT) {
                     // 左边节点 -> 父节点
                     // 根、右边节点 -> 中间的右子节点
                     if (pos == PosConstants.LEFT) {
-                        newNode = model.getParent().getMindNode();
+                        selectedModel = selectedModel.getParent();
                     } else {
-                        List<NodeModel> children = model.getRightChildren();
+                        List<NodeModel> children = selectedModel.getChildrenR();
                         if (!children.isEmpty()) {
-                            newNode = children.get(children.size() / 2).getMindNode();
+                            selectedModel = children.get(children.size() / 2);
                         }
                     }
                 } else if (code == KeyCode.LEFT) {
                     // 父节点 <- 右边节点
                     // 中间的左子节点 <- 左边、根节点
                     if (pos == PosConstants.RIGHT) {
-                        newNode = model.getParent().getMindNode();
+                        selectedModel = selectedModel.getParent();
                     } else {
-                        List<NodeModel> children = model.getLeftChildren();
+                        List<NodeModel> children = selectedModel.getChildrenL();
                         if (!children.isEmpty()) {
-                            newNode = children.get(children.size() / 2).getMindNode();
+                            selectedModel = children.get(children.size() / 2);
                         }
                     }
                 } else if (code == KeyCode.UP || code == KeyCode.DOWN) {
@@ -93,28 +91,28 @@ public class Workspace extends TabPane {
                     }
 
                     // 得到当前节点的索引
-                    NodeModel parentModel = model.getParent();
+                    NodeModel parentModel = selectedModel.getParent();
                     List<NodeModel> children;
                     if (pos == PosConstants.RIGHT) {
-                        children = parentModel.getRightChildren();
+                        children = parentModel.getChildrenR();
                     } else {
-                        children = parentModel.getLeftChildren();
+                        children = parentModel.getChildrenL();
                     }
-                    int index = children.indexOf(model);
+                    int index = children.indexOf(selectedModel);
 
                     // 切换成上下兄弟节点
                     if (code == KeyCode.UP) {
                         if (index != 0) {
-                            newNode = children.get(index - 1).getMindNode();
+                            selectedModel = children.get(index - 1);
                         }
                     } else {
                         if (index != children.size() - 1) {
-                            newNode = children.get(index + 1).getMindNode();
+                            selectedModel = children.get(index + 1);
                         }
                     }
                 }
 
-                subjectController.setSelectedNode(newNode);
+                subjectController.setSelectedModel(selectedModel);
                 return;
             }
 
@@ -123,20 +121,20 @@ public class Workspace extends TabPane {
             if (shortcutDown && altDown) {
                 // 1个子节点和5个孙节点
                 if (code == KeyCode.RIGHT) {
-                    if (subjectController.getSelectedNode().getModel().getPos() == PosConstants.LEFT) {
+                    if (subjectController.getSelectedModel().getPos() == PosConstants.LEFT) {
                         return;
                     }
-                    subjectController.addChildR(null);
-                    subjectController.addChildR(null);
+                    subjectController.addChildR();
+                    subjectController.addChildR();
                     for (int i = 0; i < 4; i++) {
                         subjectController.addSiblingR();
                     }
                 } else if (code == KeyCode.LEFT) {
-                    if (subjectController.getSelectedNode().getModel().getPos() == PosConstants.RIGHT) {
+                    if (subjectController.getSelectedModel().getPos() == PosConstants.RIGHT) {
                         return;
                     }
-                    subjectController.addChildL(null);
-                    subjectController.addChildL(null);
+                    subjectController.addChildL();
+                    subjectController.addChildL();
                     for (int i = 0; i < 4; i++) {
                         subjectController.addSiblingL();
                     }
@@ -151,10 +149,10 @@ public class Workspace extends TabPane {
                 }
                 return;
             } else if (altDown && code == KeyCode.RIGHT) {
-                subjectController.addChildR(null);
+                subjectController.addChildR();
                 return;
             } else if (altDown && code == KeyCode.LEFT) {
-                subjectController.addChildL(null);
+                subjectController.addChildL();
                 return;
             } else if (altDown && code == KeyCode.DOWN) {
                 subjectController.addSibling();
@@ -171,26 +169,20 @@ public class Workspace extends TabPane {
             }
 
             // 节点的复制粘贴
-            if (altDown) {
+            if (shortcutDown && shiftDown) {
                 if (code == KeyCode.C) {
-                    MindNode selectedNode = subjectController.getSelectedNode();
-                    if (selectedNode.getTextArea().getSelectedText().isEmpty()) {
-                        copyNode = selectedNode;
-                    }
+                    copyNode = subjectController.copy();
                 } else if (code == KeyCode.X) {
-                    MindNode selectedNode = subjectController.getSelectedNode();
-                    if (selectedNode.getTextArea().getSelectedText().isEmpty()) {
-                        copyNode = selectedNode;
-                    }
-                    subjectController.delete();
+                    copyNode = subjectController.cut();
                 } else if (code == KeyCode.V) {
-                    subjectController.pasteChild(copyNode);
+                    subjectController.paste(copyNode);
+                    copyNode = null;
                 }
             }
 
             // 文本样式
             if (shortcutDown && (code == KeyCode.B || code == KeyCode.R)) {
-                MindNode selectedNode = subjectController.getSelectedNode();
+                MindNode selectedNode = subjectController.getSelectedModel().getMindNode();
                 StyleClassedTextArea textArea = selectedNode.getTextArea();
                 IndexRange selection = textArea.getSelection();
 

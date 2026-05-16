@@ -73,7 +73,7 @@ public class Subject extends Pane {
             if (e.getButton() == MouseButton.PRIMARY) {
                 //拖拽画布
                 if (e.getTarget() == this || e.getTarget() == nodesLayer) {
-                    subjectController.setSelectedNode(null);
+                    subjectController.setSelectedModel(null);
                     paneStartX = e.getSceneX();
                     paneStartY = e.getSceneY();
                     e.consume();
@@ -87,17 +87,17 @@ public class Subject extends Pane {
 
                 //记录拖拽起始位置
                 //鼠标距离节点左上角的距离
-                MindNode selectedNode = subjectController.getSelectedNode();
-                if (selectedNode != null) {
-                    dragStartX = mousePressedX - selectedNode.getLayoutX();
-                    dragStartY = mousePressedY - selectedNode.getLayoutY();
+                NodeModel selectedModel = subjectController.getSelectedModel();
+                if (selectedModel != null) {
+                    dragStartX = mousePressedX - selectedModel.getX();
+                    dragStartY = mousePressedY - selectedModel.getY();
                 }
                 e.consume();
             }
         });
 
         setOnMouseDragged(e -> {
-            if (e.getButton() == MouseButton.PRIMARY && subjectController.getSelectedNode() != null) {
+            if (e.getButton() == MouseButton.PRIMARY && subjectController.getSelectedModel() != null) {
 //                MindNode selectedNode = controller.getSelectedNode();
 //                double newX = e.getSceneX() - dragStartX;
 //                double newY = e.getSceneY() - dragStartY;
@@ -214,6 +214,14 @@ public class Subject extends Pane {
         linesLayerL.setScaleY(scale);
 
         MessageUtil.show(scale);
+    }
+
+    public void add(MindNode node) {
+        nodesLayer.getChildren().add(node);
+    }
+
+    public void remove(MindNode node) {
+        nodesLayer.getChildren().remove(node);
     }
 
     @Override
