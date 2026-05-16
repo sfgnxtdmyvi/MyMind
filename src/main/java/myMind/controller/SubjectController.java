@@ -85,7 +85,7 @@ public class SubjectController {
         }
         // 基于最后一个子节点的位置加上偏移
         else {
-            childY = parentModel.getEndYR() + SizeConstants.NODE_GAP_Y;
+            childY = parentModel.getEndYL() + SizeConstants.NODE_GAP_Y;
         }
 
         if (copyNode == null) {
@@ -153,7 +153,7 @@ public class SubjectController {
         }
 
         // 基于当前节点位置加上偏移
-        double siblingX = nodeModel.getX();
+        double siblingX = nodeModel.getX()+ selectedNode.getPrefWidth() - SizeConstants.MIN_NODE_WIDTH;
         double siblingY = nodeModel.getY() + selectedNode.getPrefHeight() + SizeConstants.NODE_GAP_Y;
 
         NodeModel siblingModel = new NodeModel(siblingX, siblingY, PosConstants.LEFT);
@@ -237,35 +237,37 @@ public class SubjectController {
         adjustChildrenXL(rootModel);
     }
 
-    public void adjustChildrenXR(NodeModel nodeModel) {
-        List<NodeModel> children = nodeModel.getRightChildren();
+    public void adjustChildrenXR(NodeModel parentModel) {
+        List<NodeModel> children = parentModel.getRightChildren();
         if (children.isEmpty()) {
             return;
         }
 
-        double parentX = nodeModel.getX();
-        double parentWidth = nodeModel.getSelfWidth();
-        double childX = parentX + parentWidth + SizeConstants.NODE_GAP_X;
-
+        // 父节点的 X 坐标 + 父节点的宽度 + 节点间隔
+        double childX = parentModel.getX() + parentModel.getSelfWidth() + SizeConstants.NODE_GAP_X;
         for (NodeModel child : children) {
             child.setX(childX);
             adjustChildrenXR(child);
         }
     }
 
-    public void adjustChildrenXL(NodeModel nodeModel) {
-        List<NodeModel> children = nodeModel.getLeftChildren();
+    public void adjustChildrenXL(NodeModel parentModel) {
+        List<NodeModel> children = parentModel.getLeftChildren();
         if (children.isEmpty()) {
             return;
         }
 
-        double parentX = nodeModel.getX();
-        double childX = parentX - SizeConstants.NODE_GAP_X;
-
+        // 父节点的 X 坐标 - 节点间隔 - 子节点的宽度
+        double childX = parentModel.getX() - SizeConstants.NODE_GAP_X;
         for (NodeModel child : children) {
             child.setX(childX - child.getSelfWidth());
             adjustChildrenXL(child);
         }
+    }
+
+    public void adjustChildrenY() {
+        adjustChildrenYR(rootModel, null);
+        adjustChildrenYL(rootModel, null);
     }
 
     // 调整子节点Y坐标
@@ -277,7 +279,9 @@ public class SubjectController {
         adjustChildrenYL(rootModel, null);
     }
 
-    //父节点在所有子节点的中间
+    /**
+     * 子节点以父节点为中心，依次排列
+     */
     private void adjustChildrenYR(NodeModel parentModel, Double y) {
         List<NodeModel> children = parentModel.getRightChildren();
         if (children.isEmpty()) {

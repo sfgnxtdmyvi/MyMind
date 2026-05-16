@@ -38,7 +38,7 @@ public class MenuController {
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
-            FileHandler.loadFromFile(file);
+            FileHandler.loadFile(file);
         }
     }
 

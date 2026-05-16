@@ -39,7 +39,7 @@ public class FileHandler {
         imageDir = config.getString("directory.image");
     }
 
-    //保存为 JSON 文件
+    //—————————————————————————————————————————保存—————————————————————————————————————————
     public static void saveToFile(File file) {
         ObservableList<Tab> tabs = workspace.getTabs();
 
@@ -157,8 +157,8 @@ public class FileHandler {
         return styles;
     }
 
-    //加载 JSON 文件并重建界面
-    public static void loadFromFile(File file) {
+    //—————————————————————————————————————————打开—————————————————————————————————————————
+    public static void loadFile(File file) {
         subjectController = workspace.getCurrentController();
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
@@ -171,24 +171,28 @@ public class FileHandler {
 
             workspace.getTabs().clear();
 
+            // 加载所有主题
             for (int i = 0; i < json.size(); i++) {
                 workspace.addSubject();
                 subjectController = workspace.getCurrentController();
                 JSONObject subject = json.getJSONObject(Integer.toString(i));
 
+                // 加载根节点
                 NodeModel rootModel = subjectController.getRootModel();
-                rootModel.getMindNode().getTextArea().replaceText(subject.getString("text"));
+                String text = subject.getString("text");
+                workspace.getTabs().get(workspace.getTabs().size() - 1).setText(text);
+                rootModel.getMindNode().getTextArea().replaceText(text);
+                rootModel.getMindNode().getTextArea().replaceText(text);
                 loadNode(subject, rootModel.getMindNode());
 
+                // 加载子节点
                 JSONObject rightChildren = subject.getJSONObject("rightChildren");
                 JSONObject leftChildren = subject.getJSONObject("leftChildren");
                 loadRightChild(rightChildren, rootModel);
                 loadLeftChild(leftChildren, rootModel);
 
-                subjectController.adjustChildrenYR();
-                subjectController.adjustChildrenYL();
-                subjectController.adjustChildrenX();
                 subjectController.adjustChildrenSize();
+                subjectController.adjustChildrenX();
                 subjectController.refreshLines();
             }
         } catch (Exception e) {
@@ -214,6 +218,7 @@ public class FileHandler {
             loadRightChild(jsonNode.getJSONObject("rightChildren"), model);
         }
     }
+
     private static void loadLeftChild(JSONObject children, NodeModel parentModel) {
         if (children == null) {
             return;
@@ -234,11 +239,11 @@ public class FileHandler {
     }
 
     private static void loadNode(JSONObject json, MindNode node) {
-        // 填充图片
+        // 图片
         String imageName = json.getString("imageName");
         if (imageName != null) {
             String imagePath = imageDir + imageName;
-            node.addImage(imagePath, json.getDouble("imageWidth"), json.getDouble("imageHeight"));
+            node.loadImage(imagePath, json.getDouble("imageWidth"), json.getDouble("imageHeight"));
         }
 
         // 文本样式
@@ -259,6 +264,7 @@ public class FileHandler {
         }
     }
 
+    //—————————————————————————————————————————导入—————————————————————————————————————————
     public static void importFile(File file) {
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             StringBuilder content = new StringBuilder();
@@ -291,7 +297,9 @@ public class FileHandler {
         JSONObject rootJson = json.getJSONObject("root");
 
         NodeModel rootModel = subjectController.getRootModel();
-        rootModel.getMindNode().getTextArea().replaceText(rootJson.getString("text"));
+        String text = rootJson.getString("text");
+        workspace.getTabs().get(workspace.getTabs().size() - 1).setText(text);
+        rootModel.getMindNode().getTextArea().replaceText(text);
         importNode(rootJson, rootModel.getMindNode());
 
         JSONObject children = rootJson.getJSONObject("children");
@@ -299,10 +307,8 @@ public class FileHandler {
         importRightChild(children, rootModel);
         importLeftChild(children2, rootModel);
 
-        subjectController.adjustChildrenYR();
-        subjectController.adjustChildrenYL();
-        subjectController.adjustChildrenX();
         subjectController.adjustChildrenSize();
+        subjectController.adjustChildrenX();
         subjectController.refreshLines();
     }
 
@@ -346,12 +352,12 @@ public class FileHandler {
     }
 
     private static void importNode(JSONObject json, MindNode node) {
-        // 填充图片
+        // 图片
         String imageName = json.getString("imageName");
         if (imageName != null) {
             String imagePath = "C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName;
             JSONObject imageSize = json.getJSONObject("imageSize");
-            node.addImage(imagePath, imageSize.getDouble("width"), imageSize.getDouble("height"));
+            node.importImage(imagePath, imageSize.getDouble("width"), imageSize.getDouble("height"));
         }
 
         // 文本样式

@@ -41,7 +41,7 @@ public class MindNode extends VBox {
     private final StyleClassedTextArea textArea;
     @Setter
     private String imageName;
-    private final SubjectController controller;
+    private final SubjectController subjectController;
     private final Text measureText = MeasureTextUtil.getMeasureText();
     private final StackPane imageContainer;
     private final ImageView image;
@@ -55,10 +55,10 @@ public class MindNode extends VBox {
     private double startWidth;
     private double ratio;
 
-    public MindNode(NodeModel model, SubjectController controller, String text) {
+    public MindNode(NodeModel model, SubjectController subjectController, String text) {
         this.model = model;
         model.setMindNode(this);
-        this.controller = controller;
+        this.subjectController = subjectController;
 
         image = new ImageView();
         //当改变宽度或高度时，另一个维度会自动按比例缩放
@@ -108,8 +108,8 @@ public class MindNode extends VBox {
         addListener();
     }
 
-    public MindNode(NodeModel model, SubjectController controller, String imageName, double imageWidth, double imageHeight) {
-        this(model, controller, "");
+    public MindNode(NodeModel model, SubjectController subjectController, String imageName, double imageWidth, double imageHeight) {
+        this(model, subjectController, "");
         this.imageName = imageName;
         ratio = imageWidth / imageHeight;
 
@@ -117,11 +117,11 @@ public class MindNode extends VBox {
         imageContainer.setManaged(true);
         File file = new File(imageName);
         image.setImage(new Image(file.toURI().toString()));
-        image.setFitWidth(imageWidth / SizeConstants.SCALE);
-        image.setFitHeight(imageHeight / SizeConstants.SCALE);
+        image.setFitWidth(imageWidth);
+        image.setFitHeight(imageHeight);
     }
 
-    public void addImage(String imagePath, double imageWidth, double imageHeight) {
+    public void importImage(String imagePath, double imageWidth, double imageHeight) {
         this.imageName = imagePath;
         ratio = imageWidth / imageHeight;
 
@@ -129,13 +129,25 @@ public class MindNode extends VBox {
         imageContainer.setManaged(true);
         File file = new File(imagePath);
         image.setImage(new Image(file.toURI().toString()));
-        image.setFitWidth(imageWidth / SizeConstants.SCALE);
-        image.setFitHeight(imageHeight / SizeConstants.SCALE);
+        image.setFitWidth(imageWidth / 2.2);
+        image.setFitHeight(imageHeight / 2.2);
+    }
+
+    public void loadImage(String imagePath, double imageWidth, double imageHeight) {
+        this.imageName = imagePath;
+        ratio = imageWidth / imageHeight;
+
+        imageContainer.setVisible(true);
+        imageContainer.setManaged(true);
+        File file = new File(imagePath);
+        image.setImage(new Image(file.toURI().toString()));
+        image.setFitWidth(imageWidth);
+        image.setFitHeight(imageHeight);
     }
 
     private void addListener() {
         // 选中节点
-        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> controller.setSelectedNode(this));
+        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> subjectController.setSelectedNode(this));
 
         // 文本变化动态调整
         textArea.textProperty().addListener((obs, oldText, newText) ->
@@ -250,7 +262,7 @@ public class MindNode extends VBox {
      * 根据内容动态调整尺寸
      */
     public void adjustSize() {
-        String text = textArea.getText();
+        String text = getString();
         boolean imageVisible = imageContainer.isVisible();
         double textWidth;
         double textHeight;
@@ -283,7 +295,7 @@ public class MindNode extends VBox {
 
             double totalPadding = (contentHeight / 25.4) * 2.6;
             textHeight = contentHeight + totalPadding;
-            // MindNode 高度 = border(2px) + padding(20px) + image高度 + textArea 高度
+            // MindNode 高度 = border(2px) + padding(20px) + image 高度 + textArea 高度
             nodeHeight = textHeight + 22;
             if (imageVisible) {
                 nodeHeight += image.getFitHeight() + 2;
@@ -291,11 +303,9 @@ public class MindNode extends VBox {
         }
 
         // y 轴 - 高度变动的一半，让中心保持不变
-        if (model.getPos() == PosConstants.MIDDLE) {
-            double beforeHeight = getPrefHeight();
-            double delta = nodeHeight - beforeHeight;
-            model.setY(model.getY() - delta / 2.0);
-        }
+        double beforeHeight = getPrefHeight();
+        double delta = nodeHeight - beforeHeight;
+        model.setY(model.getY() - delta / 2.0);
 
         double originalWidth = getPrefWidth();
 
@@ -306,14 +316,19 @@ public class MindNode extends VBox {
 
         if (model.getPos() == PosConstants.LEFT) {
             model.setX(model.getX() - (nodeWidth - originalWidth));
-            controller.adjustChildrenXL(model);
-            controller.adjustChildrenYL();
-            controller.refreshLinesL();
+            subjectController.adjustChildrenXL(model);
+            subjectController.adjustChildrenYL();
+            subjectController.refreshLinesL();
         } else {
-            controller.adjustChildrenXR(model);
-            controller.adjustChildrenYR();
-            controller.refreshLinesR();
+            subjectController.adjustChildrenXR(model);
+            subjectController.adjustChildrenYR();
+            subjectController.refreshLinesR();
         }
+    }
+
+    private String getString() {
+        String text = textArea.getText();
+        return text;
     }
 
     public MindNode clone() {
@@ -324,7 +339,7 @@ public class MindNode extends VBox {
                 originalModel.getPos()
         );
 
-        MindNode mindNode = new MindNode(newModel, controller, imageName, image.getFitWidth(), image.getFitHeight());
+        MindNode mindNode = new MindNode(newModel, subjectController, imageName, image.getFitWidth(), image.getFitHeight());
         // todo 复制子节点
 
         return mindNode;

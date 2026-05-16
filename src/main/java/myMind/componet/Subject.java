@@ -59,8 +59,10 @@ public class Subject extends Pane {
                 double scale = nodesLayer.getScaleX() + (deltaY > 0 ? 0.1 : -0.1);
                 changeScale(scale);
             } else {
-                currentTranslateY += deltaY;
-                translateY(currentTranslateY);
+                for (int i = 0; i < 3; i++) {
+                    currentTranslateY += deltaY;
+                    translateY(currentTranslateY);
+                }
             }
         });
 
@@ -135,13 +137,13 @@ public class Subject extends Pane {
             boolean shortcutDown = e.isShortcutDown();
 
             if (code == KeyCode.PAGE_UP) {
-                currentTranslateY += 300;
+                currentTranslateY += 400;
                 translateY(currentTranslateY);
                 return;
             }
 
             if (code == KeyCode.PAGE_DOWN || code == KeyCode.SPACE) {
-                currentTranslateY -= 300;
+                currentTranslateY -= 400;
                 translateY(currentTranslateY);
                 return;
             }
@@ -176,6 +178,7 @@ public class Subject extends Pane {
 
     /**
      * 左右移动画布
+     *
      * @param currentTranslateX
      */
     private void translateX(double currentTranslateX) {
@@ -186,6 +189,7 @@ public class Subject extends Pane {
 
     /**
      * 上下移动画布
+     *
      * @param currentTranslateY
      */
     private void translateY(double currentTranslateY) {
@@ -196,6 +200,7 @@ public class Subject extends Pane {
 
     /**
      * 改变缩放比例
+     *
      * @param scale
      */
     private void changeScale(Double scale) {

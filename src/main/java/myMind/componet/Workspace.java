@@ -231,7 +231,7 @@ public class Workspace extends TabPane {
         Subject subject = subjectController.getSubject();
 
         int index = getTabs().size() + 1;
-        Tab tab = new Tab("主题" + index);
+        Tab tab = new Tab();
         tab.setContent(subject);
 
         getTabs().add(tab);
@@ -243,6 +243,7 @@ public class Workspace extends TabPane {
 //            double centerY = getHeight() / 2.0 - SizeConstants.MIN_NODE_HEIGHT;
 //        });
         subjectController.initRootNode(670, 311);
+        tab.textProperty().bind(subjectController.getRootModel().getMindNode().getTextArea().textProperty());
     }
 
     /**
