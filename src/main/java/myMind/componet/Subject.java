@@ -3,6 +3,7 @@ package myMind.componet;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import myMind.controller.SubjectController;
@@ -53,10 +54,11 @@ public class Subject extends Pane {
     }
 
     private void addListener() {
-        setOnScroll(e -> {
+        // EventFilter 能让节点不干扰鼠标滚动
+        addEventFilter(ScrollEvent.SCROLL, e -> {
             double deltaY = e.getDeltaY();
             if (e.isShortcutDown()) {
-                double scale = nodesLayer.getScaleX() + (deltaY > 0 ? 0.1 : -0.1);
+                double scale = nodesLayer.getScaleX() + (deltaY > 0 ? 0.1 :-0.1);
                 changeScale(scale);
             } else {
                 for (int i = 0; i < 3; i++) {

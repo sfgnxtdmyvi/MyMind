@@ -11,6 +11,7 @@ import myMind.componet.Subject;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 
+import java.util.Iterator;
 import java.util.List;
 
 @Data
@@ -35,19 +36,8 @@ public class SubjectController {
             return;
         }
 
-        // 父节点 X 轴 +父节点宽度 + 节点间隔
-        double childX = selectedModel.getX() + selectedModel.getMindNode().getPrefWidth() + SizeConstants.NODE_GAP_X;
-        double childY;
-        List<NodeModel> children = selectedModel.getChildrenR();
-        if (children.isEmpty()) {
-            childY = selectedModel.getY();
-        }
-        // 最后一个子节点底部 Y 轴 + 节点间隔
-        else {
-            childY = selectedModel.getEndYR() + SizeConstants.NODE_GAP_Y;
-        }
-
-        NodeModel childModel = new NodeModel(childX, childY, PosConstants.RIGHT);
+        Point2D pointR = calculateChildPointR();
+        NodeModel childModel = new NodeModel(pointR.getX(), pointR.getY(), PosConstants.RIGHT);
         selectedModel.addChildR(childModel);
         addNode(childModel);
 
@@ -60,20 +50,8 @@ public class SubjectController {
             return;
         }
 
-        // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-        double childX = selectedModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
-        double childY;
-
-        List<NodeModel> children = selectedModel.getChildrenL();
-        if (children.isEmpty()) {
-            childY = selectedModel.getY();
-        }
-        // 最后一个子节点底部 Y 轴 + 节点间隔
-        else {
-            childY = selectedModel.getEndYL() + SizeConstants.NODE_GAP_Y;
-        }
-
-        NodeModel childModel = new NodeModel(childX, childY, PosConstants.LEFT);
+        Point2D pointL = calculateChildPointL();
+        NodeModel childModel = new NodeModel(pointL.getX(), pointL.getY(), PosConstants.LEFT);
         selectedModel.addChildL(childModel);
         addNode(childModel);
 
@@ -86,10 +64,10 @@ public class SubjectController {
             return;
         }
 
-        if (selectedModel.getPos() == PosConstants.RIGHT) {
-            addSiblingR();
-        } else {
+        if (selectedModel.getPos() == PosConstants.LEFT) {
             addSiblingL();
+        } else {
+            addSiblingR();
         }
     }
 
@@ -189,14 +167,70 @@ public class SubjectController {
             return;
         }
 
+        NodeModel cloneModel = copyNode.getModel();
         if (selectedModel.getPos() == PosConstants.LEFT) {
-            pasteL(copyNode);
+            Point2D pointL = calculateChildPointL();
+            cloneModel.setX(pointL.getX());
+            cloneModel.setY(pointL.getY());
+
+            if (cloneModel.getPos() == PosConstants.RIGHT) {
+                cloneModel.setParent(selectedModel);
+                transRToL(cloneModel);
+            } else {
+                selectedModel.addChildL(cloneModel);
+            }
+            addNodeWithChildrenL(copyNode);
+
+            adjustChildrenXL(cloneModel);
+            adjustChildrenYL();
+            refreshLinesL();
         } else {
-            pasteR(copyNode);
+            Point2D pointR = calculateChildPointR();
+            cloneModel.setX(pointR.getX());
+            cloneModel.setY(pointR.getY());
+
+            if (cloneModel.getPos() == PosConstants.LEFT) {
+                cloneModel.setParent(selectedModel);
+                transLToR(cloneModel);
+            } else {
+                selectedModel.addChildR(cloneModel);
+            }
+            addNodeWithChildrenR(copyNode);
+
+            adjustChildrenXR(cloneModel);
+            adjustChildrenYR();
+            refreshLinesR();
+        }
+        setSelectedModel(cloneModel);
+    }
+
+    private void transLToR(NodeModel cloneModel) {
+        // 节点改到右边
+        cloneModel.setPos(PosConstants.RIGHT);
+        cloneModel.getParent().addChildR(cloneModel);
+
+        // 从左边删除
+        Iterator<NodeModel> iterator = cloneModel.getChildrenL().iterator();
+        while (iterator.hasNext()) {
+            NodeModel child = iterator.next();
+            iterator.remove();
+            transLToR(child);
         }
     }
 
-    public void pasteR(MindNode copyNode) {
+    private void transRToL(NodeModel cloneModel) {
+        cloneModel.setPos(PosConstants.LEFT);
+        cloneModel.getParent().addChildL(cloneModel);
+
+        Iterator<NodeModel> iterator = cloneModel.getChildrenR().iterator();
+        while (iterator.hasNext()) {
+            NodeModel child = iterator.next();
+            iterator.remove();
+            transRToL(child);
+        }
+    }
+
+    private Point2D calculateChildPointR() {
         // 父节点 X 轴 +父节点宽度 + 节点间隔
         double childX = selectedModel.getX() + selectedModel.getMindNode().getPrefWidth() + SizeConstants.NODE_GAP_X;
         double childY;
@@ -209,19 +243,10 @@ public class SubjectController {
             childY = selectedModel.getEndYR() + SizeConstants.NODE_GAP_Y;
         }
 
-        NodeModel cloneModel = copyNode.getModel();
-        cloneModel.setX(childX);
-        cloneModel.setY(childY);
-        selectedModel.addChildR(cloneModel);
-        addNodeWithChildrenR(copyNode);
-        setSelectedModel(cloneModel);
-
-        adjustChildrenXR(cloneModel);
-        adjustChildrenYR();
-        refreshLinesR();
+        return new Point2D(childX, childY);
     }
 
-    public void pasteL(MindNode copyNode) {
+    private Point2D calculateChildPointL() {
         // 父节点 X 轴 - 节点间隔 - 节点最小宽度
         double childX = selectedModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
         double childY;
@@ -235,16 +260,7 @@ public class SubjectController {
             childY = selectedModel.getEndYL() + SizeConstants.NODE_GAP_Y;
         }
 
-        NodeModel cloneModel = copyNode.getModel();
-        cloneModel.setX(childX);
-        cloneModel.setY(childY);
-        selectedModel.addChildL(cloneModel);
-        addNodeWithChildrenL(copyNode);
-        setSelectedModel(cloneModel);
-
-        adjustChildrenXL(cloneModel);
-        adjustChildrenYL();
-        refreshLinesL();
+        return new Point2D(childX, childY);
     }
 
     //———————————————————————————————————————————删除———————————————————————————————————————————
@@ -300,22 +316,26 @@ public class SubjectController {
      * 从 subject 和父节点的子节点数组中删除子节点
      */
     private void deleteChildrenR(NodeModel parentModel) {
-        List<NodeModel> childrenR = parentModel.getChildrenR();
-        for (NodeModel childModel : childrenR) {
+        Iterator<NodeModel> iterator = parentModel.getChildrenR().iterator();
+        while (iterator.hasNext()) {
+            NodeModel childModel = iterator.next();
             subject.remove(childModel.getMindNode());
-            parentModel.removeChildR(childModel);
+            iterator.remove();
+            childModel.setParent(null);
 
             deleteChildrenR(childModel);
         }
     }
 
     private void deleteChildrenL(NodeModel parentModel) {
-        List<NodeModel> childrenL = parentModel.getChildrenL();
-        for (NodeModel childModel : childrenL) {
+        Iterator<NodeModel> iterator = parentModel.getChildrenL().iterator();
+        while (iterator.hasNext()) {
+            NodeModel childModel = iterator.next();
             subject.remove(childModel.getMindNode());
-            parentModel.removeChildL(childModel);
+            iterator.remove();
+            childModel.setParent(null);
 
-            deleteChildrenL(childModel);
+            deleteChildrenR(childModel);
         }
     }
 
@@ -414,17 +434,16 @@ public class SubjectController {
             return;
         }
 
-        // 递归时，y 不为空，以传入的 y 为第一个子节点的Y坐标
+        // 递归时，y 不为空，以传入的 y 为第一个子节点的 Y 坐标
         double childY;
         if (y == null) {
-            double totalHeight = calculateTotalHeightR(children);
+            double totalHeight = parentModel.getChildrenHeightR();
             double parentMidY = parentModel.getY() + parentModel.getSelfHeight() / 2.0;
             childY = parentMidY - totalHeight / 2.0;
         } else {
             childY = y;
         }
 
-        // 依次调整所有子节点
         for (NodeModel childModel : children) {
             List<NodeModel> childrenOfChild = childModel.getChildrenR();
 
@@ -434,21 +453,21 @@ public class SubjectController {
                 // 当前Y + 当前节点高度 + 间距
                 childY += selfHeight + SizeConstants.NODE_GAP_Y;
             } else {
-                double childrenHeight = childModel.getChildrenHeightR();
-                if (selfHeight < childrenHeight) {
+                // 当前节点的高度 < 子节点的总高度
+                if (selfHeight < childModel.getChildrenHeightR()) {
+                    // 先调整子节点们的位置，再让当前节点在子节点的中间
                     adjustChildrenYR(childModel, childY);
-                    childModel.setY(childModel.getMidYR() - selfHeight / 2.0);
-                    // 下一个子节点的Y坐标 = 最后一个子节点的底部 + 间距
+                    childModel.setY((childModel.getStartYR() + childModel.getEndYR() - selfHeight) / 2.0);
+                    // 最后一个子节点的底部 + 间距
                     childY = childModel.getEndYR() + SizeConstants.NODE_GAP_Y;
-                }
-                //当前节点的高度 > 子节点的总高度
-                else {
+                } else {
                     childModel.setY(childY);
                     // 当前Y + 当前节点高度 + 间距
                     childY += selfHeight + SizeConstants.NODE_GAP_Y;
                     adjustChildrenYR(childModel, null);
                 }
             }
+
         }
     }
 
@@ -458,66 +477,34 @@ public class SubjectController {
             return;
         }
 
-        // 递归时，y 不为空，以传入的 y 为第一个子节点的Y坐标
         double childY;
         if (y == null) {
-            double totalHeight = calculateTotalHeightL(children);
+            double totalHeight = parentModel.getChildrenHeightL();
             double parentMidY = parentModel.getY() + parentModel.getSelfHeight() / 2.0;
             childY = parentMidY - totalHeight / 2.0;
         } else {
             childY = y;
         }
 
-        // 依次调整所有子节点
         for (NodeModel childModel : children) {
             List<NodeModel> childrenOfChild = childModel.getChildrenL();
 
             double selfHeight = childModel.getSelfHeight();
             if (childrenOfChild.isEmpty()) {
                 childModel.setY(childY);
-                // 当前Y + 当前节点高度 + 间距
                 childY += selfHeight + SizeConstants.NODE_GAP_Y;
             } else {
-                double childrenHeight = childModel.getChildrenHeightL();
-                if (selfHeight < childrenHeight) {
+                if (selfHeight < childModel.getChildrenHeightL()) {
                     adjustChildrenYL(childModel, childY);
-                    childModel.setY(childModel.getMidYL() - selfHeight / 2.0);
-                    // 下一个子节点的Y坐标 = 最后一个子节点的底部 + 间距
+                    childModel.setY((childModel.getStartYL() + childModel.getEndYL() - selfHeight) / 2.0);
                     childY = childModel.getEndYL() + SizeConstants.NODE_GAP_Y;
-                }
-                //当前节点的高度 > 子节点的总高度
-                else {
+                } else {
                     childModel.setY(childY);
-                    // 当前Y + 当前节点高度 + 间距
                     childY += selfHeight + SizeConstants.NODE_GAP_Y;
                     adjustChildrenYL(childModel, null);
                 }
             }
         }
-    }
-
-    /**
-     * 计算所有子孙节点的总高度，
-     * 每个 Math.max(子节点高度, 孙节点高度) + 间距 * (子节点数量 - 1)
-     */
-    private double calculateTotalHeightR(List<NodeModel> children) {
-        double totalHeight = 0;
-        for (NodeModel child : children) {
-            totalHeight += Math.max(child.getSelfHeight(), child.getChildrenHeightR());
-        }
-        totalHeight += SizeConstants.NODE_GAP_Y * (children.size() - 1);
-
-        return totalHeight;
-    }
-
-    private double calculateTotalHeightL(List<NodeModel> children) {
-        double totalHeight = 0;
-        for (NodeModel child : children) {
-            totalHeight += Math.max(child.getSelfHeight(), child.getChildrenHeightL());
-        }
-        totalHeight += SizeConstants.NODE_GAP_Y * (children.size() - 1);
-
-        return totalHeight;
     }
 
     public void adjustChildrenSize() {
