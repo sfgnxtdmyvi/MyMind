@@ -1,5 +1,6 @@
 package myMind.controller;
 
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -24,6 +25,7 @@ public class SubjectController {
     public void initRootNode(double centerX, double centerY) {
         rootModel = new NodeModel(centerX, centerY, PosConstants.MIDDLE);
         addNode(rootModel);
+        Platform.runLater(() -> rootModel.getMindNode().getTextArea().requestFocus());
     }
 
     public void addChild() {
@@ -162,13 +164,13 @@ public class SubjectController {
         return model.getMindNode();
     }
 
-    public void paste(MindNode copyNode) {
+    public void paste(MindNode copyNode, byte pos) {
         if (selectedModel == null || copyNode == null) {
             return;
         }
 
         NodeModel cloneModel = copyNode.getModel();
-        if (selectedModel.getPos() == PosConstants.LEFT) {
+        if (pos == PosConstants.LEFT) {
             Point2D pointL = calculateChildPointL();
             cloneModel.setX(pointL.getX());
             cloneModel.setY(pointL.getY());

@@ -7,6 +7,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
 import myMind.constants.PosConstants;
 import myMind.controller.SubjectController;
+import myMind.util.CopyNodeUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ import java.util.List;
 
 public class Workspace extends TabPane {
     private SubjectController subjectController;
-    private MindNode copyNode;
 
     public Workspace() {
         //关闭按钮的显示策略
@@ -171,13 +171,11 @@ public class Workspace extends TabPane {
             // 节点的复制粘贴
             if (shortcutDown && shiftDown) {
                 if (code == KeyCode.C) {
-                    copyNode = subjectController.copy();
+                    CopyNodeUtil.set(subjectController.copy());
                 } else if (code == KeyCode.X) {
-                    copyNode = subjectController.cut();
-                } else if (code == KeyCode.V) {
-                    subjectController.paste(copyNode);
-                    copyNode = null;
+                    CopyNodeUtil.set(subjectController.cut());
                 }
+                return;
             }
 
             // 文本样式

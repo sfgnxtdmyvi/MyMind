@@ -21,6 +21,7 @@ import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 import myMind.controller.FileHandler;
 import myMind.controller.SubjectController;
+import myMind.util.CopyNodeUtil;
 import myMind.util.MeasureTextUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
@@ -35,20 +36,27 @@ import java.io.IOException;
 //@Data 会自动生成 hashCode() 方法
 //循环引用时，会无限递归调用双方的 hashCode() 方法
 @Getter
-public class MindNode extends VBox {
+public class MindNode extends StackPane {
     @Setter
     private NodeModel model;
-    private final StyleClassedTextArea textArea;
+    private final SubjectController subjectController;
+
+    private final VBox contentBox;
     @Setter
     private String imageName;
-    private final SubjectController subjectController;
-    private final Text measureText = MeasureTextUtil.getMeasureText();
-    private final StackPane imageContainer;
     private final ImageView image;
+    private final StackPane imageContainer;
     private final Button closeButton;
+
+    private final StyleClassedTextArea textArea;
+    private final Text measureText = MeasureTextUtil.getMeasureText();
+
+    private Button addButtonR;
+    private Button addButtonL;
 
     // 拖拽缩放相关变量
     private static final double RESIZE_THRESHOLD = 8.0;
+    private static final double BUTTON_THRESHOLD = 15.0;
     private boolean isResizing = false;
     private double startX;
     private double startY;
@@ -65,9 +73,11 @@ public class MindNode extends VBox {
         image.setPreserveRatio(true);
         image.setSmooth(true);
 
-        closeButton = new Button("×");
+        closeButton = new Button("✖");
         closeButton.getStyleClass().add("close-button");
         closeButton.setVisible(false);
+        closeButton.setTranslateX(8);
+        closeButton.setTranslateY(-8);
         StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
 
         // StackPane 负责显示边框
@@ -84,18 +94,36 @@ public class MindNode extends VBox {
         textArea.replaceText(text);
         textArea.setWrapText(true);
         textArea.getStyleClass().add("nodeTextArea");
-        // 让绘制连线时，能获取节点位置
-        textArea.setPrefWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
-        textArea.setPrefHeight(SizeConstants.MIN_TEXTAREA_HEIGHT);
+        VBox.setVgrow(textArea, Priority.ALWAYS);
 
-        setAlignment(Pos.CENTER);
+        contentBox = new VBox();
+        contentBox.setAlignment(Pos.CENTER);
+        contentBox.setPadding(new Insets(10, 10, 10, 10));
+        contentBox.getStyleClass().add("nodeBorder");
+        contentBox.getChildren().addAll(imageContainer, textArea);
+
+        getChildren().add(contentBox);
+        byte pos = model.getPos();
+        if (pos != PosConstants.LEFT) {
+            addButtonR = new Button("✚");
+            addButtonR.getStyleClass().add("action-button");
+            addButtonR.setVisible(false);
+            StackPane.setAlignment(addButtonR, Pos.CENTER_RIGHT);
+            addButtonR.setTranslateX(8);
+            getChildren().add(addButtonR);
+        }
+
+        if (pos != PosConstants.RIGHT) {
+            addButtonL = new Button("✚");
+            addButtonL.getStyleClass().add("action-button");
+            addButtonL.setVisible(false);
+            StackPane.setAlignment(addButtonL, Pos.CENTER_LEFT);
+            addButtonL.setTranslateX(-8);
+            getChildren().add(addButtonL);
+        }
+
         setPrefWidth(SizeConstants.MIN_NODE_WIDTH);
         setPrefHeight(SizeConstants.MIN_NODE_HEIGHT);
-        getStyleClass().add("nodeBorder");
-        setPadding(new Insets(10, 10, 10, 10));
-
-        getChildren().addAll(imageContainer, textArea);
-        VBox.setVgrow(textArea, Priority.ALWAYS);
 
         // 模型x、y变化时，改变位置
         model.xProperty()
@@ -149,12 +177,104 @@ public class MindNode extends VBox {
         // 选中节点
         addEventFilter(MouseEvent.MOUSE_PRESSED, e -> subjectController.setSelectedModel(model));
 
+        addAddBtnListener();
+
+        addImageListener();
+
         // 文本变化动态调整
         textArea.textProperty().addListener((obs, oldText, newText) ->
                 Platform.runLater(this::adjustSize));
+    }
 
+    private void addAddBtnListener() {
+        // 鼠标移入左右中心点时，显示添加按钮
+        byte pos = model.getPos();
+        if (pos == PosConstants.RIGHT) {
+            setOnMouseMoved(e -> {
+                double midHeight = getBoundsInLocal().getHeight() / 2;
+                double y = e.getY();
+                if (e.getX() > getBoundsInLocal().getWidth() - BUTTON_THRESHOLD &&
+                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                    addButtonR.setVisible(true);
+                }
+            });
+
+            setOnMouseExited(e -> addButtonR.setVisible(false));
+
+            addButtonR.setOnAction(e -> {
+                MindNode mindNode = CopyNodeUtil.get();
+                if (mindNode == null) {
+                    subjectController.addChildR();
+                } else {
+                    subjectController.paste(mindNode,PosConstants.RIGHT);
+                }
+            });
+        }
+
+        if (pos == PosConstants.LEFT) {
+            setOnMouseMoved(e -> {
+                double midHeight = getBoundsInLocal().getHeight() / 2;
+                double y = e.getY();
+                if (e.getX() < BUTTON_THRESHOLD &&
+                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                    addButtonL.setVisible(true);
+                }
+            });
+            setOnMouseExited(e -> addButtonL.setVisible(false));
+
+            addButtonL.setOnAction(e -> {
+                MindNode mindNode = CopyNodeUtil.get();
+                if (mindNode == null) {
+                    subjectController.addChildL();
+                } else {
+                    subjectController.paste(mindNode, PosConstants.LEFT);
+                }
+            });
+        }
+
+        // 用 pos != PosConstants.LEFT 写法添加事件的话，根节点添加左按钮的事件时，会覆盖右按钮的事件
+        if (pos == PosConstants.MIDDLE) {
+            setOnMouseMoved(e -> {
+                double midHeight = getBoundsInLocal().getHeight() / 2;
+                double y = e.getY();
+
+                if (e.getX() > getBoundsInLocal().getWidth() - BUTTON_THRESHOLD &&
+                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                    addButtonR.setVisible(true);
+                }
+                if (e.getX() < BUTTON_THRESHOLD &&
+                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                    addButtonL.setVisible(true);
+                }
+            });
+
+            setOnMouseExited(e -> {
+                addButtonR.setVisible(false);
+                addButtonL.setVisible(false);
+            });
+
+            addButtonR.setOnAction(e -> {
+                MindNode mindNode = CopyNodeUtil.get();
+                if (mindNode == null) {
+                    subjectController.addChildR();
+                } else {
+                    subjectController.paste(mindNode, PosConstants.RIGHT);
+                }
+            });
+            addButtonL.setOnAction(e -> {
+                MindNode mindNode = CopyNodeUtil.get();
+                if (mindNode == null) {
+                    subjectController.addChildL();
+                } else {
+                    subjectController.paste(mindNode, PosConstants.LEFT);
+                }
+            });
+        }
+    }
+
+    private void addImageListener() {
         // 粘贴图片
-        textArea.setOnKeyReleased(e -> {
+        setOnKeyReleased(e -> {
             if (e.isControlDown() && e.getCode() == KeyCode.V) {
                 // javafx 的剪贴板获取不了图片，只能用 awt 的
                 Transferable transferable = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
@@ -204,9 +324,10 @@ public class MindNode extends VBox {
             double imageHeight = image.getBoundsInLocal().getHeight();
 
             if (e.getX() > imageWidth - RESIZE_THRESHOLD) {
-                if (e.getY() > imageHeight - RESIZE_THRESHOLD) {
+                double y = e.getY();
+                if (y > imageHeight - RESIZE_THRESHOLD) {
                     imageContainer.setCursor(Cursor.SE_RESIZE);
-                } else if (e.getY() < RESIZE_THRESHOLD) {
+                } else if (y < BUTTON_THRESHOLD) {
                     imageContainer.setCursor(Cursor.HAND);
                     closeButton.setVisible(true);
                 }
@@ -225,6 +346,7 @@ public class MindNode extends VBox {
             adjustSize();
         });
 
+        // 缩放
         imageContainer.setOnMousePressed(e -> {
             if (image.isVisible()) {
                 startX = e.getSceneX();
@@ -270,8 +392,6 @@ public class MindNode extends VBox {
         double nodeHeight;
 
         if (!imageVisible && text.isEmpty()) {
-            textWidth = SizeConstants.MIN_TEXTAREA_WIDTH;
-            textHeight = SizeConstants.MIN_TEXTAREA_HEIGHT;
             nodeWidth = SizeConstants.MIN_NODE_WIDTH;
             nodeHeight = SizeConstants.MIN_NODE_HEIGHT;
         } else {
@@ -309,8 +429,6 @@ public class MindNode extends VBox {
 
         double originalWidth = getPrefWidth();
 
-        textArea.setPrefWidth(textWidth);
-        textArea.setPrefHeight(textHeight);
         setPrefWidth(nodeWidth);
         setPrefHeight(nodeHeight);
 

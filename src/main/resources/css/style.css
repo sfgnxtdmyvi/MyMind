@@ -11,11 +11,11 @@
 
 /* 消息提示 */
 .message {
-    -fx-background-color:rgba(0, 0, 0, 0.7);
-    -fx-text-fill:white;
-    -fx-font-size:17;
-    -fx-padding:5 10;
-    -fx-background-radius:8;
+    -fx-background-color: rgba(0, 0, 0, 0.7);
+    -fx-text-fill: white;
+    -fx-font-size: 17;
+    -fx-padding: 5 10;
+    -fx-background-radius: 8;
 }
 
 /*——————————————————————————————————节点——————————————————————————————————*/
@@ -28,21 +28,7 @@
 
 .nodeImage {
     -fx-border-width: 1;
-    -fx-border-color: #88adf7;
-}
-
-.close-button {
-    -fx-background-color: #73bdbd;
-    -fx-text-fill: white;
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-min-width: 17px;
-    -fx-min-height: 17px;
-    -fx-max-width: 17px;
-    -fx-max-height: 17px;
-    -fx-padding: 0;
-    -fx-background-radius: 10px;
-    -fx-alignment: center;
+    -fx-border-color: #82a7f3;
 }
 
 .nodeTextArea {
@@ -63,4 +49,37 @@
 /* 选中文本的背景色 */
 .styled-text-area .selection {
     -fx-fill: #aad1ff;
+}
+
+/*——————————————————————————————————按钮——————————————————————————————————*/
+.close-button, .action-button {
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-text-fill: white;
+
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-max-width: 18px;
+    -fx-max-height: 18px;
+    -fx-background-radius: 9px;
+
+    -fx-padding: 0;
+    -fx-alignment: center;
+    -fx-cursor: hand;
+}
+
+.close-button {
+    -fx-background-color: #7ed1d1;
+}
+
+.close-button:hover {
+    -fx-background-color: #6caaaa;
+}
+
+.action-button {
+    -fx-background-color: #80d186;
+}
+
+.action-button:hover {
+    -fx-background-color: #6aae6d;
 }
