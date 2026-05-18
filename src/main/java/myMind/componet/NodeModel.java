@@ -73,12 +73,13 @@ public class NodeModel {
     }
 
     //———————————————————————————————————————————宽高计算———————————————————————————————————————————
+
     /**
      * 计算子节点的总高度
      */
     public double getChildrenHeightR() {
         double totalHeight = 0;
-        for (NodeModel child :childrenR) {
+        for (NodeModel child : childrenR) {
             totalHeight += child.getHeightR();
         }
         totalHeight += SizeConstants.NODE_GAP_Y * (childrenR.size() - 1);
@@ -87,7 +88,7 @@ public class NodeModel {
 
     public double getChildrenHeightL() {
         double totalHeight = 0;
-        for (NodeModel child :childrenL) {
+        for (NodeModel child : childrenL) {
             totalHeight += child.getHeightL();
         }
         totalHeight += SizeConstants.NODE_GAP_Y * (childrenL.size() - 1);
@@ -96,7 +97,8 @@ public class NodeModel {
 
     /**
      * 计算节点的高度
-     * @return  Math.max(当前节点的高度, 子节点的总高度)
+     *
+     * @return Math.max(当前节点的高度, 子节点的总高度)
      */
     private double getHeightR() {
         int size = childrenR.size();
@@ -138,7 +140,8 @@ public class NodeModel {
     public double getStartYR() {
         NodeModel fistNodeModel = childrenR.get(0);
         if (!fistNodeModel.childrenR.isEmpty()) {
-            return fistNodeModel.getStartYR();
+            // 当前节点可能比子节节点的总高度更高
+            return Math.min(fistNodeModel.getY(),fistNodeModel.getStartYR());
         } else {
             return fistNodeModel.getY();
         }
@@ -147,7 +150,7 @@ public class NodeModel {
     public double getStartYL() {
         NodeModel fistNodeModel = childrenL.get(0);
         if (!fistNodeModel.childrenL.isEmpty()) {
-            return fistNodeModel.getStartYL();
+            return Math.min(fistNodeModel.getY(), fistNodeModel.getStartYL());
         } else {
             return fistNodeModel.getY();
         }
@@ -155,19 +158,21 @@ public class NodeModel {
 
     public double getEndYR() {
         NodeModel lastNodeModel = childrenR.get(childrenR.size() - 1);
+        double selfEndY = lastNodeModel.getY() + lastNodeModel.getSelfHeight();
         if (!lastNodeModel.childrenR.isEmpty()) {
-            return lastNodeModel.getEndYR();
+            return Math.max(selfEndY, lastNodeModel.getEndYR());
         } else {
-            return lastNodeModel.getY() + lastNodeModel.getSelfHeight();
+            return selfEndY;
         }
     }
 
     public double getEndYL() {
         NodeModel lastNodeModel = childrenL.get(childrenL.size() - 1);
+        double selfEndY = lastNodeModel.getY() + lastNodeModel.getSelfHeight();
         if (!lastNodeModel.childrenL.isEmpty()) {
-            return lastNodeModel.getEndYL();
+            return Math.max(selfEndY, lastNodeModel.getEndYL());
         } else {
-            return lastNodeModel.getY() + lastNodeModel.getSelfHeight();
+            return selfEndY;
         }
     }
 }

@@ -1,6 +1,5 @@
 package myMind.componet;
 
-import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
@@ -24,8 +23,6 @@ public class Subject extends Pane {
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
     private final SubjectController subjectController;
-    // 缩放提示标签
-    private Label scaleLabel;
 
     private double dragStartX, dragStartY;
     private double mousePressedX;
@@ -38,17 +35,12 @@ public class Subject extends Pane {
     public Subject(SubjectController subjectController) {
         this.subjectController = subjectController;
 
-        scaleLabel = new Label("100%");
-        scaleLabel.getStyleClass().add("message");
-        scaleLabel.setVisible(false);
-        scaleLabel.setManaged(false);
-
         // 让连线不干扰鼠标事件
         linesLayerL.setMouseTransparent(true);
         linesLayerR.setMouseTransparent(true);
         nodesLayer.setMouseTransparent(false);
 
-        getChildren().addAll(linesLayerL, linesLayerR, nodesLayer, scaleLabel);
+        getChildren().addAll(linesLayerL, linesLayerR, nodesLayer);
 
         addListener();
     }
@@ -229,8 +221,9 @@ public class Subject extends Pane {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        //确保两个图层始终填满整个 Subject
+        //确保始终填满整个 Subject
         nodesLayer.resizeRelocate(0, 0, getWidth(), getHeight());
         linesLayerR.resizeRelocate(0, 0, getWidth(), getHeight());
+        linesLayerL.resizeRelocate(0, 0, getWidth(), getHeight());
     }
 }
