@@ -32,6 +32,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 
 //@Data 会自动生成 hashCode() 方法
 //循环引用时，会无限递归调用双方的 hashCode() 方法
@@ -136,14 +137,13 @@ public class MindNode extends StackPane {
         addListener();
     }
 
-    public MindNode(NodeModel model, SubjectController subjectController, String imageName, double imageWidth, double imageHeight) {
-        this(model, subjectController, "");
-        this.imageName = imageName;
+    public void loadImage(String imagePath, double imageWidth, double imageHeight) {
+        this.imageName = imagePath;
         ratio = imageWidth / imageHeight;
 
         imageContainer.setVisible(true);
         imageContainer.setManaged(true);
-        File file = new File(imageName);
+        File file = new File(imagePath);
         image.setImage(new Image(file.toURI().toString()));
         image.setFitWidth(imageWidth);
         image.setFitHeight(imageHeight);
@@ -161,21 +161,18 @@ public class MindNode extends StackPane {
         image.setFitHeight(imageHeight / 2.2);
     }
 
-    public void loadImage(String imagePath, double imageWidth, double imageHeight) {
-        this.imageName = imagePath;
-        ratio = imageWidth / imageHeight;
-
-        imageContainer.setVisible(true);
-        imageContainer.setManaged(true);
-        File file = new File(imagePath);
-        image.setImage(new Image(file.toURI().toString()));
-        image.setFitWidth(imageWidth);
-        image.setFitHeight(imageHeight);
-    }
-
     private void addListener() {
         // 选中节点
-        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> subjectController.setSelectedModel(model));
+        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+            subjectController.setSelectedModel(model);
+        });
+
+        contentBox.setOnMouseClicked(e -> {
+            MindNode copyNode = CopyNodeUtil.get();
+            if (copyNode != null) {
+                subjectController.pasteSibling(copyNode, model.getPos());
+            }
+        });
 
         addAddBtnListener();
 
@@ -206,7 +203,7 @@ public class MindNode extends StackPane {
                 if (mindNode == null) {
                     subjectController.addChildR();
                 } else {
-                    subjectController.paste(mindNode,PosConstants.RIGHT);
+                    subjectController.pasteChild(mindNode, PosConstants.RIGHT);
                 }
             });
         }
@@ -227,7 +224,7 @@ public class MindNode extends StackPane {
                 if (mindNode == null) {
                     subjectController.addChildL();
                 } else {
-                    subjectController.paste(mindNode, PosConstants.LEFT);
+                    subjectController.pasteChild(mindNode, PosConstants.LEFT);
                 }
             });
         }
@@ -258,7 +255,7 @@ public class MindNode extends StackPane {
                 if (mindNode == null) {
                     subjectController.addChildR();
                 } else {
-                    subjectController.paste(mindNode, PosConstants.RIGHT);
+                    subjectController.pasteChild(mindNode, PosConstants.RIGHT);
                 }
             });
             addButtonL.setOnAction(e -> {
@@ -266,7 +263,7 @@ public class MindNode extends StackPane {
                 if (mindNode == null) {
                     subjectController.addChildL();
                 } else {
-                    subjectController.paste(mindNode, PosConstants.LEFT);
+                    subjectController.pasteChild(mindNode, PosConstants.LEFT);
                 }
             });
         }
@@ -384,7 +381,7 @@ public class MindNode extends StackPane {
      * 根据内容动态调整尺寸
      */
     public void adjustSize() {
-        String text = getString();
+        String text = textArea.getText();
         boolean imageVisible = imageContainer.isVisible();
         double textWidth;
         double textHeight;
@@ -444,23 +441,63 @@ public class MindNode extends StackPane {
         }
     }
 
-    private String getString() {
-        String text = textArea.getText();
-        return text;
-    }
-
     public MindNode clone() {
-        NodeModel originalModel = model;
-        NodeModel newModel = new NodeModel(
+        NodeModel copyModel = new NodeModel(
                 0,
                 0,
-                originalModel.getPos()
+                model.getPos()
         );
 
-        MindNode mindNode = new MindNode(newModel, subjectController, imageName, image.getFitWidth(), image.getFitHeight());
-        // todo 复制子节点
+        MindNode copyNode = new MindNode(copyModel, subjectController, textArea.getText());
+        if (imageName != null) {
+            copyNode.loadImage(imageName, image.getFitWidth(), image.getFitHeight());
+        }
+        copyStyles(copyNode);
 
-        return mindNode;
+        if (model.getPos() == PosConstants.RIGHT) {
+            for (NodeModel childModel : model.getChildrenR()) {
+                NodeModel clone = childModel.getMindNode().clone().getModel();
+                copyModel.addChildR(clone);
+                clone.setParent(copyModel);
+            }
+        } else {
+            for (NodeModel childModel : model.getChildrenL()) {
+                NodeModel clone = childModel.getMindNode().clone().getModel();
+                copyModel.addChildL(clone);
+                clone.setParent(copyModel);
+            }
+        }
+
+        return copyNode;
     }
 
+    public void copyStyles(MindNode copyNode) {
+        int length = textArea.getLength();
+        if (length == 0) {
+            return;
+        }
+
+        StyleClassedTextArea copyTextArea = copyNode.getTextArea();
+        int start = 0;
+        Collection<String> lastStyles = textArea.getStyleOfChar(0);
+
+        for (int i = 1; i < length; i++) {
+            Collection<String> currentStyles = textArea.getStyleOfChar(i);
+
+            // 样式变化时保存前一段
+            if (!currentStyles.equals(lastStyles)) {
+                if (!lastStyles.isEmpty()) {
+                    copyTextArea.setStyle(start, i, lastStyles);
+                }
+
+                lastStyles = currentStyles;
+                start = i;
+            }
+        }
+
+        // 由于最后一段不会变化，额外处理
+        if (!lastStyles.isEmpty()) {
+            copyTextArea.setStyle(start, length, lastStyles);
+        }
+    }
 }

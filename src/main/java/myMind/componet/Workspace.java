@@ -1,5 +1,6 @@
 package myMind.componet;
 
+import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Tab;
@@ -24,6 +25,7 @@ public class Workspace extends TabPane {
         setTabClosingPolicy(TabClosingPolicy.ALL_TABS);
         getStyleClass().add("hide-tabs");
         addSubject();
+        Platform.runLater(() -> subjectController.getRootModel().getMindNode().getTextArea().requestFocus());
 
         addListener();
     }
@@ -171,7 +173,7 @@ public class Workspace extends TabPane {
             // 节点的复制粘贴
             if (shortcutDown && shiftDown) {
                 if (code == KeyCode.C) {
-                    CopyNodeUtil.set(subjectController.copy());
+                    CopyNodeUtil.set(subjectController.getSelectedModel().getMindNode().clone());
                 } else if (code == KeyCode.X) {
                     CopyNodeUtil.set(subjectController.cut());
                 }

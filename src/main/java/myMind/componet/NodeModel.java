@@ -62,6 +62,16 @@ public class NodeModel {
         child.setParent(this);
     }
 
+    public void addChildAtR(int index, NodeModel child) {
+        childrenR.add(index, child);
+        child.setParent(this);
+    }
+
+    public void addChildAtL(int index, NodeModel child) {
+        childrenL.add(index, child);
+        child.setParent(this);
+    }
+
     public void removeChildR(NodeModel child) {
         childrenR.remove(child);
         child.setParent(null);
@@ -141,7 +151,7 @@ public class NodeModel {
         NodeModel fistNodeModel = childrenR.get(0);
         if (!fistNodeModel.childrenR.isEmpty()) {
             // 当前节点可能比子节节点的总高度更高
-            return Math.min(fistNodeModel.getY(),fistNodeModel.getStartYR());
+            return Math.min(fistNodeModel.getY(), fistNodeModel.getStartYR());
         } else {
             return fistNodeModel.getY();
         }

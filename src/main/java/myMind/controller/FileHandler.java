@@ -76,9 +76,9 @@ public class FileHandler {
         String text = textArea.getText();
         json.put("text", text);
         if (!text.isEmpty()) {
-            JSONArray styles = extractStyles(textArea, text.length());
+            JSONArray styles = extractStyles(textArea);
             if (!styles.isEmpty()) {
-                json.put("styles", extractStyles(textArea, text.length()));
+                json.put("styles", extractStyles(textArea));
             }
         }
 
@@ -119,11 +119,11 @@ public class FileHandler {
         }
     }
 
-    public static JSONArray extractStyles(StyleClassedTextArea textArea, int length) {
+    public static JSONArray extractStyles(StyleClassedTextArea textArea) {
         JSONArray styles = new JSONArray();
-
         int start = 0;
         Collection<String> lastStyles = textArea.getStyleOfChar(0);
+        int length = textArea.getLength();
 
         for (int i = 1; i < length; i++) {
             Collection<String> currentStyles = textArea.getStyleOfChar(i);
@@ -246,6 +246,7 @@ public class FileHandler {
         // 文本样式
         JSONArray styles = json.getJSONArray("styles");
         if (styles != null) {
+            StyleClassedTextArea textArea = node.getTextArea();
             for (int i = 0; i < styles.size(); i++) {
                 JSONObject styleItem = styles.getJSONObject(i);
                 JSONArray styleArray = styleItem.getJSONArray("style");
@@ -254,7 +255,7 @@ public class FileHandler {
                     styleList.add(styleArray.getString(j));
                 }
 
-                node.getTextArea().setStyle(styleItem.getIntValue("start"),
+                textArea.setStyle(styleItem.getIntValue("start"),
                         styleItem.getIntValue("end"),
                         styleList);
             }
@@ -358,6 +359,7 @@ public class FileHandler {
         // 文本样式
         JSONArray style = json.getJSONArray("style");
         if (style != null) {
+            StyleClassedTextArea textArea = node.getTextArea();
             for (int i = 0; i < style.size(); i++) {
                 JSONObject styleItem = style.getJSONObject(i);
                 Boolean bold = styleItem.getBoolean("bold");
@@ -369,7 +371,7 @@ public class FileHandler {
                     styleList.add("red-text");
                 }
 
-                node.getTextArea().setStyle(styleItem.getIntValue("start"),
+                textArea.setStyle(styleItem.getIntValue("start"),
                         styleItem.getIntValue("end"),
                         styleList);
             }

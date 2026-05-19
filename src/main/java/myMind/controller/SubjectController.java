@@ -1,6 +1,5 @@
 package myMind.controller;
 
-import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -25,7 +24,6 @@ public class SubjectController {
     public void initRootNode(double centerX, double centerY) {
         rootModel = new NodeModel(centerX, centerY, PosConstants.MIDDLE);
         addNode(rootModel);
-        Platform.runLater(() -> rootModel.getMindNode().getTextArea().requestFocus());
     }
 
     public void addChild() {
@@ -38,8 +36,7 @@ public class SubjectController {
             return;
         }
 
-        Point2D pointR = calculateChildPointR();
-        NodeModel childModel = new NodeModel(pointR.getX(), pointR.getY(), PosConstants.RIGHT);
+        NodeModel childModel = new NodeModel(calculateChildXR(), 0, PosConstants.RIGHT);
         selectedModel.addChildR(childModel);
         addNode(childModel);
 
@@ -52,8 +49,7 @@ public class SubjectController {
             return;
         }
 
-        Point2D pointL = calculateChildPointL();
-        NodeModel childModel = new NodeModel(pointL.getX(), pointL.getY(), PosConstants.LEFT);
+        NodeModel childModel = new NodeModel(calculateChildXL(), 0, PosConstants.LEFT);
         selectedModel.addChildL(childModel);
         addNode(childModel);
 
@@ -79,12 +75,8 @@ public class SubjectController {
             return;
         }
 
-        double siblingX = selectedModel.getX();
-        // 当前节点的 Y 轴 + 当前节点高度 + 节点间隔
-        double siblingY = selectedModel.getY() + selectedModel.getMindNode().getPrefHeight() + SizeConstants.NODE_GAP_Y;
-
-        NodeModel siblingModel = new NodeModel(siblingX, siblingY, PosConstants.RIGHT);
-        parentModel.addChildR(siblingModel);
+        NodeModel siblingModel = new NodeModel(selectedModel.getX(), 0, PosConstants.RIGHT);
+        parentModel.addChildAtR(parentModel.getChildrenR().indexOf(selectedModel) + 1, siblingModel);
         addNode(siblingModel);
 
         adjustChildrenYR();
@@ -97,14 +89,9 @@ public class SubjectController {
             return;
         }
 
-        MindNode selectedNode = selectedModel.getMindNode();
         // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-        double siblingX = parentModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
-        // 当前节点的 Y 轴 + 当前节点高度 + 节点间隔
-        double siblingY = selectedModel.getY() + selectedNode.getPrefHeight() + SizeConstants.NODE_GAP_Y;
-
-        NodeModel siblingModel = new NodeModel(siblingX, siblingY, PosConstants.LEFT);
-        parentModel.addChildL(siblingModel);
+        NodeModel siblingModel = new NodeModel(parentModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X, 0, PosConstants.LEFT);
+        parentModel.addChildAtL(parentModel.getChildrenL().indexOf(selectedModel) + 1, siblingModel);
         addNode(siblingModel);
 
         adjustChildrenYL();
@@ -122,31 +109,17 @@ public class SubjectController {
         setSelectedModel(node.getModel());
     }
 
-    public void addNodeWithChildrenR(MindNode node) {
-        subject.add(node);
-
-        node.getModel().getChildrenR().forEach(child -> {
-            addNodeWithChildrenR(child.getMindNode());
-        });
+    private double calculateChildXR() {
+        // 父节点 X 轴 +父节点宽度 + 节点间隔
+        return selectedModel.getX() + selectedModel.getMindNode().getPrefWidth() + SizeConstants.NODE_GAP_X;
     }
 
-    public void addNodeWithChildrenL(MindNode node) {
-        subject.add(node);
-
-        node.getModel().getChildrenL().forEach(child -> {
-            addNodeWithChildrenL(child.getMindNode());
-        });
+    private double calculateChildXL() {
+        // 父节点 X 轴 - 节点间隔 - 节点最小宽度
+        return selectedModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
     }
 
     //———————————————————————————————————————————复制粘贴———————————————————————————————————————————
-    public MindNode copy() {
-        if (selectedModel == null) {
-            return null;
-        }
-
-        return selectedModel.getMindNode();
-    }
-
     public MindNode cut() {
         if (selectedModel == null || selectedModel == rootModel) {
             return null;
@@ -164,16 +137,14 @@ public class SubjectController {
         return model.getMindNode();
     }
 
-    public void paste(MindNode copyNode, byte pos) {
+    public void pasteChild(MindNode copyNode, byte pos) {
         if (selectedModel == null || copyNode == null) {
             return;
         }
 
         NodeModel cloneModel = copyNode.getModel();
         if (pos == PosConstants.LEFT) {
-            Point2D pointL = calculateChildPointL();
-            cloneModel.setX(pointL.getX());
-            cloneModel.setY(pointL.getY());
+            cloneModel.setX(calculateChildXL());
 
             if (cloneModel.getPos() == PosConstants.RIGHT) {
                 cloneModel.setParent(selectedModel);
@@ -187,15 +158,59 @@ public class SubjectController {
             adjustChildrenYL();
             refreshLinesL();
         } else {
-            Point2D pointR = calculateChildPointR();
-            cloneModel.setX(pointR.getX());
-            cloneModel.setY(pointR.getY());
+            cloneModel.setX(calculateChildXR());
 
             if (cloneModel.getPos() == PosConstants.LEFT) {
                 cloneModel.setParent(selectedModel);
                 transLToR(cloneModel);
             } else {
                 selectedModel.addChildR(cloneModel);
+            }
+            addNodeWithChildrenR(copyNode);
+
+            adjustChildrenXR(cloneModel);
+            adjustChildrenYR();
+            refreshLinesR();
+        }
+        setSelectedModel(cloneModel);
+    }
+
+    /**
+     * 粘贴到选中节点的上面
+     * @param copyNode
+     * @param pos
+     */
+    public void pasteSibling(MindNode copyNode, byte pos) {
+        if (selectedModel == null || copyNode == null) {
+            return;
+        }
+
+        NodeModel parentModel = selectedModel.getParent();
+        NodeModel cloneModel = copyNode.getModel();
+        if (pos == PosConstants.LEFT) {
+            int index = parentModel.getChildrenL().indexOf(selectedModel);
+            cloneModel.setX(parentModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X);
+
+            if (cloneModel.getPos() == PosConstants.RIGHT) {
+                cloneModel.setParent(parentModel);
+                transRToLAt(index, cloneModel);
+            } else {
+                parentModel.addChildAtL(index, cloneModel);
+            }
+            addNodeWithChildrenL(copyNode);
+
+            adjustChildrenXL(cloneModel);
+            adjustChildrenYL();
+            refreshLinesL();
+        } else {
+            int index = parentModel.getChildrenR().indexOf(selectedModel);
+            cloneModel.setX(parentModel.getX() + parentModel.getMindNode().getPrefWidth() + SizeConstants.NODE_GAP_X);
+
+            if (cloneModel.getPos() == PosConstants.LEFT) {
+                cloneModel.setParent(parentModel);
+                transLToRAt(index, cloneModel);
+            } else {
+                parentModel.addChildAtR(index, cloneModel);
             }
             addNodeWithChildrenR(copyNode);
 
@@ -232,39 +247,61 @@ public class SubjectController {
         }
     }
 
-    private Point2D calculateChildPointR() {
-        // 父节点 X 轴 +父节点宽度 + 节点间隔
-        double childX = selectedModel.getX() + selectedModel.getMindNode().getPrefWidth() + SizeConstants.NODE_GAP_X;
-        double childY;
-        List<NodeModel> children = selectedModel.getChildrenR();
-        if (children.isEmpty()) {
-            childY = selectedModel.getY();
-        }
-        // 最后一个子节点底部 Y 轴 + 节点间隔
-        else {
-            childY = selectedModel.getEndYR() + SizeConstants.NODE_GAP_Y;
+    private void transLToRAt(int index, NodeModel cloneModel) {
+        // 父节点粘到选中节点的上面，子节点继续跟着父节点
+        cloneModel.setPos(PosConstants.RIGHT);
+        if (index != -1) {
+            cloneModel.getParent().addChildAtR(index, cloneModel);
+        } else {
+            cloneModel.getParent().addChildR(cloneModel);
         }
 
-        return new Point2D(childX, childY);
+        Iterator<NodeModel> iterator = cloneModel.getChildrenL().iterator();
+        while (iterator.hasNext()) {
+            NodeModel child = iterator.next();
+            iterator.remove();
+            transLToRAt(-1, child);
+        }
     }
 
-    private Point2D calculateChildPointL() {
-        // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-        double childX = selectedModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
-        double childY;
-
-        List<NodeModel> children = selectedModel.getChildrenL();
-        if (children.isEmpty()) {
-            childY = selectedModel.getY();
-        }
-        // 最后一个子节点底部 Y 轴 + 节点间隔
-        else {
-            childY = selectedModel.getEndYL() + SizeConstants.NODE_GAP_Y;
+    private void transRToLAt(int index, NodeModel cloneModel) {
+        // 节点改到右边
+        cloneModel.setPos(PosConstants.LEFT);
+        if (index != -1) {
+            cloneModel.getParent().addChildAtL(index, cloneModel);
+        } else {
+            cloneModel.getParent().addChildL(cloneModel);
         }
 
-        return new Point2D(childX, childY);
+        // 从左边删除
+        Iterator<NodeModel> iterator = cloneModel.getChildrenR().iterator();
+        while (iterator.hasNext()) {
+            NodeModel child = iterator.next();
+            iterator.remove();
+            transRToLAt(-1, child);
+        }
     }
 
+    /**
+     * 在 subject 添加节点和子节点
+     *
+     * @param node
+     */
+    public void addNodeWithChildrenR(MindNode node) {
+        subject.add(node);
+
+        node.getModel().getChildrenR().forEach(child -> {
+            addNodeWithChildrenR(child.getMindNode());
+        });
+    }
+
+    public void addNodeWithChildrenL(MindNode node) {
+        subject.add(node);
+
+        node.getModel().getChildrenL().forEach(child -> {
+            addNodeWithChildrenL(child.getMindNode());
+        });
+    }
     //———————————————————————————————————————————删除———————————————————————————————————————————
 
     /**
