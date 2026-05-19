@@ -163,10 +163,9 @@ public class MindNode extends StackPane {
 
     private void addListener() {
         // 选中节点
-        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
-            subjectController.setSelectedModel(model);
-        });
+        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> subjectController.setSelectedModel(model));
 
+        // 粘贴到选中节点上方
         contentBox.setOnMouseClicked(e -> {
             MindNode copyNode = CopyNodeUtil.get();
             if (copyNode != null) {
@@ -183,6 +182,9 @@ public class MindNode extends StackPane {
                 Platform.runLater(this::adjustSize));
     }
 
+    /**
+     * 按钮监听
+     */
     private void addAddBtnListener() {
         // 鼠标移入左右中心点时，显示添加按钮
         byte pos = model.getPos();
@@ -269,6 +271,9 @@ public class MindNode extends StackPane {
         }
     }
 
+    /**
+     * 图片监听
+     */
     private void addImageListener() {
         // 粘贴图片
         setOnKeyReleased(e -> {
@@ -375,6 +380,46 @@ public class MindNode extends StackPane {
             isResizing = false;
             image.setCursor(Cursor.DEFAULT);
         });
+
+        // 点击有图片没有文字的节点显示 textArea
+        imageContainer.setOnMouseClicked(e -> {
+            if (!textArea.isVisible()) {
+                textArea.setVisible(true);
+                setPrefHeight(getPrefHeight() + SizeConstants.MIN_TEXTAREA_HEIGHT);
+                model.setY(model.getY() - SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
+                textArea.requestFocus();
+
+                if (model.getPos() == PosConstants.RIGHT) {
+                    subjectController.adjustChildrenYR();
+                    subjectController.refreshLinesR();
+                } else {
+                    subjectController.adjustChildrenYL();
+                    subjectController.refreshLinesL();
+                }
+            }
+        });
+
+        // 有图片没有文字的节点失去焦点时隐藏 textArea
+        textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                // 清除选区，恢复背景色
+                textArea.deselect();
+
+                if(imageContainer.isVisible() && textArea.getText().isEmpty()){
+                    textArea.setVisible(false);
+                    setPrefHeight(getPrefHeight() - SizeConstants.MIN_TEXTAREA_HEIGHT);
+                    model.setY(model.getY() + SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
+
+                    if (model.getPos() == PosConstants.RIGHT) {
+                        subjectController.adjustChildrenYR();
+                        subjectController.refreshLinesR();
+                    } else {
+                        subjectController.adjustChildrenYL();
+                        subjectController.refreshLinesL();
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -425,7 +470,6 @@ public class MindNode extends StackPane {
         model.setY(model.getY() - delta / 2.0);
 
         double originalWidth = getPrefWidth();
-
         setPrefWidth(nodeWidth);
         setPrefHeight(nodeHeight);
 
@@ -442,28 +486,40 @@ public class MindNode extends StackPane {
     }
 
     public MindNode clone() {
+        byte pos = model.getPos();
         NodeModel copyModel = new NodeModel(
                 0,
                 0,
-                model.getPos()
+                pos
         );
 
         MindNode copyNode = new MindNode(copyModel, subjectController, textArea.getText());
         if (imageName != null) {
             copyNode.loadImage(imageName, image.getFitWidth(), image.getFitHeight());
+            copyNode.adjustSize();
         }
         copyStyles(copyNode);
 
-        if (model.getPos() == PosConstants.RIGHT) {
+        if (pos == PosConstants.LEFT) {
+            for (NodeModel childModel : model.getChildrenL()) {
+                NodeModel clone = childModel.getMindNode().clone().getModel();
+                copyModel.addChildL(clone);
+                clone.setParent(copyModel);
+            }
+        } else {
             for (NodeModel childModel : model.getChildrenR()) {
                 NodeModel clone = childModel.getMindNode().clone().getModel();
                 copyModel.addChildR(clone);
                 clone.setParent(copyModel);
             }
-        } else {
+        }
+
+        // 复制根节点时，把左子节点都添加到右边
+        if (pos == PosConstants.MIDDLE) {
+            copyModel.setPos(PosConstants.RIGHT);
             for (NodeModel childModel : model.getChildrenL()) {
                 NodeModel clone = childModel.getMindNode().clone().getModel();
-                copyModel.addChildL(clone);
+                copyModel.addChildR(clone);
                 clone.setParent(copyModel);
             }
         }

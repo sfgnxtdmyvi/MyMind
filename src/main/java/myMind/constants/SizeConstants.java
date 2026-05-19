@@ -7,8 +7,8 @@ public class SizeConstants {
     public static final int MAX_NODE_WIDTH = 922;
     public static final int MIN_NODE_HEIGHT = 50;
 
-    public static final int MIN_TEXTAREA_WIDTH = MIN_NODE_WIDTH - 22;
     public static final int MIN_TEXTAREA_HEIGHT = MIN_NODE_HEIGHT - 22;
+    public static final int HALF_MIN_TEXTAREA_HEIGHT = MIN_TEXTAREA_HEIGHT/2;
 
     public static final double SCALE = GraphicsEnvironment.getLocalGraphicsEnvironment()
             .getDefaultScreenDevice()

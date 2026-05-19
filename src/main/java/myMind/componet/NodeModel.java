@@ -10,13 +10,12 @@ import java.util.List;
 
 @Data
 public class NodeModel {
-    //节点内部属性
     private MindNode mindNode;
-    private byte pos;
     private final DoubleProperty x = new SimpleDoubleProperty();
     private final DoubleProperty y = new SimpleDoubleProperty();
 
     //节点之间的关系
+    private byte pos;
     private NodeModel parent;
     private final List<NodeModel> childrenR = new ArrayList<>();
     private final List<NodeModel> childrenL = new ArrayList<>();
