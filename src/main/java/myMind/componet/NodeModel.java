@@ -12,7 +12,6 @@ import java.util.List;
 public class NodeModel {
     private MindNode mindNode;
     private final DoubleProperty x = new SimpleDoubleProperty();
-    private final DoubleProperty y = new SimpleDoubleProperty();
 
     //节点之间的关系
     private byte pos;
@@ -20,9 +19,8 @@ public class NodeModel {
     private final List<NodeModel> childrenR = new ArrayList<>();
     private final List<NodeModel> childrenL = new ArrayList<>();
 
-    public NodeModel(double x, double y, byte pos) {
+    public NodeModel(double x, byte pos) {
         this.x.set(x);
-        this.y.set(y);
         this.pos = pos;
     }
 
@@ -36,18 +34,6 @@ public class NodeModel {
 
     public DoubleProperty xProperty() {
         return x;
-    }
-
-    public double getY() {
-        return y.get();
-    }
-
-    public void setY(double y) {
-        this.y.set(y);
-    }
-
-    public DoubleProperty yProperty() {
-        return y;
     }
 
     //———————————————————————————————————————————增删———————————————————————————————————————————
@@ -150,24 +136,24 @@ public class NodeModel {
         NodeModel fistNodeModel = childrenR.get(0);
         if (!fistNodeModel.childrenR.isEmpty()) {
             // 当前节点可能比子节节点的总高度更高
-            return Math.min(fistNodeModel.getY(), fistNodeModel.getStartYR());
+            return Math.min(fistNodeModel.getMindNode().getLayoutY(), fistNodeModel.getStartYR());
         } else {
-            return fistNodeModel.getY();
+            return fistNodeModel.getMindNode().getLayoutY();
         }
     }
 
     public double getStartYL() {
         NodeModel fistNodeModel = childrenL.get(0);
         if (!fistNodeModel.childrenL.isEmpty()) {
-            return Math.min(fistNodeModel.getY(), fistNodeModel.getStartYL());
+            return Math.min(fistNodeModel.getMindNode().getLayoutY(), fistNodeModel.getStartYL());
         } else {
-            return fistNodeModel.getY();
+            return fistNodeModel.getMindNode().getLayoutY();
         }
     }
 
     public double getEndYR() {
         NodeModel lastNodeModel = childrenR.get(childrenR.size() - 1);
-        double selfEndY = lastNodeModel.getY() + lastNodeModel.getSelfHeight();
+        double selfEndY = lastNodeModel.getMindNode().getLayoutY() + lastNodeModel.getSelfHeight();
         if (!lastNodeModel.childrenR.isEmpty()) {
             return Math.max(selfEndY, lastNodeModel.getEndYR());
         } else {
@@ -177,7 +163,7 @@ public class NodeModel {
 
     public double getEndYL() {
         NodeModel lastNodeModel = childrenL.get(childrenL.size() - 1);
-        double selfEndY = lastNodeModel.getY() + lastNodeModel.getSelfHeight();
+        double selfEndY = lastNodeModel.getMindNode().getLayoutY() + lastNodeModel.getSelfHeight();
         if (!lastNodeModel.childrenL.isEmpty()) {
             return Math.max(selfEndY, lastNodeModel.getEndYL());
         } else {

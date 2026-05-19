@@ -126,13 +126,10 @@ public class MindNode extends StackPane {
         setPrefWidth(SizeConstants.MIN_NODE_WIDTH);
         setPrefHeight(SizeConstants.MIN_NODE_HEIGHT);
 
-        // 模型x、y变化时，改变位置
+        // 模型x变化时，改变位置
         model.xProperty()
                 .addListener((obs, oldVal, newVal) -> setLayoutX(newVal.doubleValue()));
-        model.yProperty()
-                .addListener((obs, oldVal, newVal) -> setLayoutY(newVal.doubleValue()));
         setLayoutX(model.getX());
-        setLayoutY(model.getY());
 
         addListener();
     }
@@ -386,7 +383,7 @@ public class MindNode extends StackPane {
             if (!textArea.isVisible()) {
                 textArea.setVisible(true);
                 setPrefHeight(getPrefHeight() + SizeConstants.MIN_TEXTAREA_HEIGHT);
-                model.setY(model.getY() - SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
+                setLayoutY(getLayoutY() - SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
                 textArea.requestFocus();
 
                 if (model.getPos() == PosConstants.RIGHT) {
@@ -408,7 +405,7 @@ public class MindNode extends StackPane {
                 if(imageContainer.isVisible() && textArea.getText().isEmpty()){
                     textArea.setVisible(false);
                     setPrefHeight(getPrefHeight() - SizeConstants.MIN_TEXTAREA_HEIGHT);
-                    model.setY(model.getY() + SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
+                    setLayoutY(getLayoutY() + SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
 
                     if (model.getPos() == PosConstants.RIGHT) {
                         subjectController.adjustChildrenYR();
@@ -467,7 +464,7 @@ public class MindNode extends StackPane {
         // y 轴 - 高度变动的一半，让中心保持不变
         double beforeHeight = getPrefHeight();
         double delta = nodeHeight - beforeHeight;
-        model.setY(model.getY() - delta / 2.0);
+        setLayoutY(getLayoutY() - delta / 2.0);
 
         double originalWidth = getPrefWidth();
         setPrefWidth(nodeWidth);
@@ -488,7 +485,6 @@ public class MindNode extends StackPane {
     public MindNode clone() {
         byte pos = model.getPos();
         NodeModel copyModel = new NodeModel(
-                0,
                 0,
                 pos
         );

@@ -50,7 +50,7 @@ public class Subject extends Pane {
         addEventFilter(ScrollEvent.SCROLL, e -> {
             double deltaY = e.getDeltaY();
             if (e.isShortcutDown()) {
-                double scale = nodesLayer.getScaleX() + (deltaY > 0 ? 0.1 :-0.1);
+                double scale = nodesLayer.getScaleX() + (deltaY > 0 ? 0.1 : -0.1);
                 changeScale(scale);
             } else {
                 for (int i = 0; i < 3; i++) {
@@ -84,7 +84,7 @@ public class Subject extends Pane {
                 NodeModel selectedModel = subjectController.getSelectedModel();
                 if (selectedModel != null) {
                     dragStartX = mousePressedX - selectedModel.getX();
-                    dragStartY = mousePressedY - selectedModel.getY();
+                    dragStartY = mousePressedY - selectedModel.getMindNode().getLayoutY();
                 }
                 e.consume();
             }
@@ -99,7 +99,7 @@ public class Subject extends Pane {
 //                newX = Math.max(20, Math.min(newX, getWidth() - selectedNode.getWidth()));
 //                newY = Math.max(20, Math.min(newY, getHeight() - selectedNode.getHeight()));
 //                selectedNode.getModel().setX(newX);
-//                selectedNode.getModel().setY(newY);
+//                selectedNode.setLayoutY(newY);
 //                controller.refreshLines();
             }
             // 移动画布

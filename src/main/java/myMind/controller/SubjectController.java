@@ -22,8 +22,9 @@ public class SubjectController {
 
     //———————————————————————————————————————————新增———————————————————————————————————————————
     public void initRootNode(double centerX, double centerY) {
-        rootModel = new NodeModel(centerX, centerY, PosConstants.MIDDLE);
+        rootModel = new NodeModel(centerX, PosConstants.MIDDLE);
         addNode(rootModel);
+        rootModel.getMindNode().setLayoutY(centerY);
     }
 
     public void addChild() {
@@ -36,7 +37,7 @@ public class SubjectController {
             return;
         }
 
-        NodeModel childModel = new NodeModel(calculateChildXR(), 0, PosConstants.RIGHT);
+        NodeModel childModel = new NodeModel(calculateChildXR(), PosConstants.RIGHT);
         selectedModel.addChildR(childModel);
         addNode(childModel);
 
@@ -49,7 +50,7 @@ public class SubjectController {
             return;
         }
 
-        NodeModel childModel = new NodeModel(calculateChildXL(), 0, PosConstants.LEFT);
+        NodeModel childModel = new NodeModel(calculateChildXL(), PosConstants.LEFT);
         selectedModel.addChildL(childModel);
         addNode(childModel);
 
@@ -75,7 +76,7 @@ public class SubjectController {
             return;
         }
 
-        NodeModel siblingModel = new NodeModel(selectedModel.getX(), 0, PosConstants.RIGHT);
+        NodeModel siblingModel = new NodeModel(selectedModel.getX(), PosConstants.RIGHT);
         parentModel.addChildAtR(parentModel.getChildrenR().indexOf(selectedModel) + 1, siblingModel);
         addNode(siblingModel);
 
@@ -90,7 +91,7 @@ public class SubjectController {
         }
 
         // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-        NodeModel siblingModel = new NodeModel(parentModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X, 0, PosConstants.LEFT);
+        NodeModel siblingModel = new NodeModel(parentModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X, PosConstants.LEFT);
         parentModel.addChildAtL(parentModel.getChildrenL().indexOf(selectedModel) + 1, siblingModel);
         addNode(siblingModel);
 
@@ -121,8 +122,12 @@ public class SubjectController {
 
     //———————————————————————————————————————————复制粘贴———————————————————————————————————————————
     public MindNode cut() {
-        if (selectedModel == null || selectedModel == rootModel) {
+        if (selectedModel == null) {
             return null;
+        }
+
+        if (selectedModel == rootModel) {
+            return selectedModel.getMindNode().clone();
         }
 
         NodeModel model = selectedModel;
@@ -478,18 +483,17 @@ public class SubjectController {
         double childY;
         if (y == null) {
             double totalHeight = parentModel.getChildrenHeightR();
-            double parentMidY = parentModel.getY() + parentModel.getSelfHeight() / 2.0;
+            double parentMidY = parentModel.getMindNode().getLayoutY() + parentModel.getSelfHeight() / 2.0;
             childY = parentMidY - totalHeight / 2.0;
         } else {
             childY = y;
         }
 
         for (NodeModel childModel : children) {
-            List<NodeModel> childrenOfChild = childModel.getChildrenR();
-
             double selfHeight = childModel.getSelfHeight();
-            if (childrenOfChild.isEmpty()) {
-                childModel.setY(childY);
+            MindNode childNode = childModel.getMindNode();
+            if (childModel.getChildrenR().isEmpty()) {
+                childNode.setLayoutY(childY);
                 // 当前Y + 当前节点高度 + 间距
                 childY += selfHeight + SizeConstants.NODE_GAP_Y;
             } else {
@@ -497,11 +501,11 @@ public class SubjectController {
                 if (selfHeight < childModel.getChildrenHeightR()) {
                     // 先调整子节点们的位置，再让当前节点在子节点的中间
                     adjustChildrenYR(childModel, childY);
-                    childModel.setY((childModel.getStartYR() + childModel.getEndYR() - selfHeight) / 2.0);
+                    childNode.setLayoutY((childModel.getStartYR() + childModel.getEndYR() - selfHeight) / 2.0);
                     // 最后一个子节点的底部 + 间距
                     childY = childModel.getEndYR() + SizeConstants.NODE_GAP_Y;
                 } else {
-                    childModel.setY(childY);
+                    childNode.setLayoutY(childY);
                     // 当前Y + 当前节点高度 + 间距
                     childY += selfHeight + SizeConstants.NODE_GAP_Y;
                     adjustChildrenYR(childModel, null);
@@ -520,26 +524,25 @@ public class SubjectController {
         double childY;
         if (y == null) {
             double totalHeight = parentModel.getChildrenHeightL();
-            double parentMidY = parentModel.getY() + parentModel.getSelfHeight() / 2.0;
+            double parentMidY = parentModel.getMindNode().getLayoutY() + parentModel.getSelfHeight() / 2.0;
             childY = parentMidY - totalHeight / 2.0;
         } else {
             childY = y;
         }
 
         for (NodeModel childModel : children) {
-            List<NodeModel> childrenOfChild = childModel.getChildrenL();
-
             double selfHeight = childModel.getSelfHeight();
-            if (childrenOfChild.isEmpty()) {
-                childModel.setY(childY);
+            MindNode childNode = childModel.getMindNode();
+            if (childModel.getChildrenL().isEmpty()) {
+                childNode.setLayoutY(childY);
                 childY += selfHeight + SizeConstants.NODE_GAP_Y;
             } else {
                 if (selfHeight < childModel.getChildrenHeightL()) {
                     adjustChildrenYL(childModel, childY);
-                    childModel.setY((childModel.getStartYL() + childModel.getEndYL() - selfHeight) / 2.0);
+                    childNode.setLayoutY((childModel.getStartYL() + childModel.getEndYL() - selfHeight) / 2.0);
                     childY = childModel.getEndYL() + SizeConstants.NODE_GAP_Y;
                 } else {
-                    childModel.setY(childY);
+                    childNode.setLayoutY(childY);
                     childY += selfHeight + SizeConstants.NODE_GAP_Y;
                     adjustChildrenYL(childModel, null);
                 }
