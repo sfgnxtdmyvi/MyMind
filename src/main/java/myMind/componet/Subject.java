@@ -5,7 +5,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
-import myMind.controller.SubjectController;
+import myMind.controller.NodeController;
 import myMind.util.MessageUtil;
 
 /**
@@ -22,15 +22,15 @@ public class Subject extends Pane {
      */
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
-    private final SubjectController subjectController;
+    private final NodeController nodeController;
 
     private double paneStartX;
     private double paneStartY;
     private double currentTranslateX = 0;
     private double currentTranslateY = 0;
 
-    public Subject(SubjectController subjectController) {
-        this.subjectController = subjectController;
+    public Subject(NodeController nodeController) {
+        this.nodeController = nodeController;
 
         // 让连线不干扰鼠标事件
         linesLayerL.setMouseTransparent(true);

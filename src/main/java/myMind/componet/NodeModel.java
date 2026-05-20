@@ -8,10 +8,12 @@ import myMind.constants.SizeConstants;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Data
-@EqualsAndHashCode(exclude = {"parent", "childrenR", "childrenL"})
+@EqualsAndHashCode(of = "id")
 public class NodeModel {
+    private final String id = UUID.randomUUID().toString();
     // 属性
     private final DoubleProperty x = new SimpleDoubleProperty();
     private final DoubleProperty y = new SimpleDoubleProperty();
@@ -160,9 +162,11 @@ public class NodeModel {
     public double getX() {
         return x.get();
     }
+
     public void setX(double x) {
         this.x.set(x);
     }
+
     public DoubleProperty xProperty() {
         return x;
     }
@@ -170,9 +174,11 @@ public class NodeModel {
     public double getY() {
         return y.get();
     }
+
     public void setY(double y) {
         this.y.set(y);
     }
+
     public DoubleProperty yProperty() {
         return y;
     }
@@ -180,9 +186,11 @@ public class NodeModel {
     public double getNodeWidth() {
         return nodeWidth.get();
     }
+
     public void setNodeWidth(double nodeWidth) {
         this.nodeWidth.set(nodeWidth);
     }
+
     public DoubleProperty nodeWidthProperty() {
         return nodeWidth;
     }
@@ -190,9 +198,11 @@ public class NodeModel {
     public double getNodeHeight() {
         return nodeHeight.get();
     }
+
     public void setNodeHeight(double nodeHeight) {
         this.nodeHeight.set(nodeHeight);
     }
+
     public DoubleProperty nodeHeightProperty() {
         return nodeHeight;
     }

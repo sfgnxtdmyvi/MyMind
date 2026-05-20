@@ -12,7 +12,7 @@ import java.util.ResourceBundle;
 
 public class MenuController {
 
-    private SubjectController subjectController;
+    private NodeController nodeController;
 
     @Setter
     private Workspace workspace;
@@ -31,12 +31,12 @@ public class MenuController {
 
     @FXML
     private void handleLoad() {
-        subjectController = workspace.getCurrentController();
+        nodeController = workspace.getCurrentController();
 
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File("D:\\MyMind"));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
-        File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
+        File file = fc.showOpenDialog(nodeController.getSubject().getScene().getWindow());
         if (file != null) {
             FileHandler.loadFile(file);
         }
@@ -55,12 +55,12 @@ public class MenuController {
 
     @FXML
     public void handleSaveAs() {
-        subjectController = workspace.getCurrentController();
+        nodeController = workspace.getCurrentController();
 
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File("D:\\MyMind"));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
-        File file = fc.showSaveDialog(subjectController.getSubject().getScene().getWindow());
+        File file = fc.showSaveDialog(nodeController.getSubject().getScene().getWindow());
         if (file != null) {
             FileHandler.saveToFile(file);
         }
@@ -68,12 +68,12 @@ public class MenuController {
 
     @FXML
     private void handleImport() {
-        subjectController = workspace.getCurrentController();
+        nodeController = workspace.getCurrentController();
 
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File("C:\\Users\\k8255\\Documents\\MindLine"));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
-        File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
+        File file = fc.showOpenDialog(nodeController.getSubject().getScene().getWindow());
         if (file != null) {
             FileHandler.importFile(file);
         }
@@ -82,15 +82,15 @@ public class MenuController {
     //—————————————————————————————————————————编辑—————————————————————————————————————————
     @FXML
     private void handleAddChild() {
-        subjectController = workspace.getCurrentController();
+        nodeController = workspace.getCurrentController();
 
-        subjectController.addChildR();
+        nodeController.addChildR();
     }
 
     @FXML
     private void handleDelete() {
-        subjectController = workspace.getCurrentController();
+        nodeController = workspace.getCurrentController();
 
-        subjectController.delete();
+        nodeController.delete();
     }
 }

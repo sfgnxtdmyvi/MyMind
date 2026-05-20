@@ -1,17 +1,14 @@
 package myMind.constants;
 
 public enum MindNodeEvent {
-    SELECTED,
-
-    ADD_CHILD_RIGHT,
-    ADD_CHILD_LEFT,
+    SELECT,
 
     PASTE_SIBLING,
-    PASTE_CHILD_RIGHT,
-    PASTE_CHILD_LEFT,
+    ADD_BUTTON_R,
+    ADD_BUTTON_L,
 
-    IMAGE_PASTE,
-    IMAGE_DELETE,
-
-    RESIZE_IMAGE
+    ADJUST_R,
+    ADJUST_L,
+    ADJUST_YR,
+    ADJUST_YL,
 }

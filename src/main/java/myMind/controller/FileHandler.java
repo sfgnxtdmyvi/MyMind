@@ -28,7 +28,7 @@ import java.util.ResourceBundle;
 
 public class FileHandler {
 
-    private static SubjectController subjectController;
+    private static NodeController nodeController;
 
     @Setter
     private static Workspace workspace;
@@ -46,8 +46,8 @@ public class FileHandler {
         JSONObject subjects = new JSONObject();
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
-            subjectController = ((Subject) tab.getContent()).getSubjectController();
-            NodeModel rootModel = subjectController.getRootModel();
+            nodeController = ((Subject) tab.getContent()).getNodeController();
+            NodeModel rootModel = nodeController.getRootModel();
 
             JSONObject subject = saveSubject(rootModel);
             subjects.put(Integer.toString(i), subject);
@@ -71,7 +71,7 @@ public class FileHandler {
     private static JSONObject saveNode(NodeModel model) {
         JSONObject json = new JSONObject();
 
-        MindNode mindNode = subjectController.getView(model);
+        MindNode mindNode = nodeController.getView(model);
         StyleClassedTextArea textArea = mindNode.getTextArea();
         String text = textArea.getText();
         json.put("text", text);
@@ -159,7 +159,7 @@ public class FileHandler {
 
     //—————————————————————————————————————————打开—————————————————————————————————————————
     public static void loadFile(File file) {
-        subjectController = workspace.getCurrentController();
+        nodeController = workspace.getCurrentController();
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             StringBuilder content = new StringBuilder();
@@ -174,12 +174,12 @@ public class FileHandler {
             // 加载所有主题
             for (int i = 0; i < json.size(); i++) {
                 workspace.addSubject();
-                subjectController = workspace.getCurrentController();
+                nodeController = workspace.getCurrentController();
                 JSONObject subject = json.getJSONObject(Integer.toString(i));
 
                 // 加载根节点
-                NodeModel rootModel = subjectController.getRootModel();
-                MindNode rootNode = subjectController.getRootNode();
+                NodeModel rootModel = nodeController.getRootModel();
+                MindNode rootNode = nodeController.getRootNode();
                 rootNode.getTextArea().replaceText(subject.getString("text"));
                 loadNode(subject, rootNode);
 
@@ -189,9 +189,9 @@ public class FileHandler {
                 loadChildR(childrenR, rootModel);
                 loadChildL(childrenL, rootModel);
 
-                subjectController.adjustChildrenSize();
-                subjectController.adjustChildrenX();
-                subjectController.refreshLines();
+                nodeController.adjustChildrenSize();
+                nodeController.adjustChildrenX();
+                nodeController.refreshLines();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -207,11 +207,11 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(PosConstants.RIGHT);
+            NodeModel model = new NodeModel(0, 0, PosConstants.RIGHT);
             parentModel.addChildR(model);
-            MindNode node = new MindNode(model, subjectController, text);
+            MindNode node = new MindNode(model, text);
             loadNode(jsonNode, node);
-            subjectController.addNode(node);
+            nodeController.addNode(node);
 
             loadChildR(jsonNode.getJSONObject("childrenR"), model);
         }
@@ -226,11 +226,11 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(PosConstants.LEFT);
+            NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
             parentModel.addChildL(model);
-            MindNode node = new MindNode(model, subjectController, text);
+            MindNode node = new MindNode(model, text);
             loadNode(jsonNode, node);
-            subjectController.addNode(node);
+            nodeController.addNode(node);
 
             loadChildL(jsonNode.getJSONObject("childrenL"), model);
         }
@@ -291,12 +291,12 @@ public class FileHandler {
 
     private static void importSubjet(JSONObject json) {
         workspace.addSubject();
-        subjectController = workspace.getCurrentController();
+        nodeController = workspace.getCurrentController();
 
         JSONObject rootJson = json.getJSONObject("root");
 
-        NodeModel rootModel = subjectController.getRootModel();
-        MindNode rootNode = subjectController.getRootNode();
+        NodeModel rootModel = nodeController.getRootModel();
+        MindNode rootNode = nodeController.getRootNode();
         rootNode.getTextArea().replaceText(rootJson.getString("text"));
         importNode(rootJson, rootNode);
 
@@ -305,9 +305,9 @@ public class FileHandler {
         importChildR(children, rootModel);
         importChildL(children2, rootModel);
 
-        subjectController.adjustChildrenSize();
-        subjectController.adjustChildrenX();
-        subjectController.refreshLines();
+        nodeController.adjustChildrenSize();
+        nodeController.adjustChildrenX();
+        nodeController.refreshLines();
     }
 
     private static void importChildR(JSONObject children, NodeModel parentModel) {
@@ -320,11 +320,11 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(PosConstants.RIGHT);
+            NodeModel model = new NodeModel(0, 0, PosConstants.RIGHT);
             parentModel.addChildR(model);
-            MindNode node = new MindNode(model, subjectController, text);
+            MindNode node = new MindNode(model, text);
             importNode(jsonNode, node);
-            subjectController.addNode(node);
+            nodeController.addNode(node);
 
             importChildR(jsonNode.getJSONObject("children"), model);
         }
@@ -339,11 +339,11 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(PosConstants.LEFT);
+            NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
             parentModel.addChildL(model);
-            MindNode node = new MindNode(model, subjectController, text);
+            MindNode node = new MindNode(model, text);
             importNode(jsonNode, node);
-            subjectController.addNode(node);
+            nodeController.addNode(node);
 
             importChildL(jsonNode.getJSONObject("children"), model);
         }

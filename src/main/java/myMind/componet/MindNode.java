@@ -1,10 +1,14 @@
 package myMind.componet;
 
+import javafx.application.Platform;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -15,11 +19,17 @@ import lombok.Data;
 import myMind.constants.MindNodeEvent;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
-import myMind.controller.SubjectController;
+import myMind.controller.FileHandler;
 import myMind.util.MeasureTextUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -49,7 +59,7 @@ public class MindNode extends StackPane {
     private double startWidth;
     private double ratio;
 
-    public MindNode(NodeModel model, SubjectController subjectController, String text) {
+    public MindNode(NodeModel model, String text) {
         this.model = model;
 
         image = new ImageView();
@@ -144,364 +154,286 @@ public class MindNode extends StackPane {
 
     private void addListener() {
         // 选中节点
-        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> onAction.accept(MindNodeEvent.SELECTED));
+        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> onAction.accept(MindNodeEvent.SELECT));
 
         // 粘贴到选中节点上方
         contentBox.setOnMouseClicked(e -> onAction.accept(MindNodeEvent.PASTE_SIBLING));
 
-//        addAddBtnListener();
+        addAddBtnListener();
 
-//        addImageListener();
+        addImageListener();
 
         // 文本变化动态调整
-//        textArea.textProperty().addListener((obs, oldText, newText) ->
-//                Platform.runLater(this::adjustSize));
+        textArea.textProperty().addListener((obs, oldText, newText) ->
+                Platform.runLater(this::adjustSize));
     }
 
     /**
      * 按钮监听
      */
-//    private void addAddBtnListener() {
-//        // 鼠标移入左右中心点时，显示添加按钮
-//        byte pos = model.getPos();
-//        if (pos == PosConstants.RIGHT) {
-//            setOnMouseMoved(e -> {
-//                double midHeight = getBoundsInLocal().getHeight() / 2;
-//                double y = e.getY();
-//                if (e.getX() > getBoundsInLocal().getWidth() - BUTTON_THRESHOLD &&
-//                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
-//                    addButtonR.setVisible(true);
-//                }
-//            });
-//
-//            setOnMouseExited(e -> addButtonR.setVisible(false));
-//
-//            addButtonR.setOnAction(e -> {
-//                MindNode mindNode = CopyNodeUtil.get();
-//                if (mindNode == null) {
-//                    subjectController.addChildR();
-//                } else {
-//                    subjectController.pasteChild(mindNode, PosConstants.RIGHT);
-//                }
-//            });
-//        }
-//
-//        if (pos == PosConstants.LEFT) {
-//            setOnMouseMoved(e -> {
-//                double midHeight = getBoundsInLocal().getHeight() / 2;
-//                double y = e.getY();
-//                if (e.getX() < BUTTON_THRESHOLD &&
-//                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
-//                    addButtonL.setVisible(true);
-//                }
-//            });
-//            setOnMouseExited(e -> addButtonL.setVisible(false));
-//
-//            addButtonL.setOnAction(e -> {
-//                MindNode mindNode = CopyNodeUtil.get();
-//                if (mindNode == null) {
-//                    subjectController.addChildL();
-//                } else {
-//                    subjectController.pasteChild(mindNode, PosConstants.LEFT);
-//                }
-//            });
-//        }
-//
-//        // 用 pos != PosConstants.LEFT 写法添加事件的话，根节点添加左按钮的事件时，会覆盖右按钮的事件
-//        if (pos == PosConstants.MIDDLE) {
-//            setOnMouseMoved(e -> {
-//                double midHeight = getBoundsInLocal().getHeight() / 2;
-//                double y = e.getY();
-//
-//                if (e.getX() > getBoundsInLocal().getWidth() - BUTTON_THRESHOLD &&
-//                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
-//                    addButtonR.setVisible(true);
-//                }
-//                if (e.getX() < BUTTON_THRESHOLD &&
-//                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
-//                    addButtonL.setVisible(true);
-//                }
-//            });
-//
-//            setOnMouseExited(e -> {
-//                addButtonR.setVisible(false);
-//                addButtonL.setVisible(false);
-//            });
-//
-//            addButtonR.setOnAction(e -> {
-//                MindNode mindNode = CopyNodeUtil.get();
-//                if (mindNode == null) {
-//                    subjectController.addChildR();
-//                } else {
-//                    subjectController.pasteChild(mindNode, PosConstants.RIGHT);
-//                }
-//            });
-//            addButtonL.setOnAction(e -> {
-//                MindNode mindNode = CopyNodeUtil.get();
-//                if (mindNode == null) {
-//                    subjectController.addChildL();
-//                } else {
-//                    subjectController.pasteChild(mindNode, PosConstants.LEFT);
-//                }
-//            });
-//        }
-//    }
-//
-//    /**
-//     * 图片监听
-//     */
-//    private void addImageListener() {
-//        // 粘贴图片
-//        setOnKeyReleased(e -> {
-//            if (e.isControlDown() && e.getCode() == KeyCode.V) {
-//                // javafx 的剪贴板获取不了图片，只能用 awt 的
-//                Transferable transferable = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
-//                if (transferable != null && transferable.isDataFlavorSupported(DataFlavor.imageFlavor)) {
-//                    try {
-//                        BufferedImage bufferedImage = (BufferedImage) transferable.getTransferData(DataFlavor.imageFlavor);
-//                        Image clipboardImage = SwingFXUtils.toFXImage(bufferedImage, null);
-//
-//                        //如果开启了 150% 缩放
-//                        //截图时，系统记录的是逻辑像素，比如 100x100，按 150% 缩放渲染出来是 150x150
-//                        //但 awt 剪贴板拿到的是物理像素，就是 150x150，再按 150% 缩放渲染出来是 225x225
-//                        image.setImage(clipboardImage);
-//                        double imageWidth = clipboardImage.getWidth();
-//                        double imageHeight = clipboardImage.getHeight();
-//                        image.setFitWidth(imageWidth / SizeConstants.SCALE);
-//                        image.setFitHeight(imageHeight / SizeConstants.SCALE);
-//                        ratio = imageWidth / imageHeight;
-//                        imageName = FileHandler.saveImage(bufferedImage, imageName);
-//
-//                        imageContainer.setVisible(true);
-//                        imageContainer.setManaged(true);
-//                    } catch (UnsupportedFlavorException | IOException ex) {
-//                        ex.printStackTrace();
-//                    }
-//                    image.setVisible(true);
-//                    image.setManaged(true);
-//                    adjustSize();
-//                }
-//
-//                e.consume();
-//            }
-//        });
-//
-//        // 鼠标移入时，显示边框
-//        imageContainer.setOnMouseEntered(e -> imageContainer.getStyleClass().add("nodeImage"));
-//
-//        imageContainer.setOnMouseExited(e -> {
-//            if (!isResizing) {
-//                imageContainer.getStyleClass().remove("nodeImage");
-//                closeButton.setVisible(false);
-//            }
-//        });
-//
-//        // 鼠标悬浮在右下角显示缩放图标，在右上角显示关闭图标
-//        imageContainer.setOnMouseMoved(e -> {
-//            double imageWidth = image.getBoundsInLocal().getWidth();
-//            double imageHeight = image.getBoundsInLocal().getHeight();
-//
-//            if (e.getX() > imageWidth - RESIZE_THRESHOLD) {
-//                double y = e.getY();
-//                if (y > imageHeight - RESIZE_THRESHOLD) {
-//                    imageContainer.setCursor(Cursor.SE_RESIZE);
-//                } else if (y < BUTTON_THRESHOLD) {
-//                    imageContainer.setCursor(Cursor.HAND);
-//                    closeButton.setVisible(true);
-//                }
-//            } else {
-//                imageContainer.setCursor(Cursor.DEFAULT);
-//                closeButton.setVisible(false);
-//            }
-//        });
-//
-//        closeButton.setOnAction(e -> {
-//            image.setImage(null);
-//            imageContainer.setVisible(false);
-//            imageContainer.setManaged(false);
-//            FileHandler.deleteImage(imageName);
-//            imageName = null;
-//            adjustSize();
-//        });
-//
-//        // 缩放
-//        imageContainer.setOnMousePressed(e -> {
-//            if (image.isVisible()) {
-//                startX = e.getSceneX();
-//                startY = e.getSceneY();
-//                startWidth = image.getFitWidth();
-//
-//                if (e.getX() > image.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD
-//                        && e.getY() > image.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD) {
-//                    isResizing = true;
-//                    image.setCursor(Cursor.SE_RESIZE);
-//                }
-//            }
-//        });
-//
-//        imageContainer.setOnMouseDragged(e -> {
-//            if (isResizing) {
-//                // 根据宽度的变化量，按宽高比计算高度
-//                double imageWidth = startWidth + e.getSceneX() - startX;
-//                double imageHeight = imageWidth / ratio;
-//
-//                image.setFitWidth(imageWidth);
-//                image.setFitHeight(imageHeight);
-//
-//                adjustSize();
-//            }
-//        });
-//
-//        imageContainer.setOnMouseReleased(e -> {
-//            isResizing = false;
-//            image.setCursor(Cursor.DEFAULT);
-//        });
-//
-//        // 点击有图片没有文字的节点显示 textArea
-//        imageContainer.setOnMouseClicked(e -> {
-//            if (!textArea.isVisible()) {
-//                textArea.setVisible(true);
-//                setPrefHeight(getPrefHeight() + SizeConstants.MIN_TEXTAREA_HEIGHT);
-//                model.setY(model.getY() - SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
-//                textArea.requestFocus();
-//
-//                if (model.getPos() == PosConstants.RIGHT) {
-//                    subjectController.adjustChildrenYR();
-//                    subjectController.refreshLinesR();
-//                } else {
-//                    subjectController.adjustChildrenYL();
-//                    subjectController.refreshLinesL();
-//                }
-//            }
-//        });
-//
-//        // 有图片没有文字的节点失去焦点时隐藏 textArea
-//        textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
-//            if (!newVal) {
-//                // 清除选区，恢复背景色
-//                textArea.deselect();
-//
-//                if (imageContainer.isVisible() && textArea.getText().isEmpty()) {
-//                    textArea.setVisible(false);
-//                    setPrefHeight(getPrefHeight() - SizeConstants.MIN_TEXTAREA_HEIGHT);
-//                    model.setY(model.getY() + SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
-//
-//                    if (model.getPos() == PosConstants.RIGHT) {
-//                        subjectController.adjustChildrenYR();
-//                        subjectController.refreshLinesR();
-//                    } else {
-//                        subjectController.adjustChildrenYL();
-//                        subjectController.refreshLinesL();
-//                    }
-//                }
-//            }
-//        });
-//    }
-//
-//    /**
-//     * 根据内容动态调整尺寸
-//     */
-//    public void adjustSize() {
-//        String text = textArea.getText();
-//        boolean imageVisible = imageContainer.isVisible();
-//        double textWidth;
-//        double textHeight;
-//        double nodeWidth;
-//        double nodeHeight;
-//
-//        if (!imageVisible && text.isEmpty()) {
-//            nodeWidth = SizeConstants.MIN_NODE_WIDTH;
-//            nodeHeight = SizeConstants.MIN_NODE_HEIGHT;
-//        } else {
-//            measureText.setText(text);
-//            measureText.setWrappingWidth(0);
-//            // textArea 左右无内边距，宽度 = 文本宽度
-//            textWidth = measureText.getLayoutBounds().getWidth();
-//
-//            // MindNode 宽度 = border(2px) + padding(20px) + textArea 宽度
-//            nodeWidth = textWidth + 22;
-//            // MIN_NODE_WIDTH <= 宽度 <= MAX_NODE_WIDTH
-//            nodeWidth = Math.max(SizeConstants.MIN_NODE_WIDTH,
-//                    Math.min(nodeWidth, SizeConstants.MAX_NODE_WIDTH));
-//            if (imageVisible) {
-//                nodeWidth = Math.max(nodeWidth + 2, image.getFitWidth() + 24);
-//            }
-//
-//            // 设置换行
-//            measureText.setWrappingWidth(SizeConstants.MAX_NODE_WIDTH - 22);
-//            double contentHeight = measureText.getLayoutBounds().getHeight();
-//
-//            double totalPadding = (contentHeight / 25.4) * 2.6;
-//            textHeight = contentHeight + totalPadding;
-//            // MindNode 高度 = border(2px) + padding(20px) + image 高度 + textArea 高度
-//            nodeHeight = textHeight + 22;
-//            if (imageVisible) {
-//                nodeHeight += image.getFitHeight() + 2;
-//            }
-//        }
-//
-//        // y 轴 - 高度变动的一半，让中心保持不变
-//        double beforeHeight = getPrefHeight();
-//        double delta = nodeHeight - beforeHeight;
-//        model.setY(model.getY() - delta / 2.0);
-//
-//        double originalWidth = getPrefWidth();
-//        model.setNodeWidth(nodeWidth);
-//        model.setNodeHeight(nodeHeight);
-//
-//        if (model.getPos() == PosConstants.LEFT) {
-//            model.setX(model.getX() - (nodeWidth - originalWidth));
-//            subjectController.adjustChildrenXL(model);
-//            subjectController.adjustChildrenYL();
-//            subjectController.refreshLinesL();
-//        } else {
-//            subjectController.adjustChildrenXR(model);
-//            subjectController.adjustChildrenYR();
-//            subjectController.refreshLinesR();
-//        }
-//    }
-//
-//    public MindNode clone() {
-//        byte pos = model.getPos();
-//        NodeModel copyModel = new NodeModel(
-//                0,
-//                0,
-//                pos
-//        );
-//
-//        MindNode copyNode = new MindNode(copyModel, subjectController, textArea.getText());
-//        if (imageName != null) {
-//            copyNode.loadImage(imageName, image.getFitWidth(), image.getFitHeight());
-//            copyNode.adjustSize();
-//        }
-//        copyStyles(copyNode);
-//
-//        if (pos == PosConstants.LEFT) {
-//            for (NodeModel childModel : model.getChildrenL()) {
-//                NodeModel clone = subjectController.getView(childModel).clone().getModel();
-//                copyModel.addChildL(clone);
-//                clone.setParent(copyModel);
-//            }
-//        } else {
-//            for (NodeModel childModel : model.getChildrenR()) {
-//                NodeModel clone = subjectController.getView(childModel).clone().getModel();
-//                copyModel.addChildR(clone);
-//                clone.setParent(copyModel);
-//            }
-//        }
-//
-//        // 复制根节点时，把左子节点都添加到右边
-//        if (pos == PosConstants.MIDDLE) {
-//            copyModel.setPos(PosConstants.RIGHT);
-//            for (NodeModel childModel : model.getChildrenL()) {
-//                NodeModel clone = subjectController.getView(childModel).clone().getModel();
-//                copyModel.addChildR(clone);
-//                clone.setParent(copyModel);
-//            }
-//        }
-//
-//        return copyNode;
-//    }
+    private void addAddBtnListener() {
+        // 鼠标移入左右中心点时，显示添加按钮
+        byte pos = model.getPos();
+        if (pos == PosConstants.RIGHT) {
+            setOnMouseMoved(e -> {
+                double midHeight = getBoundsInLocal().getHeight() / 2;
+                double y = e.getY();
+                if (e.getX() > getBoundsInLocal().getWidth() - BUTTON_THRESHOLD &&
+                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                    addButtonR.setVisible(true);
+                }
+            });
+
+            setOnMouseExited(e -> addButtonR.setVisible(false));
+
+            addButtonR.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_R));
+        }
+
+        if (pos == PosConstants.LEFT) {
+            setOnMouseMoved(e -> {
+                double midHeight = getBoundsInLocal().getHeight() / 2;
+                double y = e.getY();
+                if (e.getX() < BUTTON_THRESHOLD &&
+                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                    addButtonL.setVisible(true);
+                }
+            });
+            setOnMouseExited(e -> addButtonL.setVisible(false));
+
+            addButtonL.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_L));
+        }
+
+        // 用 pos != PosConstants.LEFT 写法添加事件的话，根节点添加左按钮的事件时，会覆盖右按钮的事件
+        if (pos == PosConstants.MIDDLE) {
+            setOnMouseMoved(e -> {
+                double midHeight = getBoundsInLocal().getHeight() / 2;
+                double y = e.getY();
+
+                if (e.getX() > getBoundsInLocal().getWidth() - BUTTON_THRESHOLD &&
+                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                    addButtonR.setVisible(true);
+                }
+                if (e.getX() < BUTTON_THRESHOLD &&
+                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                    addButtonL.setVisible(true);
+                }
+            });
+
+            setOnMouseExited(e -> {
+                addButtonR.setVisible(false);
+                addButtonL.setVisible(false);
+            });
+
+            addButtonR.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_R));
+            addButtonL.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_L));
+        }
+    }
+
+    /**
+     * 图片监听
+     */
+    private void addImageListener() {
+        // 粘贴图片
+        setOnKeyReleased(e -> {
+            if (e.isControlDown() && e.getCode() == KeyCode.V) {
+                // javafx 的剪贴板获取不了图片，只能用 awt 的
+                Transferable transferable = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
+                if (transferable != null && transferable.isDataFlavorSupported(DataFlavor.imageFlavor)) {
+                    try {
+                        BufferedImage bufferedImage = (BufferedImage) transferable.getTransferData(DataFlavor.imageFlavor);
+                        Image clipboardImage = SwingFXUtils.toFXImage(bufferedImage, null);
+
+                        //如果开启了 150% 缩放
+                        //截图时，系统记录的是逻辑像素，比如 100x100，按 150% 缩放渲染出来是 150x150
+                        //但 awt 剪贴板拿到的是物理像素，就是 150x150，再按 150% 缩放渲染出来是 225x225
+                        image.setImage(clipboardImage);
+                        double imageWidth = clipboardImage.getWidth();
+                        double imageHeight = clipboardImage.getHeight();
+                        image.setFitWidth(imageWidth / SizeConstants.SCALE);
+                        image.setFitHeight(imageHeight / SizeConstants.SCALE);
+                        ratio = imageWidth / imageHeight;
+                        imageName = FileHandler.saveImage(bufferedImage, imageName);
+
+                        imageContainer.setVisible(true);
+                        imageContainer.setManaged(true);
+                    } catch (UnsupportedFlavorException | IOException ex) {
+                        ex.printStackTrace();
+                    }
+                    image.setVisible(true);
+                    image.setManaged(true);
+                    adjustSize();
+                }
+
+                e.consume();
+            }
+        });
+
+        // 鼠标移入时，显示边框
+        imageContainer.setOnMouseEntered(e -> imageContainer.getStyleClass().add("nodeImage"));
+
+        imageContainer.setOnMouseExited(e -> {
+            if (!isResizing) {
+                imageContainer.getStyleClass().remove("nodeImage");
+                closeButton.setVisible(false);
+            }
+        });
+
+        // 鼠标悬浮在右下角显示缩放图标，在右上角显示关闭图标
+        imageContainer.setOnMouseMoved(e -> {
+            double imageWidth = image.getBoundsInLocal().getWidth();
+            double imageHeight = image.getBoundsInLocal().getHeight();
+
+            if (e.getX() > imageWidth - RESIZE_THRESHOLD) {
+                double y = e.getY();
+                if (y > imageHeight - RESIZE_THRESHOLD) {
+                    imageContainer.setCursor(Cursor.SE_RESIZE);
+                } else if (y < BUTTON_THRESHOLD) {
+                    imageContainer.setCursor(Cursor.HAND);
+                    closeButton.setVisible(true);
+                }
+            } else {
+                imageContainer.setCursor(Cursor.DEFAULT);
+                closeButton.setVisible(false);
+            }
+        });
+
+        closeButton.setOnAction(e -> {
+            image.setImage(null);
+            imageContainer.setVisible(false);
+            imageContainer.setManaged(false);
+            FileHandler.deleteImage(imageName);
+            imageName = null;
+            adjustSize();
+        });
+
+        // 缩放
+        imageContainer.setOnMousePressed(e -> {
+            if (image.isVisible()) {
+                startX = e.getSceneX();
+                startY = e.getSceneY();
+                startWidth = image.getFitWidth();
+
+                if (e.getX() > image.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD
+                        && e.getY() > image.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD) {
+                    isResizing = true;
+                    image.setCursor(Cursor.SE_RESIZE);
+                }
+            }
+        });
+
+        imageContainer.setOnMouseDragged(e -> {
+            if (isResizing) {
+                // 根据宽度的变化量，按宽高比计算高度
+                double imageWidth = startWidth + e.getSceneX() - startX;
+                double imageHeight = imageWidth / ratio;
+
+                image.setFitWidth(imageWidth);
+                image.setFitHeight(imageHeight);
+
+                adjustSize();
+            }
+        });
+
+        imageContainer.setOnMouseReleased(e -> {
+            isResizing = false;
+            image.setCursor(Cursor.DEFAULT);
+        });
+
+        // 点击有图片没有文字的节点显示 textArea
+        imageContainer.setOnMouseClicked(e -> {
+            if (!textArea.isVisible()) {
+                textArea.setVisible(true);
+                model.setNodeHeight(model.getNodeHeight() + SizeConstants.MIN_TEXTAREA_HEIGHT);
+                model.setY(model.getY() - SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
+                textArea.requestFocus();
+
+                if (model.getPos() == PosConstants.RIGHT) {
+                    onAction.accept(MindNodeEvent.ADJUST_YR);
+                } else {
+                    onAction.accept(MindNodeEvent.ADJUST_YL);
+                }
+            }
+        });
+
+        // 有图片没有文字的节点失去焦点时隐藏 textArea
+        textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                // 清除选区，恢复背景色
+                textArea.deselect();
+
+                if (imageContainer.isVisible() && textArea.getText().isEmpty()) {
+                    textArea.setVisible(false);
+                    model.setNodeHeight(model.getNodeHeight() - SizeConstants.MIN_TEXTAREA_HEIGHT);
+                    model.setY(model.getY() + SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
+
+                    if (model.getPos() == PosConstants.RIGHT) {
+                        onAction.accept(MindNodeEvent.ADJUST_YR);
+                    } else {
+                        onAction.accept(MindNodeEvent.ADJUST_YL);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * 根据内容动态调整尺寸
+     */
+    public void adjustSize() {
+        String text = textArea.getText();
+        boolean imageVisible = imageContainer.isVisible();
+        double textWidth;
+        double textHeight;
+        double nodeWidth;
+        double nodeHeight;
+
+        if (!imageVisible && text.isEmpty()) {
+            nodeWidth = SizeConstants.MIN_NODE_WIDTH;
+            nodeHeight = SizeConstants.MIN_NODE_HEIGHT;
+        } else {
+            measureText.setText(text);
+            measureText.setWrappingWidth(0);
+            // textArea 左右无内边距，宽度 = 文本宽度
+            textWidth = measureText.getLayoutBounds().getWidth();
+
+            // MindNode 宽度 = border(2px) + padding(20px) + textArea 宽度
+            nodeWidth = textWidth + 22;
+            // MIN_NODE_WIDTH <= 宽度 <= MAX_NODE_WIDTH
+            nodeWidth = Math.max(SizeConstants.MIN_NODE_WIDTH,
+                    Math.min(nodeWidth, SizeConstants.MAX_NODE_WIDTH));
+            if (imageVisible) {
+                nodeWidth = Math.max(nodeWidth + 2, image.getFitWidth() + 24);
+            }
+
+            // 设置换行
+            measureText.setWrappingWidth(SizeConstants.MAX_NODE_WIDTH - 22);
+            double contentHeight = measureText.getLayoutBounds().getHeight();
+
+            double totalPadding = (contentHeight / 25.4) * 2.6;
+            textHeight = contentHeight + totalPadding;
+            // MindNode 高度 = border(2px) + padding(20px) + image 高度 + textArea 高度
+            nodeHeight = textHeight + 22;
+            if (imageVisible) {
+                nodeHeight += image.getFitHeight() + 2;
+            }
+        }
+
+        // y 轴 - 高度变动的一半，让中心保持不变
+        double beforeHeight = getPrefHeight();
+        double delta = nodeHeight - beforeHeight;
+        model.setY(model.getY() - delta / 2.0);
+
+        double originalWidth = getPrefWidth();
+        model.setNodeWidth(nodeWidth);
+        model.setNodeHeight(nodeHeight);
+
+        if (model.getPos() == PosConstants.LEFT) {
+            model.setX(model.getX() - (nodeWidth - originalWidth));
+            onAction.accept(MindNodeEvent.ADJUST_R);
+        } else {
+            onAction.accept(MindNodeEvent.ADJUST_L);
+        }
+    }
 
     public void copyStyles(MindNode copyNode) {
         int length = textArea.getLength();

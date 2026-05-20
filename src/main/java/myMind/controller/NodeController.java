@@ -1,6 +1,7 @@
 package myMind.controller;
 
 import javafx.geometry.Point2D;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class SubjectController {
+public class NodeController {
     private final Subject subject = new Subject(this);
     private NodeModel rootModel;
     private NodeModel selectedModel = null;
@@ -103,28 +104,54 @@ public class SubjectController {
     }
 
     public void addNode(NodeModel model) {
-        MindNode node = new MindNode(model, this, "");
+        MindNode node = new MindNode(model, "");
         subject.add(node);
         modelToView.put(model, node);
         setSelectedModel(model);
 
         node.setOnAction(event -> {
             switch (event) {
-                case SELECTED -> setSelectedModel(model);
-                case ADD_CHILD_RIGHT -> {
+                case SELECT -> setSelectedModel(model);
+                case PASTE_SIBLING -> {
                     MindNode copyNode = CopyNodeUtil.get();
-
                     if (copyNode != null) {
                         pasteSibling(copyNode, model.getPos());
                     }
                 }
-//                case ADD_CHILD_LEFT ->
-//                case PASTE_SIBLING ->
-//                case PASTE_CHILD_RIGHT ->
-//                case PASTE_CHILD_LEFT ->
-//                case IMAGE_PASTE ->
-//                case IMAGE_DELETE ->
-//                case RESIZE_IMAGE ->
+                case ADD_BUTTON_R -> {
+                    MindNode mindNode = CopyNodeUtil.get();
+                    if (mindNode == null) {
+                        addChildR();
+                    } else {
+                        pasteChild(mindNode, PosConstants.RIGHT);
+                    }
+                }
+                case ADD_BUTTON_L -> {
+                    MindNode mindNode = CopyNodeUtil.get();
+                    if (mindNode == null) {
+                        addChildL();
+                    } else {
+                        pasteChild(mindNode, PosConstants.LEFT);
+                    }
+                }
+                case ADJUST_R -> {
+                    adjustChildrenXL(model);
+                    adjustChildrenYL();
+                    refreshLinesL();
+                }
+                case ADJUST_L -> {
+                    adjustChildrenXR(model);
+                    adjustChildrenYR();
+                    refreshLinesR();
+                }
+                case ADJUST_YR -> {
+                    adjustChildrenYR();
+                    refreshLinesR();
+                }
+                case ADJUST_YL -> {
+                    adjustChildrenYL();
+                    refreshLinesL();
+                }
             }
         });
     }
@@ -138,7 +165,7 @@ public class SubjectController {
 
     private double calculateChildXR() {
         // 父节点 X 轴 +父节点宽度 + 节点间隔
-        return selectedModel.getX() + getView(selectedModel).getPrefWidth() + SizeConstants.NODE_GAP_X;
+        return selectedModel.getX() + selectedModel.getNodeWidth() + SizeConstants.NODE_GAP_X;
     }
 
     private double calculateChildXL() {
@@ -581,7 +608,7 @@ public class SubjectController {
 
     public void adjustChildrenSizeR(NodeModel nodeModel) {
         for (NodeModel childModel : nodeModel.getChildrenR()) {
-//            getView(childModel).adjustSize();
+            getView(childModel).adjustSize();
 
             List<NodeModel> childrenOfChild = childModel.getChildrenR();
             if (!childrenOfChild.isEmpty()) {
@@ -592,7 +619,7 @@ public class SubjectController {
 
     public void adjustChildrenSizeL(NodeModel nodeModel) {
         for (NodeModel childModel : nodeModel.getChildrenL()) {
-//            getView(childModel).adjustSize();
+            getView(childModel).adjustSize();
 
             List<NodeModel> childrenOfChild = childModel.getChildrenL();
             if (!childrenOfChild.isEmpty()) {
@@ -687,5 +714,51 @@ public class SubjectController {
 
     public MindNode getRootNode() {
         return modelToView.get(rootModel);
+    }
+
+    public MindNode copy(NodeModel originalModel) {
+        byte pos = originalModel.getPos();
+        NodeModel copyModel = new NodeModel(
+                0,
+                0,
+                pos
+        );
+
+        MindNode originalNode = getView(originalModel);
+        MindNode copyNode = new MindNode(copyModel, originalNode.getTextArea().getText());
+        String imageName = originalNode.getImageName();
+        ImageView image = originalNode.getImage();
+
+        if (imageName != null) {
+            copyNode.loadImage(imageName, image.getFitWidth(), image.getFitHeight());
+            copyNode.adjustSize();
+        }
+        originalNode.copyStyles(copyNode);
+
+        if (pos == PosConstants.LEFT) {
+            for (NodeModel childModel : originalModel.getChildrenL()) {
+                NodeModel clone = copy(childModel).getModel();
+                copyModel.addChildL(clone);
+                clone.setParent(copyModel);
+            }
+        } else {
+            for (NodeModel childModel : originalModel.getChildrenR()) {
+                NodeModel clone = copy(childModel).getModel();
+                copyModel.addChildR(clone);
+                clone.setParent(copyModel);
+            }
+        }
+
+        // 复制根节点时，把左子节点都添加到右边
+        if (pos == PosConstants.MIDDLE) {
+            copyModel.setPos(PosConstants.RIGHT);
+            for (NodeModel childModel : originalModel.getChildrenL()) {
+                NodeModel clone = copy(childModel).getModel();
+                copyModel.addChildR(clone);
+                clone.setParent(copyModel);
+            }
+        }
+
+        return copyNode;
     }
 }
