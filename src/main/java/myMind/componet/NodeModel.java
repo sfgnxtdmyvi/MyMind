@@ -1,7 +1,5 @@
 package myMind.componet;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import lombok.Data;
 import myMind.constants.SizeConstants;
 
@@ -11,7 +9,6 @@ import java.util.List;
 @Data
 public class NodeModel {
     private MindNode mindNode;
-    private final DoubleProperty x = new SimpleDoubleProperty();
 
     //节点之间的关系
     private byte pos;
@@ -19,23 +16,9 @@ public class NodeModel {
     private final List<NodeModel> childrenR = new ArrayList<>();
     private final List<NodeModel> childrenL = new ArrayList<>();
 
-    public NodeModel(double x, byte pos) {
-        this.x.set(x);
+    public NodeModel(byte pos) {
         this.pos = pos;
     }
-
-    public double getX() {
-        return x.get();
-    }
-
-    public void setX(double x) {
-        this.x.set(x);
-    }
-
-    public DoubleProperty xProperty() {
-        return x;
-    }
-
     //———————————————————————————————————————————增删———————————————————————————————————————————
     public void addChildR(NodeModel child) {
         childrenR.add(child);

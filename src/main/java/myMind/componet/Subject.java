@@ -24,9 +24,6 @@ public class Subject extends Pane {
     private final Pane linesLayerL = new Pane();
     private final SubjectController subjectController;
 
-    private double dragStartX, dragStartY;
-    private double mousePressedX;
-    private double mousePressedY;
     private double paneStartX;
     private double paneStartY;
     private double currentTranslateX = 0;
@@ -60,50 +57,21 @@ public class Subject extends Pane {
             }
         });
 
+        //拖拽画布
         setOnMousePressed(e -> {
             //PRIMARY = 左键
             //SECONDARY = 右键
             //MIDDLE = 滚轮
             if (e.getButton() == MouseButton.PRIMARY) {
-                //拖拽画布
-                if (e.getTarget() == this || e.getTarget() == nodesLayer) {
-                    subjectController.setSelectedModel(null);
-                    paneStartX = e.getSceneX();
-                    paneStartY = e.getSceneY();
-                    e.consume();
-                    return;
-                }
-
-                // 拖拽节点
-                // 获取鼠标按下时的坐标
-                mousePressedX = e.getSceneX();
-                mousePressedY = e.getSceneY();
-
-                //记录拖拽起始位置
-                //鼠标距离节点左上角的距离
-                NodeModel selectedModel = subjectController.getSelectedModel();
-                if (selectedModel != null) {
-                    dragStartX = mousePressedX - selectedModel.getX();
-                    dragStartY = mousePressedY - selectedModel.getMindNode().getLayoutY();
-                }
+                requestFocus();
+                paneStartX = e.getSceneX();
+                paneStartY = e.getSceneY();
                 e.consume();
             }
         });
 
         setOnMouseDragged(e -> {
-            if (e.getButton() == MouseButton.PRIMARY && subjectController.getSelectedModel() != null) {
-//                MindNode selectedNode = controller.getSelectedNode();
-//                double newX = e.getSceneX() - dragStartX;
-//                double newY = e.getSceneY() - dragStartY;
-//                // 限制边界防止拖出视野外
-//                newX = Math.max(20, Math.min(newX, getWidth() - selectedNode.getWidth()));
-//                newY = Math.max(20, Math.min(newY, getHeight() - selectedNode.getHeight()));
-//                selectedNode.getModel().setX(newX);
-//                selectedNode.setLayoutY(newY);
-//                controller.refreshLines();
-            }
-            // 移动画布
-            else if (e.getButton() == MouseButton.PRIMARY) {
+            if (e.getButton() == MouseButton.PRIMARY) {
                 double deltaX = e.getSceneX() - paneStartX;
                 double deltaY = e.getSceneY() - paneStartY;
 
@@ -119,10 +87,6 @@ public class Subject extends Pane {
             }
 
             e.consume();
-        });
-
-        setOnMouseReleased(e -> {
-            // Todo 拖拽移动节点
         });
 
         // 键盘快捷键

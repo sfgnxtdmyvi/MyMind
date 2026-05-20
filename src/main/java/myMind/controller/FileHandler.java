@@ -206,7 +206,7 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(0, PosConstants.RIGHT);
+            NodeModel model = new NodeModel(PosConstants.RIGHT);
             parentModel.addChildR(model);
             MindNode node = new MindNode(model, subjectController, text);
             loadNode(jsonNode, node);
@@ -225,7 +225,7 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(0,  PosConstants.LEFT);
+            NodeModel model = new NodeModel(PosConstants.LEFT);
             parentModel.addChildL(model);
             MindNode node = new MindNode(model, subjectController, text);
             loadNode(jsonNode, node);
@@ -318,7 +318,7 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(0, PosConstants.RIGHT);
+            NodeModel model = new NodeModel(PosConstants.RIGHT);
             parentModel.addChildR(model);
             MindNode node = new MindNode(model, subjectController, text);
             importNode(jsonNode, node);
@@ -337,7 +337,7 @@ public class FileHandler {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
             String text = jsonNode.getString("text");
 
-            NodeModel model = new NodeModel(0, PosConstants.LEFT);
+            NodeModel model = new NodeModel(PosConstants.LEFT);
             parentModel.addChildL(model);
             MindNode node = new MindNode(model, subjectController, text);
             importNode(jsonNode, node);

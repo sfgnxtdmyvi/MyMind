@@ -126,11 +126,6 @@ public class MindNode extends StackPane {
         setPrefWidth(SizeConstants.MIN_NODE_WIDTH);
         setPrefHeight(SizeConstants.MIN_NODE_HEIGHT);
 
-        // 模型x变化时，改变位置
-        model.xProperty()
-                .addListener((obs, oldVal, newVal) -> setLayoutX(newVal.doubleValue()));
-        setLayoutX(model.getX());
-
         addListener();
     }
 
@@ -402,7 +397,7 @@ public class MindNode extends StackPane {
                 // 清除选区，恢复背景色
                 textArea.deselect();
 
-                if(imageContainer.isVisible() && textArea.getText().isEmpty()){
+                if (imageContainer.isVisible() && textArea.getText().isEmpty()) {
                     textArea.setVisible(false);
                     setPrefHeight(getPrefHeight() - SizeConstants.MIN_TEXTAREA_HEIGHT);
                     setLayoutY(getLayoutY() + SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
@@ -471,7 +466,7 @@ public class MindNode extends StackPane {
         setPrefHeight(nodeHeight);
 
         if (model.getPos() == PosConstants.LEFT) {
-            model.setX(model.getX() - (nodeWidth - originalWidth));
+            setLayoutX(getLayoutX() - (nodeWidth - originalWidth));
             subjectController.adjustChildrenXL(model);
             subjectController.adjustChildrenYL();
             subjectController.refreshLinesL();
@@ -484,10 +479,7 @@ public class MindNode extends StackPane {
 
     public MindNode clone() {
         byte pos = model.getPos();
-        NodeModel copyModel = new NodeModel(
-                0,
-                pos
-        );
+        NodeModel copyModel = new NodeModel(pos);
 
         MindNode copyNode = new MindNode(copyModel, subjectController, textArea.getText());
         if (imageName != null) {

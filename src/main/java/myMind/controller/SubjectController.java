@@ -22,9 +22,11 @@ public class SubjectController {
 
     //———————————————————————————————————————————新增———————————————————————————————————————————
     public void initRootNode(double centerX, double centerY) {
-        rootModel = new NodeModel(centerX, PosConstants.MIDDLE);
+        rootModel = new NodeModel(PosConstants.MIDDLE);
         addNode(rootModel);
-        rootModel.getMindNode().setLayoutY(centerY);
+        MindNode rootNode = rootModel.getMindNode();
+        rootNode.setLayoutX(centerX);
+        rootNode.setLayoutY(centerY);
     }
 
     public void addChild() {
@@ -37,9 +39,11 @@ public class SubjectController {
             return;
         }
 
-        NodeModel childModel = new NodeModel(calculateChildXR(), PosConstants.RIGHT);
+        double x = calculateChildXR();
+        NodeModel childModel = new NodeModel(PosConstants.RIGHT);
         selectedModel.addChildR(childModel);
         addNode(childModel);
+        selectedModel.getMindNode().setLayoutX(x);
 
         adjustChildrenYR();
         refreshLinesR();
@@ -50,9 +54,11 @@ public class SubjectController {
             return;
         }
 
-        NodeModel childModel = new NodeModel(calculateChildXL(), PosConstants.LEFT);
+        double x = calculateChildXL();
+        NodeModel childModel = new NodeModel(PosConstants.LEFT);
         selectedModel.addChildL(childModel);
         addNode(childModel);
+        selectedModel.getMindNode().setLayoutX(x);
 
         adjustChildrenYL();
         refreshLinesL();
@@ -76,9 +82,11 @@ public class SubjectController {
             return;
         }
 
-        NodeModel siblingModel = new NodeModel(selectedModel.getX(), PosConstants.RIGHT);
+        double x = selectedModel.getMindNode().getLayoutX();
+        NodeModel siblingModel = new NodeModel(PosConstants.RIGHT);
         parentModel.addChildAtR(parentModel.getChildrenR().indexOf(selectedModel) + 1, siblingModel);
         addNode(siblingModel);
+        selectedModel.getMindNode().setLayoutX(x);
 
         adjustChildrenYR();
         refreshLinesR();
@@ -90,10 +98,11 @@ public class SubjectController {
             return;
         }
 
-        // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-        NodeModel siblingModel = new NodeModel(parentModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X, PosConstants.LEFT);
+        NodeModel siblingModel = new NodeModel(PosConstants.LEFT);
         parentModel.addChildAtL(parentModel.getChildrenL().indexOf(selectedModel) + 1, siblingModel);
         addNode(siblingModel);
+        // 父节点 X 轴 - 节点间隔 - 节点最小宽度
+        selectedModel.getMindNode().setLayoutX(parentModel.getMindNode().getLayoutX() - SizeConstants.ADD_LEFT_NODE_GAP_X);
 
         adjustChildrenYL();
         refreshLinesL();
@@ -112,12 +121,13 @@ public class SubjectController {
 
     private double calculateChildXR() {
         // 父节点 X 轴 +父节点宽度 + 节点间隔
-        return selectedModel.getX() + selectedModel.getMindNode().getPrefWidth() + SizeConstants.NODE_GAP_X;
+        MindNode mindNode = selectedModel.getMindNode();
+        return mindNode.getLayoutX() + mindNode.getPrefWidth() + SizeConstants.NODE_GAP_X;
     }
 
     private double calculateChildXL() {
         // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-        return selectedModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
+        return selectedModel.getMindNode().getLayoutX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
     }
 
     //———————————————————————————————————————————复制粘贴———————————————————————————————————————————
@@ -142,14 +152,14 @@ public class SubjectController {
         return model.getMindNode();
     }
 
-    public void pasteChild(MindNode copyNode, byte pos) {
-        if (selectedModel == null || copyNode == null) {
+    public void pasteChild(MindNode cloneNode, byte pos) {
+        if (selectedModel == null || cloneNode == null) {
             return;
         }
 
-        NodeModel cloneModel = copyNode.getModel();
+        NodeModel cloneModel = cloneNode.getModel();
         if (pos == PosConstants.LEFT) {
-            cloneModel.setX(calculateChildXL());
+            cloneNode.setLayoutX(calculateChildXL());
 
             if (cloneModel.getPos() == PosConstants.RIGHT) {
                 cloneModel.setParent(selectedModel);
@@ -157,13 +167,13 @@ public class SubjectController {
             } else {
                 selectedModel.addChildL(cloneModel);
             }
-            addNodeWithChildrenL(copyNode);
+            addNodeWithChildrenL(cloneNode);
 
             adjustChildrenXL(cloneModel);
             adjustChildrenYL();
             refreshLinesL();
         } else {
-            cloneModel.setX(calculateChildXR());
+            cloneNode.setLayoutX(calculateChildXR());
 
             if (cloneModel.getPos() == PosConstants.LEFT) {
                 cloneModel.setParent(selectedModel);
@@ -171,7 +181,7 @@ public class SubjectController {
             } else {
                 selectedModel.addChildR(cloneModel);
             }
-            addNodeWithChildrenR(copyNode);
+            addNodeWithChildrenR(cloneNode);
 
             adjustChildrenXR(cloneModel);
             adjustChildrenYR();
@@ -183,19 +193,20 @@ public class SubjectController {
     /**
      * 粘贴到选中节点的上面
      *
-     * @param copyNode
+     * @param cloneNode
      * @param pos
      */
-    public void pasteSibling(MindNode copyNode, byte pos) {
-        if (selectedModel == null || copyNode == null) {
+    public void pasteSibling(MindNode cloneNode, byte pos) {
+        if (selectedModel == null || cloneNode == null) {
             return;
         }
 
         NodeModel parentModel = selectedModel.getParent();
-        NodeModel cloneModel = copyNode.getModel();
+        MindNode parentNode = parentModel.getMindNode();
+        NodeModel cloneModel = cloneNode.getModel();
         if (pos == PosConstants.LEFT) {
             int index = parentModel.getChildrenL().indexOf(selectedModel);
-            cloneModel.setX(parentModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X);
+            cloneNode.setLayoutX(parentNode.getLayoutX() - SizeConstants.ADD_LEFT_NODE_GAP_X);
 
             if (cloneModel.getPos() == PosConstants.RIGHT) {
                 cloneModel.setParent(parentModel);
@@ -203,14 +214,14 @@ public class SubjectController {
             } else {
                 parentModel.addChildAtL(index, cloneModel);
             }
-            addNodeWithChildrenL(copyNode);
+            addNodeWithChildrenL(cloneNode);
 
             adjustChildrenXL(cloneModel);
             adjustChildrenYL();
             refreshLinesL();
         } else {
             int index = parentModel.getChildrenR().indexOf(selectedModel);
-            cloneModel.setX(parentModel.getX() + parentModel.getMindNode().getPrefWidth() + SizeConstants.NODE_GAP_X);
+            cloneNode.setLayoutX(parentNode.getLayoutX() + parentNode.getPrefWidth() + SizeConstants.NODE_GAP_X);
 
             if (cloneModel.getPos() == PosConstants.LEFT) {
                 cloneModel.setParent(parentModel);
@@ -218,7 +229,7 @@ public class SubjectController {
             } else {
                 parentModel.addChildAtR(index, cloneModel);
             }
-            addNodeWithChildrenR(copyNode);
+            addNodeWithChildrenR(cloneNode);
 
             adjustChildrenXR(cloneModel);
             adjustChildrenYR();
@@ -435,9 +446,9 @@ public class SubjectController {
         }
 
         // 父节点的 X 坐标 + 父节点的宽度 + 节点间隔
-        double childX = parentModel.getX() + parentModel.getSelfWidth() + SizeConstants.NODE_GAP_X;
+        double childX = parentModel.getMindNode().getLayoutX() + parentModel.getSelfWidth() + SizeConstants.NODE_GAP_X;
         for (NodeModel child : children) {
-            child.setX(childX);
+            child.getMindNode().setLayoutX(childX);
             adjustChildrenXR(child);
         }
     }
@@ -449,9 +460,9 @@ public class SubjectController {
         }
 
         // 父节点的 X 坐标 - 节点间隔 - 子节点的宽度
-        double childX = parentModel.getX() - SizeConstants.NODE_GAP_X;
+        double childX = parentModel.getMindNode().getLayoutX() - SizeConstants.NODE_GAP_X;
         for (NodeModel child : children) {
-            child.setX(childX - child.getSelfWidth());
+            child.getMindNode().setLayoutX(childX - child.getSelfWidth());
             adjustChildrenXL(child);
         }
     }
@@ -648,10 +659,6 @@ public class SubjectController {
     //———————————————————————————————————————————其他———————————————————————————————————————————
     public void setSelectedModel(NodeModel nodeModel) {
         this.selectedModel = nodeModel;
-        if (nodeModel != null) {
-            selectedModel.getMindNode().getTextArea().requestFocus();
-        } else {
-            subject.requestFocus();
-        }
+        selectedModel.getMindNode().getTextArea().requestFocus();
     }
 }
