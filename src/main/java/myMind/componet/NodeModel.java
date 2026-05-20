@@ -1,14 +1,22 @@
 package myMind.componet;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import myMind.constants.SizeConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(exclude = {"parent", "childrenR", "childrenL"})
 public class NodeModel {
-    private MindNode mindNode;
+    // 属性
+    private final DoubleProperty x = new SimpleDoubleProperty();
+    private final DoubleProperty y = new SimpleDoubleProperty();
+    private DoubleProperty nodeWidth = new SimpleDoubleProperty();
+    private DoubleProperty nodeHeight = new SimpleDoubleProperty();
 
     //节点之间的关系
     private byte pos;
@@ -16,9 +24,12 @@ public class NodeModel {
     private final List<NodeModel> childrenR = new ArrayList<>();
     private final List<NodeModel> childrenL = new ArrayList<>();
 
-    public NodeModel(byte pos) {
+    public NodeModel(double x, double y, byte pos) {
+        this.x.set(x);
+        this.y.set(y);
         this.pos = pos;
     }
+
     //———————————————————————————————————————————增删———————————————————————————————————————————
     public void addChildR(NodeModel child) {
         childrenR.add(child);
@@ -81,7 +92,7 @@ public class NodeModel {
     private double getHeightR() {
         int size = childrenR.size();
         if (size == 0) {
-            return getSelfHeight();
+            return getNodeHeight();
         }
 
         double totalHeight = 0;
@@ -89,13 +100,13 @@ public class NodeModel {
             totalHeight += child.getHeightR();
         }
         totalHeight += SizeConstants.NODE_GAP_Y * (size - 1);
-        return Math.max(getSelfHeight(), totalHeight);
+        return Math.max(getNodeHeight(), totalHeight);
     }
 
     private double getHeightL() {
         int size = childrenL.size();
         if (size == 0) {
-            return getSelfHeight();
+            return getNodeHeight();
         }
 
         double totalHeight = 0;
@@ -103,15 +114,7 @@ public class NodeModel {
             totalHeight += child.getHeightL();
         }
         totalHeight += SizeConstants.NODE_GAP_Y * (size - 1);
-        return Math.max(getSelfHeight(), totalHeight);
-    }
-
-    public double getSelfHeight() {
-        return mindNode.getPrefHeight();
-    }
-
-    public double getSelfWidth() {
-        return mindNode.getPrefWidth();
+        return Math.max(getNodeHeight(), totalHeight);
     }
 
     //———————————————————————————————————————————位置计算———————————————————————————————————————————
@@ -119,24 +122,24 @@ public class NodeModel {
         NodeModel fistNodeModel = childrenR.get(0);
         if (!fistNodeModel.childrenR.isEmpty()) {
             // 当前节点可能比子节节点的总高度更高
-            return Math.min(fistNodeModel.getMindNode().getLayoutY(), fistNodeModel.getStartYR());
+            return Math.min(fistNodeModel.getY(), fistNodeModel.getStartYR());
         } else {
-            return fistNodeModel.getMindNode().getLayoutY();
+            return fistNodeModel.getY();
         }
     }
 
     public double getStartYL() {
         NodeModel fistNodeModel = childrenL.get(0);
         if (!fistNodeModel.childrenL.isEmpty()) {
-            return Math.min(fistNodeModel.getMindNode().getLayoutY(), fistNodeModel.getStartYL());
+            return Math.min(fistNodeModel.getY(), fistNodeModel.getStartYL());
         } else {
-            return fistNodeModel.getMindNode().getLayoutY();
+            return fistNodeModel.getY();
         }
     }
 
     public double getEndYR() {
         NodeModel lastNodeModel = childrenR.get(childrenR.size() - 1);
-        double selfEndY = lastNodeModel.getMindNode().getLayoutY() + lastNodeModel.getSelfHeight();
+        double selfEndY = lastNodeModel.getY() + lastNodeModel.getNodeHeight();
         if (!lastNodeModel.childrenR.isEmpty()) {
             return Math.max(selfEndY, lastNodeModel.getEndYR());
         } else {
@@ -146,11 +149,53 @@ public class NodeModel {
 
     public double getEndYL() {
         NodeModel lastNodeModel = childrenL.get(childrenL.size() - 1);
-        double selfEndY = lastNodeModel.getMindNode().getLayoutY() + lastNodeModel.getSelfHeight();
+        double selfEndY = lastNodeModel.getY() + lastNodeModel.getNodeHeight();
         if (!lastNodeModel.childrenL.isEmpty()) {
             return Math.max(selfEndY, lastNodeModel.getEndYL());
         } else {
             return selfEndY;
         }
     }
+
+    public double getX() {
+        return x.get();
+    }
+    public void setX(double x) {
+        this.x.set(x);
+    }
+    public DoubleProperty xProperty() {
+        return x;
+    }
+
+    public double getY() {
+        return y.get();
+    }
+    public void setY(double y) {
+        this.y.set(y);
+    }
+    public DoubleProperty yProperty() {
+        return y;
+    }
+
+    public double getNodeWidth() {
+        return nodeWidth.get();
+    }
+    public void setNodeWidth(double nodeWidth) {
+        this.nodeWidth.set(nodeWidth);
+    }
+    public DoubleProperty nodeWidthProperty() {
+        return nodeWidth;
+    }
+
+    public double getNodeHeight() {
+        return nodeHeight.get();
+    }
+    public void setNodeHeight(double nodeHeight) {
+        this.nodeHeight.set(nodeHeight);
+    }
+    public DoubleProperty nodeHeightProperty() {
+        return nodeHeight;
+    }
+
+
 }

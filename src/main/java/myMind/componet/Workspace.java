@@ -25,7 +25,7 @@ public class Workspace extends TabPane {
         setTabClosingPolicy(TabClosingPolicy.ALL_TABS);
         getStyleClass().add("hide-tabs");
         addSubject();
-        Platform.runLater(() -> subjectController.getRootModel().getMindNode().getTextArea().requestFocus());
+        Platform.runLater(() -> subjectController.getSelectedNode().getTextArea().requestFocus());
 
         addListener();
     }
@@ -173,7 +173,7 @@ public class Workspace extends TabPane {
             // 节点的复制粘贴
             if (shortcutDown && shiftDown) {
                 if (code == KeyCode.C) {
-                    CopyNodeUtil.set(subjectController.getSelectedModel().getMindNode().clone());
+//                    CopyNodeUtil.set(subjectController.getSelectedNode().clone());
                 } else if (code == KeyCode.X) {
                     CopyNodeUtil.set(subjectController.cut());
                 }
@@ -182,7 +182,7 @@ public class Workspace extends TabPane {
 
             // 文本样式
             if (shortcutDown && (code == KeyCode.B || code == KeyCode.R)) {
-                MindNode selectedNode = subjectController.getSelectedModel().getMindNode();
+                MindNode selectedNode = subjectController.getSelectedNode();
                 StyleClassedTextArea textArea = selectedNode.getTextArea();
                 IndexRange selection = textArea.getSelection();
 
@@ -235,7 +235,7 @@ public class Workspace extends TabPane {
 //            double centerY = getHeight() / 2.0 - SizeConstants.MIN_NODE_HEIGHT;
 //        });
         subjectController.initRootNode(670, 311);
-        tab.textProperty().bind(subjectController.getRootModel().getMindNode().getTextArea().textProperty());
+        tab.textProperty().bind(subjectController.getRootNode().getTextArea().textProperty());
     }
 
     /**

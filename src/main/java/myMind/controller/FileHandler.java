@@ -71,7 +71,7 @@ public class FileHandler {
     private static JSONObject saveNode(NodeModel model) {
         JSONObject json = new JSONObject();
 
-        MindNode mindNode = model.getMindNode();
+        MindNode mindNode = subjectController.getView(model);
         StyleClassedTextArea textArea = mindNode.getTextArea();
         String text = textArea.getText();
         json.put("text", text);
@@ -179,8 +179,9 @@ public class FileHandler {
 
                 // 加载根节点
                 NodeModel rootModel = subjectController.getRootModel();
-                rootModel.getMindNode().getTextArea().replaceText(subject.getString("text"));
-                loadNode(subject, rootModel.getMindNode());
+                MindNode rootNode = subjectController.getRootNode();
+                rootNode.getTextArea().replaceText(subject.getString("text"));
+                loadNode(subject, rootNode);
 
                 // 加载子节点
                 JSONObject childrenR = subject.getJSONObject("childrenR");
@@ -295,8 +296,9 @@ public class FileHandler {
         JSONObject rootJson = json.getJSONObject("root");
 
         NodeModel rootModel = subjectController.getRootModel();
-        rootModel.getMindNode().getTextArea().replaceText(rootJson.getString("text"));
-        importNode(rootJson, rootModel.getMindNode());
+        MindNode rootNode = subjectController.getRootNode();
+        rootNode.getTextArea().replaceText(rootJson.getString("text"));
+        importNode(rootJson, rootNode);
 
         JSONObject children = rootJson.getJSONObject("children");
         JSONObject children2 = rootJson.getJSONObject("children2");
