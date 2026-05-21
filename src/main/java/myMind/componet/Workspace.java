@@ -7,15 +7,14 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
 import myMind.constants.PosConstants;
-import myMind.controller.NodeController;
-import myMind.util.CopyNodeUtil;
+import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Workspace extends TabPane {
-    private NodeController nodeController;
+    private SubjectController subjectController;
 
     public Workspace() {
         //关闭按钮的显示策略
@@ -25,7 +24,7 @@ public class Workspace extends TabPane {
         setTabClosingPolicy(TabClosingPolicy.ALL_TABS);
         getStyleClass().add("hide-tabs");
         addSubject();
-        Platform.runLater(() -> nodeController.getSelectedNode().getTextArea().requestFocus());
+        Platform.runLater(() -> subjectController.getSelectedNode().getTextArea().requestFocus());
 
         addListener();
     }
@@ -35,7 +34,7 @@ public class Workspace extends TabPane {
             if (newTab == null) {
                 return;
             }
-            nodeController = ((Subject) newTab.getContent()).getNodeController();
+            subjectController = ((Subject) newTab.getContent()).getSubjectController();
         });
 
         getTabs().addListener((ListChangeListener.Change<? extends Tab> c) -> {
@@ -59,7 +58,7 @@ public class Workspace extends TabPane {
 
             // 切换选中节点
             if (shiftDown && altDown) {
-                NodeModel selectedModel = nodeController.getSelectedModel();
+                NodeModel selectedModel = subjectController.getSelectedModel();
                 if (selectedModel == null) {
                     return;
                 }
@@ -114,7 +113,7 @@ public class Workspace extends TabPane {
                     }
                 }
 
-                nodeController.setSelectedModel(selectedModel);
+                subjectController.setSelectedModel(selectedModel);
                 return;
             }
 
@@ -123,41 +122,42 @@ public class Workspace extends TabPane {
             if (shortcutDown && altDown) {
                 // 1个子节点和5个孙节点
                 if (code == KeyCode.RIGHT) {
-                    if (nodeController.getSelectedModel().getPos() == PosConstants.LEFT) {
+                    if (subjectController.getSelectedModel().getPos() == PosConstants.LEFT) {
                         return;
                     }
-                    nodeController.addChildR();
-                    nodeController.addChildR();
+                    subjectController.addChildR();
+                    subjectController.addChildR();
                     for (int i = 0; i < 4; i++) {
-                        nodeController.addSiblingR();
+                        subjectController.addSiblingR();
                     }
                 } else if (code == KeyCode.LEFT) {
-                    if (nodeController.getSelectedModel().getPos() == PosConstants.RIGHT) {
+                    if (subjectController.getSelectedModel().getPos() == PosConstants.RIGHT) {
                         return;
                     }
-                    nodeController.addChildL();
-                    nodeController.addChildL();
+                    subjectController.addChildL();
+                    subjectController.addChildL();
                     for (int i = 0; i < 4; i++) {
-                        nodeController.addSiblingL();
+                        subjectController.addSiblingL();
                     }
                 }
                 // 1个兄弟节点和5个孙节点
                 else if (code == KeyCode.DOWN) {
-                    nodeController.addSibling();
-                    nodeController.addChild();
+                    subjectController.addSibling();
+                    subjectController.addChildR();
+                    subjectController.addChildL();
                     for (int i = 0; i < 4; i++) {
-                        nodeController.addSibling();
+                        subjectController.addSibling();
                     }
                 }
                 return;
             } else if (altDown && code == KeyCode.RIGHT) {
-                nodeController.addChildR();
+                subjectController.addChildR();
                 return;
             } else if (altDown && code == KeyCode.LEFT) {
-                nodeController.addChildL();
+                subjectController.addChildL();
                 return;
             } else if (altDown && code == KeyCode.DOWN) {
-                nodeController.addSibling();
+                subjectController.addSibling();
                 return;
             } else if (altDown && code == KeyCode.UP) {
 
@@ -166,23 +166,23 @@ public class Workspace extends TabPane {
 
             // 删除
             if (altDown && code == KeyCode.DELETE) {
-                nodeController.delete();
+                subjectController.delete();
                 return;
             }
 
             // 节点的复制粘贴
             if (shortcutDown && shiftDown) {
                 if (code == KeyCode.C) {
-                    CopyNodeUtil.set(nodeController.copy(nodeController.getSelectedModel()));
+                    subjectController.copy();
                 } else if (code == KeyCode.X) {
-                    CopyNodeUtil.set(nodeController.cut());
+                    subjectController.cut();
                 }
                 return;
             }
 
             // 文本样式
             if (shortcutDown && (code == KeyCode.B || code == KeyCode.R)) {
-                MindNode selectedNode = nodeController.getSelectedNode();
+                MindNode selectedNode = subjectController.getSelectedNode();
                 StyleClassedTextArea textArea = selectedNode.getTextArea();
                 IndexRange selection = textArea.getSelection();
 
@@ -219,8 +219,8 @@ public class Workspace extends TabPane {
     }
 
     public void addSubject() {
-        nodeController = new NodeController();
-        Subject subject = nodeController.getSubject();
+        subjectController = new SubjectController();
+        Subject subject = subjectController.getSubject();
 
         int index = getTabs().size() + 1;
         Tab tab = new Tab();
@@ -234,16 +234,16 @@ public class Workspace extends TabPane {
 //            double centerX = (getWidth() - SizeConstants.MIN_NODE_WIDTH) / 2.0;
 //            double centerY = getHeight() / 2.0 - SizeConstants.MIN_NODE_HEIGHT;
 //        });
-        nodeController.initRootNode(670, 311);
-        tab.textProperty().bind(nodeController.getRootNode().getTextArea().textProperty());
+        subjectController.initRootNode(670, 311);
+        tab.textProperty().bind(subjectController.getRootNode().getTextArea().textProperty());
     }
 
     /**
      * 获取当前选中标签页的控制器
      */
-    public NodeController getCurrentController() {
+    public SubjectController getCurrentController() {
         Tab selectedTab = getSelectionModel().getSelectedItem();
-        nodeController = ((Subject) selectedTab.getContent()).getNodeController();
-        return nodeController;
+        subjectController = ((Subject) selectedTab.getContent()).getSubjectController();
+        return subjectController;
     }
 }

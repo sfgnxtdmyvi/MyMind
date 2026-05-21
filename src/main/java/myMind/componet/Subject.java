@@ -1,12 +1,17 @@
 package myMind.componet;
 
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
-import myMind.controller.NodeController;
+import myMind.controller.SubjectController;
 import myMind.util.MessageUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 主控面板，放节点和连线
@@ -22,15 +27,16 @@ public class Subject extends Pane {
      */
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
-    private final NodeController nodeController;
+    private Map<NodeModel, MindNode> modelToView = new HashMap<>();
+    private final SubjectController subjectController;
 
     private double paneStartX;
     private double paneStartY;
     private double currentTranslateX = 0;
     private double currentTranslateY = 0;
 
-    public Subject(NodeController nodeController) {
-        this.nodeController = nodeController;
+    public Subject(SubjectController subjectController) {
+        this.subjectController = subjectController;
 
         // 让连线不干扰鼠标事件
         linesLayerL.setMouseTransparent(true);
@@ -134,6 +140,8 @@ public class Subject extends Pane {
         });
     }
 
+    //———————————————————————————————————————————画布———————————————————————————————————————————
+
     /**
      * 左右移动画布
      *
@@ -174,11 +182,24 @@ public class Subject extends Pane {
         MessageUtil.show(scale);
     }
 
+    //———————————————————————————————————————————增删———————————————————————————————————————————
     public void add(MindNode node) {
         nodesLayer.getChildren().add(node);
+        modelToView.put(node.getModel(), node);
     }
 
-    public void remove(MindNode node) {
+    public void addClone(Map<NodeModel, MindNode> cloneMap) {
+        ObservableList<Node> children = nodesLayer.getChildren();
+
+        for (Map.Entry<NodeModel, MindNode> entry : cloneMap.entrySet()) {
+            MindNode node = entry.getValue();
+            children.add(node);
+            modelToView.put(entry.getKey(), node);
+        }
+    }
+
+    public void remove(NodeModel model) {
+        MindNode node = modelToView.remove(model);
         nodesLayer.getChildren().remove(node);
     }
 

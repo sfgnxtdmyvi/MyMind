@@ -11,7 +11,6 @@ import myMind.componet.NodeModel;
 import myMind.componet.Subject;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
-import myMind.util.CopyNodeUtil;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,11 +18,12 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class NodeController {
+public class SubjectController {
     private final Subject subject = new Subject(this);
     private NodeModel rootModel;
-    private NodeModel selectedModel = null;
-    private Map<NodeModel, MindNode> modelToView = new HashMap<>();
+    private NodeModel selectedModel;
+    private MindNode cloneNode;
+    private Map<NodeModel, MindNode> cloneMap = new HashMap<>();
 
     //———————————————————————————————————————————新增———————————————————————————————————————————
     public void initRootNode(double centerX, double centerY) {
@@ -31,17 +31,12 @@ public class NodeController {
         addNode(rootModel);
     }
 
-    public void addChild() {
-        addChildR();
-        addChildL();
-    }
-
     public void addChildR() {
         if (selectedModel == null || selectedModel.getPos() == PosConstants.LEFT) {
             return;
         }
 
-        NodeModel childModel = new NodeModel(calculateChildXR(), 0, PosConstants.RIGHT);
+        NodeModel childModel = new NodeModel(calculateChildXR(selectedModel), 0, PosConstants.RIGHT);
         selectedModel.addChildR(childModel);
         addNode(childModel);
 
@@ -54,7 +49,7 @@ public class NodeController {
             return;
         }
 
-        NodeModel childModel = new NodeModel(calculateChildXL(), 0, PosConstants.LEFT);
+        NodeModel childModel = new NodeModel(calculateChildXL(selectedModel), 0, PosConstants.LEFT);
         selectedModel.addChildL(childModel);
         addNode(childModel);
 
@@ -67,14 +62,15 @@ public class NodeController {
             return;
         }
 
-        if (selectedModel.getPos() == PosConstants.LEFT) {
-            addSiblingL();
-        } else {
+        if (selectedModel.getPos() == PosConstants.RIGHT) {
             addSiblingR();
+        } else {
+            addSiblingL();
         }
     }
 
     public void addSiblingR() {
+        // 根节点无法添加兄弟节点
         NodeModel parentModel = selectedModel.getParent();
         if (parentModel == null) {
             return;
@@ -106,44 +102,50 @@ public class NodeController {
     public void addNode(NodeModel model) {
         MindNode node = new MindNode(model, "");
         subject.add(node);
-        modelToView.put(model, node);
         setSelectedModel(model);
+        setOnAction(node, model);
+    }
 
+    public void addNode(MindNode node) {
+        subject.add(node);
+        NodeModel model = node.getModel();
+        setSelectedModel(model);
+        setOnAction(node, model);
+    }
+
+    private void setOnAction(MindNode node, NodeModel model) {
         node.setOnAction(event -> {
             switch (event) {
                 case SELECT -> setSelectedModel(model);
+
                 case PASTE_SIBLING -> {
-                    MindNode copyNode = CopyNodeUtil.get();
-                    if (copyNode != null) {
-                        pasteSibling(copyNode, model.getPos());
+                    if (cloneNode != null) {
+                        pasteSibling(cloneNode, model.getPos());
+                        cloneNode = null;
+                        cloneMap.clear();
                     }
                 }
                 case ADD_BUTTON_R -> {
-                    MindNode mindNode = CopyNodeUtil.get();
-                    if (mindNode == null) {
+                    if (cloneNode == null) {
                         addChildR();
                     } else {
-                        pasteChild(mindNode, PosConstants.RIGHT);
+                        pasteChild(cloneNode, PosConstants.RIGHT);
+                        cloneNode = null;
+                        cloneMap.clear();
                     }
                 }
                 case ADD_BUTTON_L -> {
-                    MindNode mindNode = CopyNodeUtil.get();
-                    if (mindNode == null) {
+                    if (cloneNode == null) {
                         addChildL();
                     } else {
-                        pasteChild(mindNode, PosConstants.LEFT);
+                        pasteChild(cloneNode, PosConstants.LEFT);
+                        cloneNode = null;
+                        cloneMap.clear();
                     }
                 }
-                case ADJUST_R -> {
-                    adjustChildrenXL(model);
-                    adjustChildrenYL();
-                    refreshLinesL();
-                }
-                case ADJUST_L -> {
-                    adjustChildrenXR(model);
-                    adjustChildrenYR();
-                    refreshLinesR();
-                }
+
+                case ADJUST_R -> adjustR(model);
+                case ADJUST_L -> adjustL(model);
                 case ADJUST_YR -> {
                     adjustChildrenYR();
                     refreshLinesR();
@@ -156,27 +158,78 @@ public class NodeController {
         });
     }
 
-    public void addNode(MindNode node) {
-        subject.add(node);
-        NodeModel model = node.getModel();
-        modelToView.put(model, node);
-        setSelectedModel(model);
-    }
-
-    private double calculateChildXR() {
+    private double calculateChildXR(NodeModel parentModel) {
         // 父节点 X 轴 +父节点宽度 + 节点间隔
-        return selectedModel.getX() + selectedModel.getNodeWidth() + SizeConstants.NODE_GAP_X;
+        return parentModel.getX() + parentModel.getNodeWidth() + SizeConstants.NODE_GAP_X;
     }
 
-    private double calculateChildXL() {
+    private double calculateChildXL(NodeModel parentModel) {
         // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-        return selectedModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
+        return parentModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
     }
 
     //———————————————————————————————————————————复制粘贴———————————————————————————————————————————
-    public MindNode cut() {
-        if (selectedModel == null || selectedModel == rootModel) {
-            return null;
+    public void copy() {
+        cloneNode = clone(selectedModel);
+    }
+
+    private MindNode clone(NodeModel originalModel) {
+        byte pos = originalModel.getPos();
+        NodeModel cloneModel = new NodeModel(
+                0,
+                0,
+                pos
+        );
+
+        MindNode originalNode = getNode(originalModel);
+        MindNode cloneNode = new MindNode(cloneModel, originalNode.getTextArea().getText());
+        setOnAction(cloneNode, cloneModel);
+        String imageName = originalNode.getImageName();
+        ImageView image = originalNode.getImage();
+
+        if (imageName != null) {
+            cloneNode.loadImage(imageName, image.getFitWidth(), image.getFitHeight());
+            cloneNode.adjustSize();
+        }
+        originalNode.copyStyles(cloneNode);
+        // 不能在复制时，直接添加到 subject 中，如果后面没有粘贴，会导致内存泄漏
+        cloneMap.put(cloneModel, cloneNode);
+
+        if (pos == PosConstants.LEFT) {
+            for (NodeModel childModel : originalModel.getChildrenL()) {
+                NodeModel clone = clone(childModel).getModel();
+                cloneModel.addChildL(clone);
+                clone.setParent(cloneModel);
+            }
+        } else {
+            for (NodeModel childModel : originalModel.getChildrenR()) {
+                NodeModel clone = clone(childModel).getModel();
+                cloneModel.addChildR(clone);
+                clone.setParent(cloneModel);
+            }
+        }
+
+        // 复制根节点时，把左子节点都添加到右边
+        if (pos == PosConstants.MIDDLE) {
+            cloneModel.setPos(PosConstants.RIGHT);
+            for (NodeModel childModel : originalModel.getChildrenL()) {
+                NodeModel clone = clone(childModel).getModel();
+                cloneModel.addChildR(clone);
+                clone.setParent(cloneModel);
+            }
+        }
+
+        return cloneNode;
+    }
+
+    public void cut() {
+        if (selectedModel == null) {
+            return;
+        }
+
+        // 根节点改成复制
+        if (selectedModel == rootModel) {
+            cloneNode = clone(selectedModel);
         }
 
         NodeModel model = selectedModel;
@@ -188,31 +241,22 @@ public class NodeController {
             deleteL();
         }
 
-        return getView(model);
+        cloneNode = getNode(model);
     }
 
-    public void pasteChild(MindNode copyNode, byte pos) {
-        if (selectedModel == null || copyNode == null) {
+    /**
+     *
+     * @param cloneNode
+     * @param pos       粘到目标的左边还是右边，跟 cloneNode 的 pos 可以不一致
+     */
+    private void pasteChild(MindNode cloneNode, byte pos) {
+        if (selectedModel == null || cloneNode == null) {
             return;
         }
 
-        NodeModel cloneModel = copyNode.getModel();
-        if (pos == PosConstants.LEFT) {
-            cloneModel.setX(calculateChildXL());
-
-            if (cloneModel.getPos() == PosConstants.RIGHT) {
-                cloneModel.setParent(selectedModel);
-                transRToL(cloneModel);
-            } else {
-                selectedModel.addChildL(cloneModel);
-            }
-            addNodeWithChildrenL(copyNode);
-
-            adjustChildrenXL(cloneModel);
-            adjustChildrenYL();
-            refreshLinesL();
-        } else {
-            cloneModel.setX(calculateChildXR());
+        NodeModel cloneModel = cloneNode.getModel();
+        if (pos == PosConstants.RIGHT) {
+            cloneModel.setX(calculateChildXR(selectedModel));
 
             if (cloneModel.getPos() == PosConstants.LEFT) {
                 cloneModel.setParent(selectedModel);
@@ -220,46 +264,42 @@ public class NodeController {
             } else {
                 selectedModel.addChildR(cloneModel);
             }
-            addNodeWithChildrenR(copyNode);
+            subject.addClone(cloneMap);
 
-            adjustChildrenXR(cloneModel);
-            adjustChildrenYR();
-            refreshLinesR();
+            adjustL(cloneModel);
+        } else {
+            cloneModel.setX(calculateChildXL(selectedModel));
+
+            // selectedModel 与 cloneModel 的 pos 不一致时，需要移动
+            if (cloneModel.getPos() == PosConstants.RIGHT) {
+                cloneModel.setParent(selectedModel);
+                transRToL(cloneModel);
+            } else {
+                selectedModel.addChildL(cloneModel);
+            }
+            subject.addClone(cloneMap);
+
+            adjustR(cloneModel);
         }
+
         setSelectedModel(cloneModel);
     }
 
     /**
      * 粘贴到选中节点的上面
      *
-     * @param copyNode
-     * @param pos
      */
-    public void pasteSibling(MindNode copyNode, byte pos) {
-        if (selectedModel == null || copyNode == null) {
+    public void pasteSibling(MindNode cloneNode, byte pos) {
+        if (selectedModel == null || cloneNode == null || selectedModel == rootModel) {
             return;
         }
 
         NodeModel parentModel = selectedModel.getParent();
-        NodeModel cloneModel = copyNode.getModel();
-        if (pos == PosConstants.LEFT) {
-            int index = parentModel.getChildrenL().indexOf(selectedModel);
-            cloneModel.setX(parentModel.getX() - SizeConstants.ADD_LEFT_NODE_GAP_X);
+        NodeModel cloneModel = cloneNode.getModel();
 
-            if (cloneModel.getPos() == PosConstants.RIGHT) {
-                cloneModel.setParent(parentModel);
-                transRToLAt(index, cloneModel);
-            } else {
-                parentModel.addChildAtL(index, cloneModel);
-            }
-            addNodeWithChildrenL(copyNode);
-
-            adjustChildrenXL(cloneModel);
-            adjustChildrenYL();
-            refreshLinesL();
-        } else {
+        if (pos == PosConstants.RIGHT) {
             int index = parentModel.getChildrenR().indexOf(selectedModel);
-            cloneModel.setX(parentModel.getX() + parentModel.getNodeWidth() + SizeConstants.NODE_GAP_X);
+            cloneModel.setX(calculateChildXR(parentModel));
 
             if (cloneModel.getPos() == PosConstants.LEFT) {
                 cloneModel.setParent(parentModel);
@@ -267,21 +307,34 @@ public class NodeController {
             } else {
                 parentModel.addChildAtR(index, cloneModel);
             }
-            addNodeWithChildrenR(copyNode);
+            subject.addClone(cloneMap);
 
-            adjustChildrenXR(cloneModel);
-            adjustChildrenYR();
-            refreshLinesR();
+            adjustL(cloneModel);
+        } else {
+            int index = parentModel.getChildrenL().indexOf(selectedModel);
+            cloneModel.setX(calculateChildXL(parentModel));
+
+            if (cloneModel.getPos() == PosConstants.RIGHT) {
+                cloneModel.setParent(parentModel);
+                transRToLAt(index, cloneModel);
+            } else {
+                parentModel.addChildAtL(index, cloneModel);
+            }
+            subject.addClone(cloneMap);
+
+            adjustR(cloneModel);
         }
+
         setSelectedModel(cloneModel);
     }
 
+    /**
+     * 节点改到右边，再从从左边删除
+     */
     private void transLToR(NodeModel cloneModel) {
-        // 节点改到右边
         cloneModel.setPos(PosConstants.RIGHT);
         cloneModel.getParent().addChildR(cloneModel);
 
-        // 从左边删除
         Iterator<NodeModel> iterator = cloneModel.getChildrenL().iterator();
         while (iterator.hasNext()) {
             NodeModel child = iterator.next();
@@ -320,7 +373,6 @@ public class NodeController {
     }
 
     private void transRToLAt(int index, NodeModel cloneModel) {
-        // 节点改到右边
         cloneModel.setPos(PosConstants.LEFT);
         if (index != -1) {
             cloneModel.getParent().addChildAtL(index, cloneModel);
@@ -328,7 +380,6 @@ public class NodeController {
             cloneModel.getParent().addChildL(cloneModel);
         }
 
-        // 从左边删除
         Iterator<NodeModel> iterator = cloneModel.getChildrenR().iterator();
         while (iterator.hasNext()) {
             NodeModel child = iterator.next();
@@ -338,24 +389,24 @@ public class NodeController {
     }
 
     /**
-     * 在 subject 添加节点和子节点
-     *
-     * @param node
+     * 仅从 subject 删除子节点
      */
-    public void addNodeWithChildrenR(MindNode node) {
-        subject.add(node);
+    private void deleteChildrenFromSubjectR(NodeModel parentModel) {
+        List<NodeModel> childrenR = parentModel.getChildrenR();
+        for (NodeModel childModel : childrenR) {
+            subject.remove(childModel);
 
-        node.getModel().getChildrenR().forEach(child -> {
-            addNodeWithChildrenR(getView(child));
-        });
+            deleteChildrenFromSubjectR(childModel);
+        }
     }
 
-    public void addNodeWithChildrenL(MindNode node) {
-        subject.add(node);
+    private void deleteChildrenFromSubjectL(NodeModel parentModel) {
+        List<NodeModel> childrenL = parentModel.getChildrenL();
+        for (NodeModel childModel : childrenL) {
+            subject.remove(childModel);
 
-        node.getModel().getChildrenL().forEach(child -> {
-            addNodeWithChildrenL(getView(child));
-        });
+            deleteChildrenFromSubjectL(childModel);
+        }
     }
     //———————————————————————————————————————————删除———————————————————————————————————————————
 
@@ -374,6 +425,7 @@ public class NodeController {
             deleteChildrenL(selectedModel);
             deleteL();
         }
+
     }
 
     /**
@@ -387,7 +439,7 @@ public class NodeController {
         changeSelectedModel(toDelete, parent, parent.getChildrenR());
 
         parent.removeChildR(toDelete);
-        subject.remove(getView(toDelete));
+        subject.remove(toDelete);
 
         adjustChildrenYR();
         refreshLinesR();
@@ -400,7 +452,7 @@ public class NodeController {
         changeSelectedModel(toDelete, parent, parent.getChildrenL());
 
         parent.removeChildL(toDelete);
-        subject.remove(getView(toDelete));
+        subject.remove(toDelete);
 
         adjustChildrenYL();
         refreshLinesL();
@@ -413,49 +465,31 @@ public class NodeController {
         Iterator<NodeModel> iterator = parentModel.getChildrenR().iterator();
         while (iterator.hasNext()) {
             NodeModel childModel = iterator.next();
-            subject.remove(getView(childModel));
+            subject.remove(childModel);
             iterator.remove();
             childModel.setParent(null);
 
             deleteChildrenR(childModel);
         }
     }
+
 
     private void deleteChildrenL(NodeModel parentModel) {
         Iterator<NodeModel> iterator = parentModel.getChildrenL().iterator();
         while (iterator.hasNext()) {
             NodeModel childModel = iterator.next();
-            subject.remove(getView(childModel));
+            subject.remove(childModel);
             iterator.remove();
             childModel.setParent(null);
 
-            deleteChildrenR(childModel);
-        }
-    }
-
-    /**
-     * 仅从 subject 删除子节点
-     */
-    private void deleteChildrenFromSubjectR(NodeModel parentModel) {
-        List<NodeModel> childrenR = parentModel.getChildrenR();
-        for (NodeModel childModel : childrenR) {
-            subject.remove(getView(childModel));
-
-            deleteChildrenFromSubjectR(childModel);
-        }
-    }
-
-    private void deleteChildrenFromSubjectL(NodeModel parentModel) {
-        List<NodeModel> childrenL = parentModel.getChildrenL();
-        for (NodeModel childModel : childrenL) {
-            subject.remove(getView(childModel));
-
-            deleteChildrenFromSubjectL(childModel);
+            deleteChildrenL(childModel);
         }
     }
 
     /**
      * 改变选中节点
+     * 有下一个节点就改成下一个节点，没有就改成上一个
+     * 没有兄弟节点，就改成父节点
      */
     private void changeSelectedModel(NodeModel toDelete, NodeModel parent, List<NodeModel> children) {
         if (children.size() == 1) {
@@ -471,6 +505,18 @@ public class NodeController {
     }
 
     //———————————————————————————————————————————调整———————————————————————————————————————————
+    private void adjustR(NodeModel model) {
+        adjustChildrenXL(model);
+        adjustChildrenYL();
+        refreshLinesL();
+    }
+
+    private void adjustL(NodeModel model) {
+        adjustChildrenXR(model);
+        adjustChildrenYR();
+        refreshLinesR();
+    }
+
     // 调整子节点X坐标
     public void adjustChildrenX() {
         adjustChildrenXR(rootModel);
@@ -503,11 +549,6 @@ public class NodeController {
             child.setX(childX - child.getNodeWidth());
             adjustChildrenXL(child);
         }
-    }
-
-    public void adjustChildrenY() {
-        adjustChildrenYR(rootModel, null);
-        adjustChildrenYL(rootModel, null);
     }
 
     // 调整子节点Y坐标
@@ -561,7 +602,6 @@ public class NodeController {
                     adjustChildrenYR(childModel, null);
                 }
             }
-
         }
     }
 
@@ -606,9 +646,9 @@ public class NodeController {
         adjustChildrenSizeL(rootModel);
     }
 
-    public void adjustChildrenSizeR(NodeModel nodeModel) {
+    private void adjustChildrenSizeR(NodeModel nodeModel) {
         for (NodeModel childModel : nodeModel.getChildrenR()) {
-            getView(childModel).adjustSize();
+            getNode(childModel).adjustSize();
 
             List<NodeModel> childrenOfChild = childModel.getChildrenR();
             if (!childrenOfChild.isEmpty()) {
@@ -617,9 +657,9 @@ public class NodeController {
         }
     }
 
-    public void adjustChildrenSizeL(NodeModel nodeModel) {
+    private void adjustChildrenSizeL(NodeModel nodeModel) {
         for (NodeModel childModel : nodeModel.getChildrenL()) {
-            getView(childModel).adjustSize();
+            getNode(childModel).adjustSize();
 
             List<NodeModel> childrenOfChild = childModel.getChildrenL();
             if (!childrenOfChild.isEmpty()) {
@@ -704,61 +744,15 @@ public class NodeController {
         }
     }
 
-    public MindNode getView(NodeModel model) {
-        return modelToView.get(model);
+    public MindNode getNode(NodeModel model) {
+        return subject.getModelToView().get(model);
     }
 
     public MindNode getSelectedNode() {
-        return modelToView.get(selectedModel);
+        return getNode(selectedModel);
     }
 
     public MindNode getRootNode() {
-        return modelToView.get(rootModel);
-    }
-
-    public MindNode copy(NodeModel originalModel) {
-        byte pos = originalModel.getPos();
-        NodeModel copyModel = new NodeModel(
-                0,
-                0,
-                pos
-        );
-
-        MindNode originalNode = getView(originalModel);
-        MindNode copyNode = new MindNode(copyModel, originalNode.getTextArea().getText());
-        String imageName = originalNode.getImageName();
-        ImageView image = originalNode.getImage();
-
-        if (imageName != null) {
-            copyNode.loadImage(imageName, image.getFitWidth(), image.getFitHeight());
-            copyNode.adjustSize();
-        }
-        originalNode.copyStyles(copyNode);
-
-        if (pos == PosConstants.LEFT) {
-            for (NodeModel childModel : originalModel.getChildrenL()) {
-                NodeModel clone = copy(childModel).getModel();
-                copyModel.addChildL(clone);
-                clone.setParent(copyModel);
-            }
-        } else {
-            for (NodeModel childModel : originalModel.getChildrenR()) {
-                NodeModel clone = copy(childModel).getModel();
-                copyModel.addChildR(clone);
-                clone.setParent(copyModel);
-            }
-        }
-
-        // 复制根节点时，把左子节点都添加到右边
-        if (pos == PosConstants.MIDDLE) {
-            copyModel.setPos(PosConstants.RIGHT);
-            for (NodeModel childModel : originalModel.getChildrenL()) {
-                NodeModel clone = copy(childModel).getModel();
-                copyModel.addChildR(clone);
-                clone.setParent(copyModel);
-            }
-        }
-
-        return copyNode;
+        return getNode(rootModel);
     }
 }
