@@ -27,7 +27,7 @@ public class Subject extends Pane {
      */
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
-    private Map<NodeModel, MindNode> modelToView = new HashMap<>();
+    private final Map<NodeModel, MindNode> modelToView = new HashMap<>();
     private final SubjectController subjectController;
 
     private double dragStartX;

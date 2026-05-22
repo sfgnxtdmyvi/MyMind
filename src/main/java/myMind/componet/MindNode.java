@@ -1,10 +1,12 @@
 package myMind.componet;
 
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -53,7 +55,6 @@ public class MindNode extends StackPane {
     private static final double BUTTON_THRESHOLD = 15.0;
     private boolean isResizing = false;
     private double startX;
-    private double startY;
     private double startWidth;
     private double ratio;
 
@@ -66,8 +67,6 @@ public class MindNode extends StackPane {
         closeButton = new Button("✖");
         closeButton.getStyleClass().add("close-button");
         closeButton.setVisible(false);
-        closeButton.setTranslateX(8);
-        closeButton.setTranslateY(-8);
         StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
 
         // StackPane 负责显示边框
@@ -91,8 +90,9 @@ public class MindNode extends StackPane {
         contentBox.setPadding(new Insets(10, 10, 10, 10));
         contentBox.getStyleClass().add("nodeBorder");
         contentBox.getChildren().addAll(imageContainer, textArea);
+        ObservableList<Node> children = getChildren();
+        children.add(contentBox);
 
-        getChildren().add(contentBox);
         byte pos = model.getPos();
         if (pos != PosConstants.LEFT) {
             addButtonR = new Button("✚");
@@ -100,7 +100,7 @@ public class MindNode extends StackPane {
             addButtonR.setVisible(false);
             StackPane.setAlignment(addButtonR, Pos.CENTER_RIGHT);
             addButtonR.setTranslateX(8);
-            getChildren().add(addButtonR);
+            children.add(addButtonR);
         }
 
         if (pos != PosConstants.RIGHT) {
@@ -109,7 +109,7 @@ public class MindNode extends StackPane {
             addButtonL.setVisible(false);
             StackPane.setAlignment(addButtonL, Pos.CENTER_LEFT);
             addButtonL.setTranslateX(-8);
-            getChildren().add(addButtonL);
+            children.add(addButtonL);
         }
 
         model.setNodeWidth(SizeConstants.MIN_NODE_WIDTH);
@@ -130,8 +130,7 @@ public class MindNode extends StackPane {
 
         imageContainer.setVisible(true);
         imageContainer.setManaged(true);
-        File file = new File(imagePath);
-        image.setImage(new Image(file.toURI().toString()));
+        image.setImage(new Image(new File(imagePath).toURI().toString()));
         image.setFitWidth(imageWidth);
         image.setFitHeight(imageHeight);
     }
@@ -143,7 +142,7 @@ public class MindNode extends StackPane {
         imageContainer.setVisible(true);
         imageContainer.setManaged(true);
         File file = new File(imagePath);
-        image.setImage(new Image(file.toURI().toString()));
+        image.setImage(new Image(new File(imagePath).toURI().toString()));
         image.setFitWidth(imageWidth / 2.2);
         image.setFitHeight(imageHeight / 2.2);
     }
@@ -159,7 +158,7 @@ public class MindNode extends StackPane {
 
         addImageListener();
 
-        // 文本变化动态调整
+        // 文本变化调整节点大小
         textArea.textProperty().addListener((obs, oldText, newText) ->
                 Platform.runLater(this::adjustSize));
     }
@@ -174,12 +173,11 @@ public class MindNode extends StackPane {
             setOnMouseMoved(e -> {
                 double midHeight = getBoundsInLocal().getHeight() / 2;
                 double y = e.getY();
-                if (e.getX() > getBoundsInLocal().getWidth() - BUTTON_THRESHOLD &&
-                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                if (getBoundsInLocal().getWidth() - BUTTON_THRESHOLD < e.getX() &&
+                        midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
                     addButtonR.setVisible(true);
                 }
             });
-
             setOnMouseExited(e -> addButtonR.setVisible(false));
 
             addButtonR.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_R));
@@ -190,7 +188,7 @@ public class MindNode extends StackPane {
                 double midHeight = getBoundsInLocal().getHeight() / 2;
                 double y = e.getY();
                 if (e.getX() < BUTTON_THRESHOLD &&
-                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                        midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
                     addButtonL.setVisible(true);
                 }
             });
@@ -205,12 +203,12 @@ public class MindNode extends StackPane {
                 double midHeight = getBoundsInLocal().getHeight() / 2;
                 double y = e.getY();
 
-                if (e.getX() > getBoundsInLocal().getWidth() - BUTTON_THRESHOLD &&
-                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                if (getBoundsInLocal().getWidth() - BUTTON_THRESHOLD < e.getX() &&
+                        midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
                     addButtonR.setVisible(true);
                 }
                 if (e.getX() < BUTTON_THRESHOLD &&
-                        y < midHeight + BUTTON_THRESHOLD && y > midHeight - BUTTON_THRESHOLD) {
+                        midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
                     addButtonL.setVisible(true);
                 }
             });
@@ -252,12 +250,11 @@ public class MindNode extends StackPane {
 
                         imageContainer.setVisible(true);
                         imageContainer.setManaged(true);
+
+                        adjustSize();
                     } catch (UnsupportedFlavorException | IOException ex) {
                         ex.printStackTrace();
                     }
-                    image.setVisible(true);
-                    image.setManaged(true);
-                    adjustSize();
                 }
 
                 e.consume();
@@ -279,9 +276,9 @@ public class MindNode extends StackPane {
             double imageWidth = image.getBoundsInLocal().getWidth();
             double imageHeight = image.getBoundsInLocal().getHeight();
 
-            if (e.getX() > imageWidth - RESIZE_THRESHOLD) {
+            if (imageWidth - RESIZE_THRESHOLD < e.getX()) {
                 double y = e.getY();
-                if (y > imageHeight - RESIZE_THRESHOLD) {
+                if (imageHeight - RESIZE_THRESHOLD < y) {
                     imageContainer.setCursor(Cursor.SE_RESIZE);
                 } else if (y < BUTTON_THRESHOLD) {
                     imageContainer.setCursor(Cursor.HAND);
@@ -289,7 +286,6 @@ public class MindNode extends StackPane {
                 }
             } else {
                 imageContainer.setCursor(Cursor.DEFAULT);
-                closeButton.setVisible(false);
             }
         });
 
@@ -304,27 +300,22 @@ public class MindNode extends StackPane {
 
         // 缩放
         imageContainer.setOnMousePressed(e -> {
-            if (image.isVisible()) {
-                startX = e.getSceneX();
-                startY = e.getSceneY();
-                startWidth = image.getFitWidth();
+            startX = e.getSceneX();
+            startWidth = image.getFitWidth();
 
-                if (e.getX() > image.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD
-                        && e.getY() > image.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD) {
-                    isResizing = true;
-                    image.setCursor(Cursor.SE_RESIZE);
-                }
+            if (image.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD < e.getX()
+                    && image.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD < e.getY()) {
+                isResizing = true;
+                image.setCursor(Cursor.SE_RESIZE);
             }
         });
 
         imageContainer.setOnMouseDragged(e -> {
             if (isResizing) {
-                // 根据宽度的变化量，按宽高比计算高度
                 double imageWidth = startWidth + e.getSceneX() - startX;
-                double imageHeight = imageWidth / ratio;
-
                 image.setFitWidth(imageWidth);
-                image.setFitHeight(imageHeight);
+                // 根据宽度的变化量，按宽高比计算高度
+                image.setFitHeight(imageWidth / ratio);
 
                 adjustSize();
             }
@@ -339,9 +330,9 @@ public class MindNode extends StackPane {
         imageContainer.setOnMouseClicked(e -> {
             if (!textArea.isVisible()) {
                 textArea.setVisible(true);
+                textArea.requestFocus();
                 model.setNodeHeight(model.getNodeHeight() + SizeConstants.MIN_TEXTAREA_HEIGHT);
                 model.setY(model.getY() - SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
-                textArea.requestFocus();
 
                 if (model.getPos() == PosConstants.RIGHT) {
                     onAction.accept(MindNodeEvent.ADJUST_YR);
@@ -393,13 +384,14 @@ public class MindNode extends StackPane {
             // textArea 左右无内边距，宽度 = 文本宽度
             textWidth = measureText.getLayoutBounds().getWidth();
 
-            // MindNode 宽度 = border(2px) + padding(20px) + textArea 宽度
+            // MindNode 宽度 = textArea 宽度 + border(2px) + padding(20px)
             nodeWidth = textWidth + 22;
             // MIN_NODE_WIDTH <= 宽度 <= MAX_NODE_WIDTH
             nodeWidth = Math.max(SizeConstants.MIN_NODE_WIDTH,
                     Math.min(nodeWidth, SizeConstants.MAX_NODE_WIDTH));
             if (imageVisible) {
-                nodeWidth = Math.max(nodeWidth + 2, image.getFitWidth() + 24);
+                // 文本宽度 < 图片宽度时，宽度 = 图片宽度 + border(4px) + padding(20px)
+                nodeWidth = Math.max(nodeWidth, image.getFitWidth() + 24);
             }
 
             // 设置换行
@@ -408,7 +400,7 @@ public class MindNode extends StackPane {
 
             double totalPadding = (contentHeight / 25.4) * 2.6;
             textHeight = contentHeight + totalPadding;
-            // MindNode 高度 = border(2px) + padding(20px) + image 高度 + textArea 高度
+            // MindNode 高度 = textArea 高度 + border(2px) + padding(20px) [+ image 高度 + border(2px)]
             nodeHeight = textHeight + 22;
             if (imageVisible) {
                 nodeHeight += image.getFitHeight() + 2;
@@ -416,29 +408,27 @@ public class MindNode extends StackPane {
         }
 
         // y 轴 - 高度变动的一半，让中心保持不变
-        double beforeHeight = getPrefHeight();
-        double delta = nodeHeight - beforeHeight;
-        model.setY(model.getY() - delta / 2.0);
+        model.setY(model.getY() - (nodeHeight - getPrefHeight()) / 2.0);
 
-        double originalWidth = getPrefWidth();
+        double oldWidth = getPrefWidth();
         model.setNodeWidth(nodeWidth);
         model.setNodeHeight(nodeHeight);
 
         if (model.getPos() == PosConstants.LEFT) {
-            model.setX(model.getX() - (nodeWidth - originalWidth));
+            model.setX(model.getX() - (nodeWidth - oldWidth));
             onAction.accept(MindNodeEvent.ADJUST_R);
         } else {
             onAction.accept(MindNodeEvent.ADJUST_L);
         }
     }
 
-    public void copyStyles(MindNode copyNode) {
+    public void copyStyles(MindNode cloneNode) {
         int length = textArea.getLength();
         if (length == 0) {
             return;
         }
 
-        StyleClassedTextArea copyTextArea = copyNode.getTextArea();
+        StyleClassedTextArea cloneTextArea = cloneNode.getTextArea();
         int start = 0;
         Collection<String> lastStyles = textArea.getStyleOfChar(0);
 
@@ -448,7 +438,7 @@ public class MindNode extends StackPane {
             // 样式变化时保存前一段
             if (!currentStyles.equals(lastStyles)) {
                 if (!lastStyles.isEmpty()) {
-                    copyTextArea.setStyle(start, i, lastStyles);
+                    cloneTextArea.setStyle(start, i, lastStyles);
                 }
 
                 lastStyles = currentStyles;
@@ -458,7 +448,7 @@ public class MindNode extends StackPane {
 
         // 由于最后一段不会变化，额外处理
         if (!lastStyles.isEmpty()) {
-            copyTextArea.setStyle(start, length, lastStyles);
+            cloneTextArea.setStyle(start, length, lastStyles);
         }
     }
 }
