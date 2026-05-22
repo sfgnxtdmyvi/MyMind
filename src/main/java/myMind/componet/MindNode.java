@@ -43,9 +43,7 @@ public class MindNode extends StackPane {
     private final ImageView image;
     private final StackPane imageContainer;
     private final Button closeButton;
-
     private final StyleClassedTextArea textArea;
-    private final Text measureText = MeasureTextUtil.getMeasureText();
 
     private Button addButtonR;
     private Button addButtonL;
@@ -63,8 +61,6 @@ public class MindNode extends StackPane {
         this.model = model;
 
         image = new ImageView();
-        //当改变宽度或高度时，另一个维度会自动按比例缩放
-        image.setPreserveRatio(true);
         image.setSmooth(true);
 
         closeButton = new Button("✖");
@@ -391,6 +387,7 @@ public class MindNode extends StackPane {
             nodeWidth = SizeConstants.MIN_NODE_WIDTH;
             nodeHeight = SizeConstants.MIN_NODE_HEIGHT;
         } else {
+            Text measureText = MeasureTextUtil.getMeasureText();
             measureText.setText(text);
             measureText.setWrappingWidth(0);
             // textArea 左右无内边距，宽度 = 文本宽度

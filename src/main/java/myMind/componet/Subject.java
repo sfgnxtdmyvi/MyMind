@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 主控面板，放节点和连线
+ * 主题，放节点和连线
  */
 @Getter
 public class Subject extends Pane {
@@ -30,10 +30,8 @@ public class Subject extends Pane {
     private Map<NodeModel, MindNode> modelToView = new HashMap<>();
     private final SubjectController subjectController;
 
-    private double paneStartX;
-    private double paneStartY;
-    private double currentTranslateX = 0;
-    private double currentTranslateY = 0;
+    private double dragStartX;
+    private double dragStartY;
 
     public Subject(SubjectController subjectController) {
         this.subjectController = subjectController;
@@ -53,12 +51,11 @@ public class Subject extends Pane {
         addEventFilter(ScrollEvent.SCROLL, e -> {
             double deltaY = e.getDeltaY();
             if (e.isShortcutDown()) {
-                double scale = nodesLayer.getScaleX() + (deltaY > 0 ? 0.1 : -0.1);
+                double scale = getScaleX() + (deltaY > 0 ? 0.1 : -0.1);
                 changeScale(scale);
             } else {
                 for (int i = 0; i < 3; i++) {
-                    currentTranslateY += deltaY;
-                    translateY(currentTranslateY);
+                    setTranslateY(getTranslateY() + deltaY);
                 }
             }
         });
@@ -68,30 +65,26 @@ public class Subject extends Pane {
             //PRIMARY = 左键
             //SECONDARY = 右键
             //MIDDLE = 滚轮
-            if (e.getButton() == MouseButton.PRIMARY) {
-                requestFocus();
-                paneStartX = e.getSceneX();
-                paneStartY = e.getSceneY();
-                e.consume();
+            if (e.getButton() == MouseButton.PRIMARY && e.getTarget() == nodesLayer) {
+                subjectController.setSelectedModel(null);
+                dragStartX = e.getSceneX();
+                dragStartY = e.getSceneY();
             }
+            e.consume();
         });
 
         setOnMouseDragged(e -> {
-            if (e.getButton() == MouseButton.PRIMARY) {
-                double deltaX = e.getSceneX() - paneStartX;
-                double deltaY = e.getSceneY() - paneStartY;
-
-                currentTranslateX += deltaX;
-                currentTranslateY += deltaY;
+            if (e.getButton() == MouseButton.PRIMARY && isFocused()) {
+                double translateX = getTranslateX() + e.getSceneX() - dragStartX;
+                double translateY = getTranslateY() + e.getSceneY() - dragStartY;
 
                 // 应用偏移量到图层
-                translateX(currentTranslateX);
-                translateY(currentTranslateY);
+                setTranslateX(translateX);
+                setTranslateY(translateY);
 
-                paneStartX = e.getSceneX();
-                paneStartY = e.getSceneY();
+                dragStartX = e.getSceneX();
+                dragStartY = e.getSceneY();
             }
-
             e.consume();
         });
 
@@ -101,67 +94,32 @@ public class Subject extends Pane {
             boolean shortcutDown = e.isShortcutDown();
 
             if (code == KeyCode.PAGE_UP) {
-                currentTranslateY += 400;
-                translateY(currentTranslateY);
+                setTranslateY(getTranslateY() + 400);
                 return;
             }
 
             if (code == KeyCode.PAGE_DOWN || code == KeyCode.SPACE) {
-                currentTranslateY -= 400;
-                translateY(currentTranslateY);
-                return;
-            }
-
-            if (shortcutDown && code == KeyCode.DIGIT0) {
-                changeScale(1.0);
-                return;
-            }
-
-            if (shortcutDown && code == KeyCode.MINUS) {
-                double scale = nodesLayer.getScaleX() - 0.1;
-                changeScale(scale);
-                return;
-            }
-
-            if (shortcutDown && code == KeyCode.EQUALS) {
-                double scale = nodesLayer.getScaleX() + 0.1;
-                changeScale(scale);
+                setTranslateY(getTranslateY() - 400);
                 return;
             }
 
             // 回到中心
             if (shortcutDown && code == KeyCode.G) {
-                currentTranslateX = 0;
-                currentTranslateY = 0;
+                setTranslateX(0);
+                setTranslateY(0);
+                return;
+            }
 
-                translateX(0);
-                translateY(0);
+            if (shortcutDown) {
+                if (code == KeyCode.DIGIT0) {
+                    changeScale(1.0);
+                } else if (code == KeyCode.MINUS) {
+                    changeScale(getScaleX() - 0.1);
+                } else if (code == KeyCode.EQUALS) {
+                    changeScale(getScaleX() + 0.1);
+                }
             }
         });
-    }
-
-    //———————————————————————————————————————————画布———————————————————————————————————————————
-
-    /**
-     * 左右移动画布
-     *
-     * @param currentTranslateX
-     */
-    private void translateX(double currentTranslateX) {
-        nodesLayer.setTranslateX(currentTranslateX);
-        linesLayerR.setTranslateX(currentTranslateX);
-        linesLayerL.setTranslateX(currentTranslateX);
-    }
-
-    /**
-     * 上下移动画布
-     *
-     * @param currentTranslateY
-     */
-    private void translateY(double currentTranslateY) {
-        nodesLayer.setTranslateY(currentTranslateY);
-        linesLayerR.setTranslateY(currentTranslateY);
-        linesLayerL.setTranslateY(currentTranslateY);
     }
 
     /**
@@ -172,12 +130,8 @@ public class Subject extends Pane {
     private void changeScale(Double scale) {
         scale = Math.round(scale * 10.0) / 10.0;
         scale = Math.max(0.1, Math.min(scale, 3.0));
-        nodesLayer.setScaleX(scale);
-        nodesLayer.setScaleY(scale);
-        linesLayerR.setScaleX(scale);
-        linesLayerR.setScaleY(scale);
-        linesLayerL.setScaleX(scale);
-        linesLayerL.setScaleY(scale);
+        setScaleX(scale);
+        setScaleY(scale);
 
         MessageUtil.show(scale);
     }
@@ -207,8 +161,10 @@ public class Subject extends Pane {
     protected void layoutChildren() {
         super.layoutChildren();
         //确保始终填满整个 Subject
-        nodesLayer.resizeRelocate(0, 0, getWidth(), getHeight());
-        linesLayerR.resizeRelocate(0, 0, getWidth(), getHeight());
-        linesLayerL.resizeRelocate(0, 0, getWidth(), getHeight());
+        double width = getWidth();
+        double height = getHeight();
+        nodesLayer.resizeRelocate(0, 0, width, height);
+        linesLayerR.resizeRelocate(0, 0, width, height);
+        linesLayerL.resizeRelocate(0, 0, width, height);
     }
 }

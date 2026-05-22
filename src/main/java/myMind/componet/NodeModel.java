@@ -66,7 +66,7 @@ public class NodeModel {
     //———————————————————————————————————————————宽高计算———————————————————————————————————————————
 
     /**
-     * 计算子节点的总高度
+     * 子节点的总高度
      */
     public double getChildrenHeightR() {
         double totalHeight = 0;
@@ -87,36 +87,22 @@ public class NodeModel {
     }
 
     /**
-     * 计算节点的高度
+     * 节点的高度
      *
      * @return Math.max(当前节点的高度, 子节点的总高度)
      */
     private double getHeightR() {
-        int size = childrenR.size();
-        if (size == 0) {
+        if (childrenR.isEmpty()) {
             return getNodeHeight();
         }
-
-        double totalHeight = 0;
-        for (NodeModel child : childrenR) {
-            totalHeight += child.getHeightR();
-        }
-        totalHeight += SizeConstants.NODE_GAP_Y * (size - 1);
-        return Math.max(getNodeHeight(), totalHeight);
+        return Math.max(getNodeHeight(), getChildrenHeightR());
     }
 
     private double getHeightL() {
-        int size = childrenL.size();
-        if (size == 0) {
+        if (childrenL.isEmpty()) {
             return getNodeHeight();
         }
-
-        double totalHeight = 0;
-        for (NodeModel child : childrenL) {
-            totalHeight += child.getHeightL();
-        }
-        totalHeight += SizeConstants.NODE_GAP_Y * (size - 1);
-        return Math.max(getNodeHeight(), totalHeight);
+        return Math.max(getNodeHeight(), getChildrenHeightL());
     }
 
     //———————————————————————————————————————————位置计算———————————————————————————————————————————
@@ -206,6 +192,4 @@ public class NodeModel {
     public DoubleProperty nodeHeightProperty() {
         return nodeHeight;
     }
-
-
 }
