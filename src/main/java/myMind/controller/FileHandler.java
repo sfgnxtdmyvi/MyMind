@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
+import javafx.stage.Stage;
 import lombok.Setter;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
@@ -40,16 +41,18 @@ public class FileHandler {
     }
 
     //—————————————————————————————————————————保存—————————————————————————————————————————
-    public static void saveToFile(File file) {
+    public static void saveFile(File file) {
         ObservableList<Tab> tabs = workspace.getTabs();
-
         JSONObject subjects = new JSONObject();
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
             subjectController = ((Subject) tab.getContent()).getSubjectController();
             NodeModel rootModel = subjectController.getRootModel();
 
-            JSONObject subject = saveSubject(rootModel);
+            JSONObject subject = saveNode(rootModel);
+            saveChildrenR(subject, rootModel.getChildrenR());
+            saveChildrenL(subject, rootModel.getChildrenL());
+
             subjects.put(Integer.toString(i), subject);
         }
 
@@ -61,27 +64,23 @@ public class FileHandler {
         }
     }
 
-    private static JSONObject saveSubject(NodeModel model) {
-        JSONObject rootJson = saveNode(model);
-        saveChildrenR(rootJson, model.getChildrenR());
-        saveChildrenL(rootJson, model.getChildrenL());
-        return rootJson;
-    }
-
     private static JSONObject saveNode(NodeModel model) {
         JSONObject json = new JSONObject();
 
         MindNode mindNode = subjectController.getNode(model);
+        // 文本
         StyleClassedTextArea textArea = mindNode.getTextArea();
         String text = textArea.getText();
         json.put("text", text);
+        // 样式
         if (!text.isEmpty()) {
             JSONArray styles = extractStyles(textArea);
             if (!styles.isEmpty()) {
-                json.put("styles", extractStyles(textArea));
+                json.put("styles", styles);
             }
         }
 
+        // 图片
         String imageName = mindNode.getImageName();
         if (imageName != null) {
             json.put("imageName", imageName);
@@ -99,8 +98,9 @@ public class FileHandler {
             for (int i = 0; i < childrenR.size(); i++) {
                 NodeModel childModel = childrenR.get(i);
                 JSONObject childJson = saveNode(childModel);
-                saveChildrenR(childJson, childModel.getChildrenR());
                 childrenRJson.put(Integer.toString(i), childJson);
+
+                saveChildrenR(childJson, childModel.getChildrenR());
             }
             parentJson.put("childrenR", childrenRJson);
         }
@@ -112,8 +112,9 @@ public class FileHandler {
             for (int i = 0; i < childrenL.size(); i++) {
                 NodeModel childModel = childrenL.get(i);
                 JSONObject childJson = saveNode(childModel);
-                saveChildrenL(childJson, childModel.getChildrenL());
                 childrenLJson.put(Integer.toString(i), childJson);
+
+                saveChildrenL(childJson, childModel.getChildrenL());
             }
             parentJson.put("childrenL", childrenLJson);
         }
@@ -159,42 +160,52 @@ public class FileHandler {
 
     //—————————————————————————————————————————打开—————————————————————————————————————————
     public static void loadFile(File file) {
-        subjectController = workspace.getCurrentController();
+        JSONObject json = readFile(file);
+        // 加载主题
+        for (int i = 0; i < json.size(); i++) {
+            workspace.addSubject();
+            subjectController = workspace.getCurrentController();
+            JSONObject subject = json.getJSONObject(Integer.toString(i));
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                content.append(line);
+            // 加载根节点
+            NodeModel rootModel = subjectController.getRootModel();
+            MindNode rootNode = subjectController.getRootNode();
+            rootNode.getTextArea().replaceText(subject.getString("text"));
+            loadNode(subject, rootNode);
+
+            // 加载子节点
+            loadChildR(subject.getJSONObject("childrenR"), rootModel);
+            loadChildL(subject.getJSONObject("childrenL"), rootModel);
+
+            subjectController.adjustChildrenSize();
+            subjectController.adjustXY();
+        }
+    }
+
+    private static void loadNode(JSONObject json, MindNode node) {
+        // 文本样式
+        JSONArray styles = json.getJSONArray("styles");
+        if (styles != null) {
+            StyleClassedTextArea textArea = node.getTextArea();
+            for (int i = 0; i < styles.size(); i++) {
+                JSONObject styleItem = styles.getJSONObject(i);
+                JSONArray styleArray = styleItem.getJSONArray("style");
+                List<String> styleList = new ArrayList<>();
+                for (int j = 0; j < styleArray.size(); j++) {
+                    styleList.add(styleArray.getString(j));
+                }
+
+                textArea.setStyle(styleItem.getIntValue("start"),
+                        styleItem.getIntValue("end"),
+                        styleList);
             }
-            JSONObject json = JSONObject.parseObject(content.toString());
+        }
 
-            workspace.getTabs().clear();
-
-            // 加载所有主题
-            for (int i = 0; i < json.size(); i++) {
-                workspace.addSubject();
-                subjectController = workspace.getCurrentController();
-                JSONObject subject = json.getJSONObject(Integer.toString(i));
-
-                // 加载根节点
-                NodeModel rootModel = subjectController.getRootModel();
-                MindNode rootNode = subjectController.getRootNode();
-                rootNode.getTextArea().replaceText(subject.getString("text"));
-                loadNode(subject, rootNode);
-
-                // 加载子节点
-                JSONObject childrenR = subject.getJSONObject("childrenR");
-                JSONObject childrenL = subject.getJSONObject("childrenL");
-                loadChildR(childrenR, rootModel);
-                loadChildL(childrenL, rootModel);
-
-                subjectController.adjustChildrenSize();
-                subjectController.adjustChildrenX();
-                subjectController.refreshLines();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        // 图片
+        String imageName = json.getString("imageName");
+        if (imageName != null) {
+            String imagePath = imageDir + imageName;
+            node.loadImage(imagePath, json.getDouble("imageWidth"), json.getDouble("imageHeight"));
         }
     }
 
@@ -236,56 +247,34 @@ public class FileHandler {
         }
     }
 
-    private static void loadNode(JSONObject json, MindNode node) {
-        // 图片
-        String imageName = json.getString("imageName");
-        if (imageName != null) {
-            String imagePath = imageDir + imageName;
-            node.loadImage(imagePath, json.getDouble("imageWidth"), json.getDouble("imageHeight"));
-        }
-
-        // 文本样式
-        JSONArray styles = json.getJSONArray("styles");
-        if (styles != null) {
-            StyleClassedTextArea textArea = node.getTextArea();
-            for (int i = 0; i < styles.size(); i++) {
-                JSONObject styleItem = styles.getJSONObject(i);
-                JSONArray styleArray = styleItem.getJSONArray("style");
-                List<String> styleList = new ArrayList<>();
-                for (int j = 0; j < styleArray.size(); j++) {
-                    styleList.add(styleArray.getString(j));
-                }
-
-                textArea.setStyle(styleItem.getIntValue("start"),
-                        styleItem.getIntValue("end"),
-                        styleList);
-            }
-        }
-    }
-
     //—————————————————————————————————————————导入—————————————————————————————————————————
-    public static void importFile(File file) {
+    private static JSONObject readFile(File file) {
+        StringBuilder content = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            StringBuilder content = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) {
                 content.append(line);
             }
-            JSONObject json = JSONObject.parseObject(content.toString());
 
             workspace.getTabs().clear();
-
-            importSubjet(json);
-
-            JSONObject subjects = json.getJSONObject("subjects");
-            if (subjects != null) {
-                for (int i = 0; i < subjects.size() - 1; i++) {
-                    JSONObject subject = subjects.getJSONObject(Integer.toString(i));
-                    importSubjet(subject);
-                }
-            }
+            Stage stage = (Stage) workspace.getScene().getWindow();
+            stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
         } catch (Exception e) {
-            e.printStackTrace();
+            MessageUtil.show("读取失败：" + e.getMessage());
+        }
+        return JSONObject.parseObject(content.toString());
+    }
+
+    public static void importFile(File file) {
+        JSONObject json = readFile(file);
+
+        importSubjet(json);
+
+        JSONObject subjects = json.getJSONObject("subjects");
+        if (subjects != null) {
+            for (int i = 0; i < subjects.size() - 1; i++) {
+                importSubjet(subjects.getJSONObject(Integer.toString(i)));
+            }
         }
     }
 
@@ -294,20 +283,47 @@ public class FileHandler {
         subjectController = workspace.getCurrentController();
 
         JSONObject rootJson = json.getJSONObject("root");
-
         NodeModel rootModel = subjectController.getRootModel();
         MindNode rootNode = subjectController.getRootNode();
         rootNode.getTextArea().replaceText(rootJson.getString("text"));
         importNode(rootJson, rootNode);
 
-        JSONObject children = rootJson.getJSONObject("children");
-        JSONObject children2 = rootJson.getJSONObject("children2");
-        importChildR(children, rootModel);
-        importChildL(children2, rootModel);
+        importChildR(rootJson.getJSONObject("children"), rootModel);
+        importChildL(rootJson.getJSONObject("children2"), rootModel);
 
         subjectController.adjustChildrenSize();
-        subjectController.adjustChildrenX();
-        subjectController.refreshLines();
+        subjectController.adjustXY();
+    }
+
+    private static void importNode(JSONObject json, MindNode node) {
+        // 文本样式
+        JSONArray style = json.getJSONArray("style");
+        if (style != null) {
+            StyleClassedTextArea textArea = node.getTextArea();
+            for (int i = 0; i < style.size(); i++) {
+                JSONObject styleItem = style.getJSONObject(i);
+                Boolean bold = styleItem.getBoolean("bold");
+                List<String> styleList = new ArrayList<>();
+                String color = styleItem.getString("color");
+                if (bold != null) {
+                    styleList.add("bold-text");
+                } else if (color != null && color.equals("#FF0000")) {
+                    styleList.add("red-text");
+                }
+
+                textArea.setStyle(styleItem.getIntValue("start"),
+                        styleItem.getIntValue("end"),
+                        styleList);
+            }
+        }
+
+        // 图片
+        String imageName = json.getString("imageName");
+        if (imageName != null) {
+            String imagePath = "C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName;
+            JSONObject imageSize = json.getJSONObject("imageSize");
+            node.importImage(imagePath, imageSize.getDouble("width"), imageSize.getDouble("height"));
+        }
     }
 
     private static void importChildR(JSONObject children, NodeModel parentModel) {
@@ -346,37 +362,6 @@ public class FileHandler {
             subjectController.addNode(node);
 
             importChildL(jsonNode.getJSONObject("children"), model);
-        }
-    }
-
-    private static void importNode(JSONObject json, MindNode node) {
-        // 图片
-        String imageName = json.getString("imageName");
-        if (imageName != null) {
-            String imagePath = "C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName;
-            JSONObject imageSize = json.getJSONObject("imageSize");
-            node.importImage(imagePath, imageSize.getDouble("width"), imageSize.getDouble("height"));
-        }
-
-        // 文本样式
-        JSONArray style = json.getJSONArray("style");
-        if (style != null) {
-            StyleClassedTextArea textArea = node.getTextArea();
-            for (int i = 0; i < style.size(); i++) {
-                JSONObject styleItem = style.getJSONObject(i);
-                Boolean bold = styleItem.getBoolean("bold");
-                List<String> styleList = new ArrayList<>();
-                String color = styleItem.getString("color");
-                if (bold != null) {
-                    styleList.add("bold-text");
-                } else if (color != null && color.equals("#FF0000")) {
-                    styleList.add("red-text");
-                }
-
-                textArea.setStyle(styleItem.getIntValue("start"),
-                        styleItem.getIntValue("end"),
-                        styleList);
-            }
         }
     }
 

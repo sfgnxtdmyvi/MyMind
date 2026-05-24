@@ -163,7 +163,7 @@ public class MindNode extends StackPane {
 
         // 文本变化调整节点大小
         textArea.textProperty().addListener((obs, oldText, newText) ->
-                Platform.runLater(this::adjustSize));
+                Platform.runLater(this::adjust));
     }
 
     /**
@@ -254,7 +254,7 @@ public class MindNode extends StackPane {
                         imageContainer.setVisible(true);
                         imageContainer.setManaged(true);
 
-                        adjustSize();
+                        adjust();
                     } catch (UnsupportedFlavorException | IOException ex) {
                         ex.printStackTrace();
                     }
@@ -298,7 +298,7 @@ public class MindNode extends StackPane {
             imageContainer.setManaged(false);
             FileHandler.deleteImage(imageName);
             imageName = null;
-            adjustSize();
+            adjust();
         });
 
         // 缩放
@@ -320,7 +320,7 @@ public class MindNode extends StackPane {
                 // 根据宽度的变化量，按宽高比计算高度
                 image.setFitHeight(imageWidth / ratio);
 
-                adjustSize();
+                adjust();
             }
         });
 
@@ -367,7 +367,23 @@ public class MindNode extends StackPane {
     }
 
     /**
-     * 根据内容动态调整尺寸
+     * 调整尺寸和位置
+     */
+    public void adjust() {
+        double oldWidth = getPrefWidth();
+        adjustSize();
+
+        // 调整位置
+        if (model.getPos() == PosConstants.LEFT) {
+            model.setX(model.getX() - (getPrefWidth() - oldWidth));
+            onAction.accept(MindNodeEvent.ADJUST_R);
+        } else {
+            onAction.accept(MindNodeEvent.ADJUST_L);
+        }
+    }
+
+    /**
+     * 根据内容调整尺寸
      */
     public void adjustSize() {
         String text = textArea.getText();
@@ -413,16 +429,8 @@ public class MindNode extends StackPane {
         // y 轴 - 高度变动的一半，让中心保持不变
         model.setY(model.getY() - (nodeHeight - getPrefHeight()) / 2.0);
 
-        double oldWidth = getPrefWidth();
         model.setNodeWidth(nodeWidth);
         model.setNodeHeight(nodeHeight);
-
-        if (model.getPos() == PosConstants.LEFT) {
-            model.setX(model.getX() - (nodeWidth - oldWidth));
-            onAction.accept(MindNodeEvent.ADJUST_R);
-        } else {
-            onAction.accept(MindNodeEvent.ADJUST_L);
-        }
     }
 
     public void copyStyles(MindNode cloneNode) {

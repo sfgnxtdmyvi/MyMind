@@ -30,6 +30,28 @@ public class SubjectController {
         addNode(rootModel);
     }
 
+    public void addChild() {
+        if (selectedModel == null) {
+            return;
+        }
+
+        if (selectedModel.getPos() == PosConstants.LEFT) {
+            NodeModel childModel = new NodeModel(calculateChildXL(selectedModel), 0, PosConstants.LEFT);
+            selectedModel.addChildL(childModel);
+            addNode(childModel);
+
+            adjustChildrenYL();
+            refreshLinesL();
+        } else {
+            NodeModel childModel = new NodeModel(calculateChildXR(selectedModel), 0, PosConstants.RIGHT);
+            selectedModel.addChildR(childModel);
+            addNode(childModel);
+
+            adjustChildrenYR();
+            refreshLinesR();
+        }
+    }
+
     public void addChildR() {
         if (selectedModel == null || selectedModel.getPos() == PosConstants.LEFT) {
             return;
@@ -183,12 +205,13 @@ public class SubjectController {
         MindNode originalNode = getNode(originalModel);
         MindNode cloneNode = new MindNode(cloneModel, originalNode.getTextArea().getText());
         setOnAction(cloneNode, cloneModel);
+        cloneModel.setNodeWidth(originalModel.getNodeWidth());
+        cloneModel.setNodeHeight(originalModel.getNodeHeight());
         String imageName = originalNode.getImageName();
         ImageView image = originalNode.getImage();
 
         if (imageName != null) {
             cloneNode.loadImage(imageName, image.getFitWidth(), image.getFitHeight());
-            cloneNode.adjustSize();
         }
         originalNode.copyStyles(cloneNode);
         // 不能在复制时，直接添加到 subject 中，如果后面没有粘贴，会导致内存泄漏
@@ -504,6 +527,11 @@ public class SubjectController {
     }
 
     //———————————————————————————————————————————调整———————————————————————————————————————————
+    public void adjustXY() {
+        adjustR(rootModel);
+        adjustL(rootModel);
+    }
+
     private void adjustR(NodeModel model) {
         adjustChildrenXL(model);
         adjustChildrenYL();
@@ -514,12 +542,6 @@ public class SubjectController {
         adjustChildrenXR(model);
         adjustChildrenYR();
         refreshLinesR();
-    }
-
-    // 调整子节点X坐标
-    public void adjustChildrenX() {
-        adjustChildrenXR(rootModel);
-        adjustChildrenXL(rootModel);
     }
 
     public void adjustChildrenXR(NodeModel parentModel) {
@@ -668,11 +690,6 @@ public class SubjectController {
     }
 
     //———————————————————————————————————————————刷新连线———————————————————————————————————————————
-    public void refreshLines() {
-        refreshLinesR();
-        refreshLinesL();
-    }
-
     public void refreshLinesR() {
         subject.clearLineR();
         refreshLinesR(rootModel);

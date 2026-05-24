@@ -30,11 +30,13 @@ public class App extends Application {
             menuController.setWorkspace(workspace);
             FileHandler.setWorkspace(workspace);
             borderPane.setTop(menuBar);
+
+            borderPane.setCenter(workspace);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        borderPane.setCenter(workspace);
 
+        // Pane 用来添加消息提示标签，BorderPane 无法手动指定位置
         Pane root = new Pane(borderPane);
         // Pane 不会自动调整子节点大小，需要手动绑定
         borderPane.prefWidthProperty().bind(root.widthProperty());
@@ -45,7 +47,6 @@ public class App extends Application {
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
 
         primaryStage.setScene(scene);
-        primaryStage.setTitle("MyMind");
         primaryStage.setMaximized(true);
         primaryStage.show();
     }

@@ -1,6 +1,7 @@
 package myMind.util;
 
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
@@ -12,6 +13,7 @@ public class MessageUtil {
     private static final Label label;
     private static Pane parentPane;
     private static PauseTransition hideTimer;
+    private static double parentPaneWidth;
 
     static {
         label = new Label();
@@ -31,6 +33,7 @@ public class MessageUtil {
      */
     public static void init(Pane parentPane) {
         MessageUtil.parentPane = parentPane;
+        Platform.runLater(() -> parentPaneWidth = parentPane.getWidth());
         parentPane.getChildren().add(label);
     }
 
@@ -68,10 +71,8 @@ public class MessageUtil {
         label.setManaged(true);
 
         // 中间上方
-        double labelWidth = label.prefWidth(-1);
-        double labelHeight = label.prefHeight(-1);
-        label.setLayoutX((parentPane.getWidth() - labelWidth) / 2);
-        label.setLayoutY(labelHeight * 2);
+        label.setLayoutX((parentPaneWidth - label.prefWidth(-1)) / 2);
+        label.setLayoutY(label.prefHeight(-1) * 2);
 
         // 重置定时器
         hideTimer.stop();

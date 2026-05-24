@@ -17,11 +17,11 @@ public class MenuController {
     @Setter
     private Workspace workspace;
 
-    private static String fileDir;
+    private static String rootDir;
 
     static {
         ResourceBundle config = ResourceBundle.getBundle("config");
-        fileDir = config.getString("directory.file");
+        rootDir = config.getString("directory.root");
     }
 
     //—————————————————————————————————————————文件—————————————————————————————————————————
@@ -43,27 +43,36 @@ public class MenuController {
     }
 
     @FXML
-    public void handleLoadRecently(ActionEvent actionEvent) {
+    public void handleLoadRecently() {
     }
 
     @FXML
     private void handleSave() {
         Stage stage = (Stage) workspace.getScene().getWindow();
-        File file = new File(fileDir + stage.getTitle() + ".mm");
-        FileHandler.saveToFile(file);
+        String title = stage.getTitle();
+        // 没有保存过，就保存到新建文件，并设置标题
+        if (title == null) {
+            String fileName = handleSaveAs();
+            stage.setTitle(fileName.substring(0, fileName.length() - 3));
+        } else {
+            File file = new File(rootDir + title + ".mm");
+            FileHandler.saveFile(file);
+        }
     }
 
     @FXML
-    public void handleSaveAs() {
+    public String handleSaveAs() {
         subjectController = workspace.getCurrentController();
 
         FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File("D:\\MyMind"));
+        fc.setInitialDirectory(new File(rootDir));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showSaveDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
-            FileHandler.saveToFile(file);
+            FileHandler.saveFile(file);
         }
+
+        return file.getName();
     }
 
     @FXML
@@ -83,7 +92,7 @@ public class MenuController {
     @FXML
     private void handleAddChild() {
         subjectController = workspace.getCurrentController();
-        subjectController.addChildR();
+        subjectController.addChild();
     }
 
     @FXML
