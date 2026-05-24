@@ -18,6 +18,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import myMind.constants.MindNodeEvent;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
@@ -36,6 +37,8 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 @Data
+// 从 nodesLayer 中 remove 时，要用到 equals，不能依赖可变的属性
+@EqualsAndHashCode(of = "model")
 public class MindNode extends StackPane {
     private NodeModel model;
     private Consumer<MindNodeEvent> onAction;
@@ -88,7 +91,6 @@ public class MindNode extends StackPane {
         contentBox = new VBox();
         contentBox.setAlignment(Pos.CENTER);
         contentBox.setPadding(new Insets(10, 10, 10, 10));
-        contentBox.getStyleClass().add("nodeBorder");
         contentBox.getChildren().addAll(imageContainer, textArea);
         ObservableList<Node> children = getChildren();
         children.add(contentBox);
@@ -112,6 +114,7 @@ public class MindNode extends StackPane {
             children.add(addButtonL);
         }
 
+        getStyleClass().add("node");
         model.setNodeWidth(SizeConstants.MIN_NODE_WIDTH);
         model.setNodeHeight(SizeConstants.MIN_NODE_HEIGHT);
 

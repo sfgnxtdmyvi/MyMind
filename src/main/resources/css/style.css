@@ -19,11 +19,12 @@
 }
 
 /*——————————————————————————————————节点——————————————————————————————————*/
-.nodeBorder {
+.node {
     -fx-background-radius: 8;
     -fx-border-radius: 8;
     -fx-border-color: #c2c2c2;
     -fx-border-width: 1;
+    -fx-background-color: white;
 }
 
 .nodeImage {
@@ -33,9 +34,6 @@
 
 .nodeTextArea {
     -fx-font-size: 20;
-    -fx-background-color: transparent;
-    -fx-border-width: 0;
-    -fx-border-radius: 8;
 }
 
 .bold-text {

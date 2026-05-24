@@ -6,6 +6,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.QuadCurve;
 import lombok.Getter;
 import myMind.controller.SubjectController;
 import myMind.util.MessageUtil;
@@ -17,7 +19,7 @@ import java.util.Map;
  * 主题，放节点和连线
  */
 @Getter
-public class Subject extends Pane {
+public class Subject extends StackPane {
     /**
      * 节点层
      */
@@ -136,8 +138,8 @@ public class Subject extends Pane {
         MessageUtil.show(scale);
     }
 
-    //———————————————————————————————————————————增删———————————————————————————————————————————
-    public void add(MindNode node) {
+    //———————————————————————————————————————————节点———————————————————————————————————————————
+    public void addNode(MindNode node) {
         nodesLayer.getChildren().add(node);
         modelToView.put(node.getModel(), node);
     }
@@ -155,6 +157,23 @@ public class Subject extends Pane {
     public void remove(NodeModel model) {
         MindNode node = modelToView.remove(model);
         nodesLayer.getChildren().remove(node);
+    }
+
+    //———————————————————————————————————————————连线———————————————————————————————————————————
+    public void addLineR(QuadCurve line) {
+        linesLayerR.getChildren().add(line);
+    }
+
+    public void addLineL(QuadCurve line) {
+        linesLayerL.getChildren().add(line);
+    }
+
+    public void clearLineR() {
+        linesLayerR.getChildren().clear();
+    }
+
+    public void clearLineL() {
+        linesLayerL.getChildren().clear();
     }
 
     @Override

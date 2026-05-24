@@ -2,9 +2,8 @@ package myMind.controller;
 
 import javafx.geometry.Point2D;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
+import javafx.scene.shape.QuadCurve;
 import lombok.Data;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
@@ -101,13 +100,13 @@ public class SubjectController {
 
     public void addNode(NodeModel model) {
         MindNode node = new MindNode(model, "");
-        subject.add(node);
+        subject.addNode(node);
         setSelectedModel(model);
         setOnAction(node, model);
     }
 
     public void addNode(MindNode node) {
-        subject.add(node);
+        subject.addNode(node);
         NodeModel model = node.getModel();
         setSelectedModel(model);
         setOnAction(node, model);
@@ -675,63 +674,92 @@ public class SubjectController {
     }
 
     public void refreshLinesR() {
-        Pane linesLayerR = subject.getLinesLayerR();
-        linesLayerR.getChildren().clear();
-        refreshLinesR(linesLayerR, rootModel);
+        subject.clearLineR();
+        refreshLinesR(rootModel);
     }
 
     public void refreshLinesL() {
-        Pane linesLayerL = subject.getLinesLayerL();
-        linesLayerL.getChildren().clear();
-        refreshLinesL(linesLayerL, rootModel);
+        subject.clearLineL();
+        refreshLinesL(rootModel);
     }
 
-    private void refreshLinesR(Pane linesLayer, NodeModel parentModel) {
-        List<NodeModel> children = parentModel.getChildrenR();
-        if (!children.isEmpty()) {
-            for (NodeModel childModel : children) {
-                Point2D start = getPointR(parentModel);
-                Point2D end = getPointL(childModel);
+    private void refreshLinesR(NodeModel parentModel) {
+        List<NodeModel> childrenR = parentModel.getChildrenR();
+        int size = childrenR.size();
+        int maxIndex = size - 1;
 
-                Line line = new Line(start.getX(), start.getY(), end.getX(), end.getY());
-                line.setStroke(Color.rgb(100, 100, 100));
-                line.setStrokeWidth(2.5);
-                line.setStrokeDashOffset(0);
+        for (NodeModel childModel : childrenR) {
+            // todo 根据高度优化
+            QuadCurve curve = getQuadCurve(getStartR(parentModel, childrenR.indexOf(childModel), maxIndex),
+                    getEndR(childModel));
+            subject.addLineR(curve);
 
-                linesLayer.getChildren().add(line);
-                refreshLinesR(linesLayer, childModel);
-            }
+            refreshLinesR(childModel);
         }
     }
 
-    private void refreshLinesL(Pane linesLayer, NodeModel parentModel) {
-        List<NodeModel> children = parentModel.getChildrenL();
-        if (!children.isEmpty()) {
-            for (NodeModel childModel : children) {
-                Point2D start = getPointL(parentModel);
-                Point2D end = getPointR(childModel);
+    private void refreshLinesL(NodeModel parentModel) {
+        List<NodeModel> childrenL = parentModel.getChildrenL();
+        int size = childrenL.size();
+        int maxIndex = size - 1;
 
-                Line line = new Line(start.getX(), start.getY(), end.getX(), end.getY());
-                line.setStroke(Color.rgb(100, 100, 100));
-                line.setStrokeWidth(2.5);
-                line.setStrokeDashOffset(0);
+        for (NodeModel childModel : childrenL) {
+            QuadCurve curve = getQuadCurve(getStartL(parentModel, childrenL.indexOf(childModel), maxIndex),
+                    getEndL(childModel));
+            subject.addLineL(curve);
 
-                linesLayer.getChildren().add(line);
-                refreshLinesL(linesLayer, childModel);
-            }
+            refreshLinesL(childModel);
         }
     }
 
-    private Point2D getPointR(NodeModel model) {
-        double x = model.getX() + model.getNodeWidth();
-        double y = model.getY() + model.getNodeHeight() / 2;
-        return new Point2D(x, y);
+    private Point2D getStartR(NodeModel model, int i, int maxIndex) {
+        //最大值 - min（从左数第几个， 从右数第几个）
+        double x = model.getX() + model.getNodeWidth() - getLevel(maxIndex - Math.min(i, maxIndex - i));
+        return new Point2D(x, getMidY(model));
     }
 
-    private Point2D getPointL(NodeModel model) {
-        double x = model.getX();
-        double y = model.getY() + model.getNodeHeight() / 2;
-        return new Point2D(x, y);
+    private Point2D getEndR(NodeModel model) {
+        return new Point2D(model.getX(), getMidY(model));
+    }
+
+    private Point2D getStartL(NodeModel model, int i, int maxIndex) {
+        //最大值 + min（从左数第几个，从右数第几个）
+        double x = model.getX() + getLevel(maxIndex - Math.min(i, maxIndex - i));
+        return new Point2D(x, getMidY(model));
+    }
+
+    private Point2D getEndL(NodeModel model) {
+        return new Point2D(model.getX() + model.getNodeWidth(), getMidY(model));
+    }
+
+    private double getMidY(NodeModel model) {
+        return model.getY() + model.getNodeHeight() / 2;
+    }
+
+    private int getLevel(int i) {
+        if (i > 3) {
+            return 40;
+        } else if (i > 2) {
+            return 30;
+        } else if (i > 1) {
+            return 10;
+        } else {
+            return 0;
+        }
+    }
+
+    private static QuadCurve getQuadCurve(Point2D start, Point2D end) {
+        QuadCurve curve = new QuadCurve(
+                start.getX(), start.getY(),
+                start.getX(),
+                end.getY(),
+                end.getX(), end.getY()
+        );
+        curve.setStroke(Color.rgb(100, 100, 100));
+        curve.setStrokeWidth(2.5);
+        curve.setFill(null);
+
+        return curve;
     }
 
     //———————————————————————————————————————————其他———————————————————————————————————————————
