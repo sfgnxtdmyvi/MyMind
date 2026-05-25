@@ -11,6 +11,12 @@ public class MeasureTextUtil {
     private static Text measureText;
     static {
         measureText = new Text();
-        measureText.setFont(Font.font("System", SizeConstants.NODE_FONT_SIZE));
+        measureText.setFont(Font.font("Microsoft YaHei", SizeConstants.FONT_SIZE));
+        measureText.setWrappingWidth(0);
+    }
+
+    public static double getTextWidth(String text) {
+        measureText.setText(text);
+        return measureText.getLayoutBounds().getWidth();
     }
 }

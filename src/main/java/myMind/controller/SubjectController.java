@@ -121,7 +121,7 @@ public class SubjectController {
     }
 
     public void addNode(NodeModel model) {
-        MindNode node = new MindNode(model, "");
+        MindNode node = new MindNode(model);
         subject.addNode(node);
         setSelectedModel(model);
         setOnAction(node, model);
@@ -203,7 +203,7 @@ public class SubjectController {
         );
 
         MindNode originalNode = getNode(originalModel);
-        MindNode cloneNode = new MindNode(cloneModel, originalNode.getTextArea().getText());
+        MindNode cloneNode = new MindNode(cloneModel);
         setOnAction(cloneNode, cloneModel);
         cloneModel.setNodeWidth(originalModel.getNodeWidth());
         cloneModel.setNodeHeight(originalModel.getNodeHeight());
@@ -213,7 +213,7 @@ public class SubjectController {
         if (imageName != null) {
             cloneNode.loadImage(imageName, image.getFitWidth(), image.getFitHeight());
         }
-        originalNode.copyStyles(cloneNode);
+        originalNode.copyStyles(cloneNode, originalNode);
         // 不能在复制时，直接添加到 subject 中，如果后面没有粘贴，会导致内存泄漏
         cloneMap.put(cloneModel, cloneNode);
 

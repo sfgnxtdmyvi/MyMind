@@ -170,7 +170,6 @@ public class FileHandler {
             // 加载根节点
             NodeModel rootModel = subjectController.getRootModel();
             MindNode rootNode = subjectController.getRootNode();
-            rootNode.getTextArea().replaceText(subject.getString("text"));
             loadNode(subject, rootNode);
 
             // 加载子节点
@@ -184,6 +183,7 @@ public class FileHandler {
 
     private static void loadNode(JSONObject json, MindNode node) {
         // 文本样式
+        node.getTextArea().replaceText(json.getString("text"));
         JSONArray styles = json.getJSONArray("styles");
         if (styles != null) {
             StyleClassedTextArea textArea = node.getTextArea();
@@ -216,11 +216,10 @@ public class FileHandler {
 
         for (int i = 0; i < children.size(); i++) {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
-            String text = jsonNode.getString("text");
 
             NodeModel model = new NodeModel(0, 0, PosConstants.RIGHT);
             parentModel.addChildR(model);
-            MindNode node = new MindNode(model, text);
+            MindNode node = new MindNode(model);
             loadNode(jsonNode, node);
             subjectController.addNode(node);
 
@@ -235,11 +234,10 @@ public class FileHandler {
 
         for (int i = 0; i < children.size(); i++) {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
-            String text = jsonNode.getString("text");
 
             NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
             parentModel.addChildL(model);
-            MindNode node = new MindNode(model, text);
+            MindNode node = new MindNode(model);
             loadNode(jsonNode, node);
             subjectController.addNode(node);
 
@@ -285,7 +283,6 @@ public class FileHandler {
         JSONObject rootJson = json.getJSONObject("root");
         NodeModel rootModel = subjectController.getRootModel();
         MindNode rootNode = subjectController.getRootNode();
-        rootNode.getTextArea().replaceText(rootJson.getString("text"));
         importNode(rootJson, rootNode);
 
         importChildR(rootJson.getJSONObject("children"), rootModel);
@@ -297,6 +294,7 @@ public class FileHandler {
 
     private static void importNode(JSONObject json, MindNode node) {
         // 文本样式
+        node.getTextArea().replaceText(json.getString("text"));
         JSONArray style = json.getJSONArray("style");
         if (style != null) {
             StyleClassedTextArea textArea = node.getTextArea();
@@ -334,11 +332,10 @@ public class FileHandler {
         //children里有一个"objectClass": "NSArray"
         for (int i = 0; i < children.size() - 1; i++) {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
-            String text = jsonNode.getString("text");
 
             NodeModel model = new NodeModel(0, 0, PosConstants.RIGHT);
             parentModel.addChildR(model);
-            MindNode node = new MindNode(model, text);
+            MindNode node = new MindNode(model);
             importNode(jsonNode, node);
             subjectController.addNode(node);
 
@@ -353,11 +350,10 @@ public class FileHandler {
 
         for (int i = 0; i < children.size() - 1; i++) {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
-            String text = jsonNode.getString("text");
 
             NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
             parentModel.addChildL(model);
-            MindNode node = new MindNode(model, text);
+            MindNode node = new MindNode(model);
             importNode(jsonNode, node);
             subjectController.addNode(node);
 

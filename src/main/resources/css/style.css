@@ -32,10 +32,6 @@
     -fx-border-color: #82a7f3;
 }
 
-.nodeTextArea {
-    -fx-font-size: 20;
-}
-
 .bold-text {
     -fx-font-weight: bold;
 }

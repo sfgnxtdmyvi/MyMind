@@ -16,7 +16,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import myMind.constants.MindNodeEvent;
@@ -61,7 +60,7 @@ public class MindNode extends StackPane {
     private double startWidth;
     private double ratio;
 
-    public MindNode(NodeModel model, String text) {
+    public MindNode(NodeModel model) {
         this.model = model;
 
         image = new ImageView();
@@ -83,9 +82,7 @@ public class MindNode extends StackPane {
         imageContainer.setManaged(false);
 
         textArea = new StyleClassedTextArea();
-        textArea.replaceText(text);
-        textArea.setWrapText(true);
-        textArea.getStyleClass().add("nodeTextArea");
+        textArea.setStyle("-fx-font-family: 'Microsoft YaHei'; -fx-font-size: 20px;");
         VBox.setVgrow(textArea, Priority.ALWAYS);
 
         contentBox = new VBox();
@@ -144,7 +141,6 @@ public class MindNode extends StackPane {
 
         imageContainer.setVisible(true);
         imageContainer.setManaged(true);
-        File file = new File(imagePath);
         image.setImage(new Image(new File(imagePath).toURI().toString()));
         image.setFitWidth(imageWidth / 2.2);
         image.setFitHeight(imageHeight / 2.2);
@@ -388,8 +384,6 @@ public class MindNode extends StackPane {
     public void adjustSize() {
         String text = textArea.getText();
         boolean imageVisible = imageContainer.isVisible();
-        double textWidth;
-        double textHeight;
         double nodeWidth;
         double nodeHeight;
 
@@ -397,14 +391,8 @@ public class MindNode extends StackPane {
             nodeWidth = SizeConstants.MIN_NODE_WIDTH;
             nodeHeight = SizeConstants.MIN_NODE_HEIGHT;
         } else {
-            Text measureText = MeasureTextUtil.getMeasureText();
-            measureText.setText(text);
-            measureText.setWrappingWidth(0);
-            // textArea 左右无内边距，宽度 = 文本宽度
-            textWidth = measureText.getLayoutBounds().getWidth();
-
-            // MindNode 宽度 = textArea 宽度 + border(2px) + padding(20px)
-            nodeWidth = textWidth + 22;
+            // textArea 宽度 + border(2px) + padding(20px)
+            nodeWidth = MeasureTextUtil.getTextWidth(text) + 22;
             // MIN_NODE_WIDTH <= 宽度 <= MAX_NODE_WIDTH
             nodeWidth = Math.max(SizeConstants.MIN_NODE_WIDTH,
                     Math.min(nodeWidth, SizeConstants.MAX_NODE_WIDTH));
@@ -413,14 +401,8 @@ public class MindNode extends StackPane {
                 nodeWidth = Math.max(nodeWidth, image.getFitWidth() + 24);
             }
 
-            // 设置换行
-            measureText.setWrappingWidth(SizeConstants.MAX_NODE_WIDTH - 22);
-            double contentHeight = measureText.getLayoutBounds().getHeight();
-
-            double totalPadding = (contentHeight / 25.4) * 2.6;
-            textHeight = contentHeight + totalPadding;
-            // MindNode 高度 = textArea 高度 + border(2px) + padding(20px) [+ image 高度 + border(2px)]
-            nodeHeight = textHeight + 22;
+            // textArea 行数 * 行高 + border(2px) + padding(20px) [+ image 高度 + border(2px)]
+            nodeHeight = text.split("\n", -1).length * SizeConstants.LINE_HEIGHT + 22;
             if (imageVisible) {
                 nodeHeight += image.getFitHeight() + 2;
             }
@@ -429,22 +411,24 @@ public class MindNode extends StackPane {
         // y 轴 - 高度变动的一半，让中心保持不变
         model.setY(model.getY() - (nodeHeight - getPrefHeight()) / 2.0);
 
-        model.setNodeWidth(nodeWidth);
+        model.setNodeWidth(nodeWidth * 1.01);
         model.setNodeHeight(nodeHeight);
     }
 
-    public void copyStyles(MindNode cloneNode) {
-        int length = textArea.getLength();
+    public void copyStyles(MindNode cloneNode, MindNode originalNode) {
+        StyleClassedTextArea originalTextArea = originalNode.getTextArea();
+        int length = originalTextArea.getLength();
         if (length == 0) {
             return;
         }
 
         StyleClassedTextArea cloneTextArea = cloneNode.getTextArea();
+        cloneTextArea.replaceText(originalTextArea.getText());
         int start = 0;
-        Collection<String> lastStyles = textArea.getStyleOfChar(0);
+        Collection<String> lastStyles = originalTextArea.getStyleOfChar(0);
 
         for (int i = 1; i < length; i++) {
-            Collection<String> currentStyles = textArea.getStyleOfChar(i);
+            Collection<String> currentStyles = originalTextArea.getStyleOfChar(i);
 
             // 样式变化时保存前一段
             if (!currentStyles.equals(lastStyles)) {
