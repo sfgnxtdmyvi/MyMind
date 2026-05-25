@@ -1,10 +1,10 @@
 package myMind.controller;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
+import myMind.App;
 import myMind.componet.Workspace;
 
 import java.io.File;
@@ -26,7 +26,8 @@ public class MenuController {
 
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
-    public void handleNew(ActionEvent actionEvent) {
+    public void handleNew() {
+        App.newMyMind(new Stage());
     }
 
     @FXML
@@ -53,7 +54,9 @@ public class MenuController {
         // 没有保存过，就保存到新建文件，并设置标题
         if (title == null) {
             String fileName = handleSaveAs();
-            stage.setTitle(fileName.substring(0, fileName.length() - 3));
+            if (fileName == null) {
+                stage.setTitle(fileName.substring(0, fileName.length() - 3));
+            }
         } else {
             File file = new File(rootDir + title + ".mm");
             FileHandler.saveFile(file);
@@ -70,9 +73,10 @@ public class MenuController {
         File file = fc.showSaveDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
             FileHandler.saveFile(file);
+            return file.getName();
         }
 
-        return file.getName();
+        return null;
     }
 
     @FXML

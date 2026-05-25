@@ -10,19 +10,16 @@ import myMind.componet.NodeModel;
 import myMind.componet.Subject;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
+import myMind.util.CloneNodeUtil;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 @Data
 public class SubjectController {
     private final Subject subject = new Subject(this);
     private NodeModel rootModel;
     private NodeModel selectedModel;
-    private MindNode cloneNode;
-    private Map<NodeModel, MindNode> cloneMap = new HashMap<>();
 
     //———————————————————————————————————————————新增———————————————————————————————————————————
     public void initRootNode(double centerX, double centerY) {
@@ -140,28 +137,25 @@ public class SubjectController {
                 case SELECT -> setSelectedModel(model);
 
                 case PASTE_SIBLING -> {
+                    MindNode cloneNode = CloneNodeUtil.getNode();
                     if (cloneNode != null) {
                         pasteSibling(cloneNode, model.getPos());
-                        cloneNode = null;
-                        cloneMap.clear();
                     }
                 }
                 case ADD_BUTTON_R -> {
+                    MindNode cloneNode = CloneNodeUtil.getNode();
                     if (cloneNode == null) {
                         addChildR();
                     } else {
                         pasteChild(cloneNode, PosConstants.RIGHT);
-                        cloneNode = null;
-                        cloneMap.clear();
                     }
                 }
                 case ADD_BUTTON_L -> {
+                    MindNode cloneNode = CloneNodeUtil.getNode();
                     if (cloneNode == null) {
                         addChildL();
                     } else {
                         pasteChild(cloneNode, PosConstants.LEFT);
-                        cloneNode = null;
-                        cloneMap.clear();
                     }
                 }
 
@@ -191,7 +185,7 @@ public class SubjectController {
 
     //———————————————————————————————————————————复制粘贴———————————————————————————————————————————
     public void copy() {
-        cloneNode = clone(selectedModel);
+        CloneNodeUtil.setNode(clone(selectedModel));
     }
 
     private MindNode clone(NodeModel originalModel) {
@@ -215,7 +209,7 @@ public class SubjectController {
         }
         originalNode.copyStyles(cloneNode, originalNode);
         // 不能在复制时，直接添加到 subject 中，如果后面没有粘贴，会导致内存泄漏
-        cloneMap.put(cloneModel, cloneNode);
+        CloneNodeUtil.putMap(cloneModel, cloneNode);
 
         if (pos == PosConstants.LEFT) {
             for (NodeModel childModel : originalModel.getChildrenL()) {
@@ -251,7 +245,7 @@ public class SubjectController {
 
         // 根节点改成复制
         if (selectedModel == rootModel) {
-            cloneNode = clone(selectedModel);
+            CloneNodeUtil.setNode(clone(selectedModel));
         }
 
         NodeModel model = selectedModel;
@@ -263,7 +257,7 @@ public class SubjectController {
             deleteL();
         }
 
-        cloneNode = getNode(model);
+        CloneNodeUtil.setNode(getNode(model));
     }
 
     /**
@@ -286,7 +280,7 @@ public class SubjectController {
             } else {
                 selectedModel.addChildR(cloneModel);
             }
-            subject.addClone(cloneMap);
+            subject.addClone(CloneNodeUtil.getMap());
 
             adjustL(cloneModel);
         } else {
@@ -299,7 +293,7 @@ public class SubjectController {
             } else {
                 selectedModel.addChildL(cloneModel);
             }
-            subject.addClone(cloneMap);
+            subject.addClone(CloneNodeUtil.getMap());
 
             adjustR(cloneModel);
         }
@@ -329,7 +323,7 @@ public class SubjectController {
             } else {
                 parentModel.addChildAtR(index, cloneModel);
             }
-            subject.addClone(cloneMap);
+            subject.addClone(CloneNodeUtil.getMap());
 
             adjustL(cloneModel);
         } else {
@@ -342,7 +336,7 @@ public class SubjectController {
             } else {
                 parentModel.addChildAtL(index, cloneModel);
             }
-            subject.addClone(cloneMap);
+            subject.addClone(CloneNodeUtil.getMap());
 
             adjustR(cloneModel);
         }

@@ -15,18 +15,19 @@ import myMind.util.MessageUtil;
 import java.io.IOException;
 
 public class App extends Application {
-    private MenuController menuController;
-    private Workspace workspace;
-
     @Override
     public void start(Stage primaryStage) {
-        workspace = new Workspace();
+        newMyMind(primaryStage);
+    }
+
+    public static void newMyMind(Stage stage) {
+        Workspace workspace = new Workspace();
         workspace.getStyleClass().add("workspace");
         BorderPane borderPane = new BorderPane();
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
+            FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/menu.fxml"));
             MenuBar menuBar = loader.load();
-            menuController = loader.getController();
+            MenuController menuController = loader.getController();
             menuController.setWorkspace(workspace);
             FileHandler.setWorkspace(workspace);
             borderPane.setTop(menuBar);
@@ -44,11 +45,11 @@ public class App extends Application {
         MessageUtil.init(root);
 
         Scene scene = new Scene(root, 1450, 740);
-        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        scene.getStylesheets().add(App.class.getResource("/css/style.css").toExternalForm());
 
-        primaryStage.setScene(scene);
-        primaryStage.setMaximized(true);
-        primaryStage.show();
+        stage.setScene(scene);
+        stage.setMaximized(true);
+        stage.show();
     }
 
     public static void main(String[] args) {
