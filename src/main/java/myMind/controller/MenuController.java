@@ -13,6 +13,8 @@ import java.util.ResourceBundle;
 public class MenuController {
 
     private SubjectController subjectController;
+    @Setter
+    private FileHandler fileHandler;
 
     @Setter
     private Workspace workspace;
@@ -39,7 +41,7 @@ public class MenuController {
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
-            FileHandler.loadFile(file);
+            fileHandler.loadFile(file);
         }
     }
 
@@ -59,7 +61,7 @@ public class MenuController {
             }
         } else {
             File file = new File(rootDir + title + ".mm");
-            FileHandler.saveFile(file);
+            fileHandler.saveFile(file);
         }
     }
 
@@ -72,7 +74,7 @@ public class MenuController {
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showSaveDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
-            FileHandler.saveFile(file);
+            fileHandler.saveFile(file);
             return file.getName();
         }
 
@@ -88,7 +90,7 @@ public class MenuController {
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
-            FileHandler.importFile(file);
+            fileHandler.importFile(file);
         }
     }
 

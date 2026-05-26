@@ -135,7 +135,7 @@ public class Subject extends StackPane {
         setScaleX(scale);
         setScaleY(scale);
 
-        MessageUtil.show(scale);
+        MessageUtil.showScale(scale);
     }
 
     //———————————————————————————————————————————节点———————————————————————————————————————————

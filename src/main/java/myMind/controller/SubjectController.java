@@ -242,6 +242,7 @@ public class SubjectController {
         if (selectedModel == null) {
             return;
         }
+        CloneNodeUtil.setNode(getSelectedNode());
 
         // 根节点改成复制
         if (selectedModel == rootModel) {
@@ -251,13 +252,13 @@ public class SubjectController {
         NodeModel model = selectedModel;
         if (selectedModel.getPos() == PosConstants.RIGHT) {
             deleteChildrenFromSubjectR(model);
+            CloneNodeUtil.putMap(selectedModel, getNode(selectedModel));
             deleteR();
         } else {
             deleteChildrenFromSubjectL(model);
+            CloneNodeUtil.putMap(selectedModel, getNode(selectedModel));
             deleteL();
         }
-
-        CloneNodeUtil.setNode(getNode(model));
     }
 
     /**
@@ -266,7 +267,7 @@ public class SubjectController {
      * @param pos       粘到目标的左边还是右边，跟 cloneNode 的 pos 可以不一致
      */
     private void pasteChild(MindNode cloneNode, byte pos) {
-        if (selectedModel == null || cloneNode == null) {
+        if (selectedModel == null) {
             return;
         }
 
@@ -306,7 +307,7 @@ public class SubjectController {
      *
      */
     public void pasteSibling(MindNode cloneNode, byte pos) {
-        if (selectedModel == null || cloneNode == null || selectedModel == rootModel) {
+        if (selectedModel == null || selectedModel == rootModel) {
             return;
         }
 
@@ -410,6 +411,7 @@ public class SubjectController {
     private void deleteChildrenFromSubjectR(NodeModel parentModel) {
         List<NodeModel> childrenR = parentModel.getChildrenR();
         for (NodeModel childModel : childrenR) {
+            CloneNodeUtil.putMap(childModel, getNode(childModel));
             subject.remove(childModel);
 
             deleteChildrenFromSubjectR(childModel);
@@ -419,6 +421,7 @@ public class SubjectController {
     private void deleteChildrenFromSubjectL(NodeModel parentModel) {
         List<NodeModel> childrenL = parentModel.getChildrenL();
         for (NodeModel childModel : childrenL) {
+            CloneNodeUtil.putMap(childModel, getNode(childModel));
             subject.remove(childModel);
 
             deleteChildrenFromSubjectL(childModel);

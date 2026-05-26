@@ -191,7 +191,7 @@ public class Workspace extends TabPane {
                     List<String> styles = new ArrayList<>(textArea.getStyleOfChar(start));
                     // getStyleAtPosition(p) is equivalent to getStyleOfChar(p-1)
                     // 用getStyleAtPosition获取的是指定位置的前一个位置的样式
-//                    List<String> styles = new ArrayList<>(textArea.getStyleAtPosition(start + 1));
+                    // List<String> styles = new ArrayList<>(textArea.getStyleAtPosition(start + 1));
                     if (code == KeyCode.B) {
                         if (styles.contains("bold-text")) {
                             styles.remove("bold-text");
@@ -222,8 +222,8 @@ public class Workspace extends TabPane {
         subjectController = new SubjectController();
         Subject subject = subjectController.getSubject();
 
-        int index = getTabs().size() + 1;
-        Tab tab = new Tab();
+        String subjectName = "主题" + (getTabs().size() + 1);
+        Tab tab = new Tab(subjectName);
         tab.setContent(subject);
 
         getTabs().add(tab);
@@ -235,7 +235,13 @@ public class Workspace extends TabPane {
 //            double centerY = getHeight() / 2.0 - SizeConstants.MIN_NODE_HEIGHT;
 //        });
         subjectController.initRootNode(670, 311);
-        tab.textProperty().bind(subjectController.getRootNode().getTextArea().textProperty());
+        subjectController.getRootNode().getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.isEmpty()) {
+                tab.setText(newValue);
+            }else {
+                tab.setText(subjectName);
+            }
+        });
     }
 
     /**

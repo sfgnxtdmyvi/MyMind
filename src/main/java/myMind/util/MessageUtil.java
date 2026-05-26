@@ -1,40 +1,43 @@
 package myMind.util;
 
 import javafx.animation.PauseTransition;
-import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 /**
  * 消息提示标签
  */
 public class MessageUtil {
-    private static final Label label;
-    private static Pane parentPane;
+    private static Label label;
     private static PauseTransition hideTimer;
     private static double parentPaneWidth;
-
-    static {
-        label = new Label();
-        label.getStyleClass().add("message");
-        label.setVisible(false);
-        label.setManaged(false);
-
-        hideTimer = new PauseTransition(Duration.seconds(3));
-        hideTimer.setOnFinished(event -> {
-            label.setVisible(false);
-            label.setManaged(false);
-        });
-    }
 
     /**
      * 初始化并添加到父容器
      */
-    public static void init(Pane parentPane) {
-        MessageUtil.parentPane = parentPane;
-        Platform.runLater(() -> parentPaneWidth = parentPane.getWidth());
+    public static void init(Pane parentPane, Stage stage) {
+        Label label = new Label();
+        label.getStyleClass().add("message");
+        label.setVisible(false);
+        label.setManaged(false);
         parentPane.getChildren().add(label);
+
+
+        PauseTransition hideTimer = new PauseTransition(Duration.seconds(3));
+        hideTimer.setOnFinished(event -> {
+            label.setVisible(false);
+            label.setManaged(false);
+        });
+
+        stage.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                MessageUtil.label = label;
+                MessageUtil.hideTimer = hideTimer;
+                MessageUtil.parentPaneWidth = parentPane.getWidth();
+            }
+        });
     }
 
     /**
@@ -42,14 +45,9 @@ public class MessageUtil {
      *
      * @param scale 缩放比例 (0.1 - 3.0)
      */
-    public static void show(double scale) {
-        if (parentPane == null) {
-            return;
-        }
-
+    public static void showScale(double scale) {
         int percentage = (int) Math.round(scale * 100);
-        label.setText(percentage + "%");
-        show();
+        showMessage(percentage + "%");
     }
 
     /**
@@ -57,16 +55,8 @@ public class MessageUtil {
      *
      * @param message 消息
      */
-    public static void show(String message) {
-        if (parentPane == null) {
-            return;
-        }
-
+    public static void showMessage(String message) {
         label.setText(message);
-        show();
-    }
-
-    private static void show() {
         label.setVisible(true);
         label.setManaged(true);
 
@@ -74,7 +64,6 @@ public class MessageUtil {
         label.setLayoutX((parentPaneWidth - label.prefWidth(-1)) / 2);
         label.setLayoutY(label.prefHeight(-1) * 2);
 
-        // 重置定时器
         hideTimer.stop();
         hideTimer.play();
     }

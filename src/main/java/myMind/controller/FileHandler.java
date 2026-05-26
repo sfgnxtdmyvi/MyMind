@@ -6,7 +6,6 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-import lombok.Setter;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
 import myMind.componet.Subject;
@@ -31,8 +30,7 @@ public class FileHandler {
 
     private static SubjectController subjectController;
 
-    @Setter
-    private static Workspace workspace;
+    private Workspace workspace;
     private static String imageDir;
 
     static {
@@ -40,8 +38,12 @@ public class FileHandler {
         imageDir = config.getString("directory.image");
     }
 
+    public FileHandler(Workspace workspace) {
+        this.workspace = workspace;
+    }
+
     //—————————————————————————————————————————保存—————————————————————————————————————————
-    public static void saveFile(File file) {
+    public void saveFile(File file) {
         ObservableList<Tab> tabs = workspace.getTabs();
         JSONObject subjects = new JSONObject();
         for (int i = 0; i < tabs.size(); i++) {
@@ -58,13 +60,13 @@ public class FileHandler {
 
         try (FileWriter fw = new FileWriter(file)) {
             fw.write(subjects.toString());
-            MessageUtil.show("保存成功");
+            MessageUtil.showMessage("保存成功");
         } catch (IOException e) {
-            MessageUtil.show("保存失败");
+            MessageUtil.showMessage("保存失败");
         }
     }
 
-    private static JSONObject saveNode(NodeModel model) {
+    private JSONObject saveNode(NodeModel model) {
         JSONObject json = new JSONObject();
 
         MindNode mindNode = subjectController.getNode(model);
@@ -92,7 +94,7 @@ public class FileHandler {
         return json;
     }
 
-    private static void saveChildrenR(JSONObject parentJson, List<NodeModel> childrenR) {
+    private void saveChildrenR(JSONObject parentJson, List<NodeModel> childrenR) {
         if (!childrenR.isEmpty()) {
             JSONObject childrenRJson = new JSONObject();
             for (int i = 0; i < childrenR.size(); i++) {
@@ -106,7 +108,7 @@ public class FileHandler {
         }
     }
 
-    private static void saveChildrenL(JSONObject parentJson, List<NodeModel> childrenL) {
+    private void saveChildrenL(JSONObject parentJson, List<NodeModel> childrenL) {
         if (!childrenL.isEmpty()) {
             JSONObject childrenLJson = new JSONObject();
             for (int i = 0; i < childrenL.size(); i++) {
@@ -120,7 +122,7 @@ public class FileHandler {
         }
     }
 
-    public static JSONArray extractStyles(StyleClassedTextArea textArea) {
+    public JSONArray extractStyles(StyleClassedTextArea textArea) {
         JSONArray styles = new JSONArray();
         int start = 0;
         Collection<String> lastStyles = textArea.getStyleOfChar(0);
@@ -159,7 +161,7 @@ public class FileHandler {
     }
 
     //—————————————————————————————————————————打开—————————————————————————————————————————
-    public static void loadFile(File file) {
+    public void loadFile(File file) {
         JSONObject json = readFile(file);
         // 加载主题
         for (int i = 0; i < json.size(); i++) {
@@ -181,7 +183,7 @@ public class FileHandler {
         }
     }
 
-    private static void loadNode(JSONObject json, MindNode node) {
+    private void loadNode(JSONObject json, MindNode node) {
         // 文本样式
         node.getTextArea().replaceText(json.getString("text"));
         JSONArray styles = json.getJSONArray("styles");
@@ -209,7 +211,7 @@ public class FileHandler {
         }
     }
 
-    private static void loadChildR(JSONObject children, NodeModel parentModel) {
+    private void loadChildR(JSONObject children, NodeModel parentModel) {
         if (children == null) {
             return;
         }
@@ -227,7 +229,7 @@ public class FileHandler {
         }
     }
 
-    private static void loadChildL(JSONObject children, NodeModel parentModel) {
+    private void loadChildL(JSONObject children, NodeModel parentModel) {
         if (children == null) {
             return;
         }
@@ -246,7 +248,7 @@ public class FileHandler {
     }
 
     //—————————————————————————————————————————导入—————————————————————————————————————————
-    private static JSONObject readFile(File file) {
+    private JSONObject readFile(File file) {
         StringBuilder content = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
@@ -258,12 +260,12 @@ public class FileHandler {
             Stage stage = (Stage) workspace.getScene().getWindow();
             stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
         } catch (Exception e) {
-            MessageUtil.show("读取失败：" + e.getMessage());
+            MessageUtil.showMessage("读取失败：" + e.getMessage());
         }
         return JSONObject.parseObject(content.toString());
     }
 
-    public static void importFile(File file) {
+    public void importFile(File file) {
         JSONObject json = readFile(file);
 
         importSubjet(json);
@@ -276,7 +278,7 @@ public class FileHandler {
         }
     }
 
-    private static void importSubjet(JSONObject json) {
+    private void importSubjet(JSONObject json) {
         workspace.addSubject();
         subjectController = workspace.getCurrentController();
 
@@ -292,7 +294,7 @@ public class FileHandler {
         subjectController.adjustXY();
     }
 
-    private static void importNode(JSONObject json, MindNode node) {
+    private void importNode(JSONObject json, MindNode node) {
         // 文本样式
         node.getTextArea().replaceText(json.getString("text"));
         JSONArray style = json.getJSONArray("style");
@@ -324,7 +326,7 @@ public class FileHandler {
         }
     }
 
-    private static void importChildR(JSONObject children, NodeModel parentModel) {
+    private void importChildR(JSONObject children, NodeModel parentModel) {
         if (children == null) {
             return;
         }
@@ -343,7 +345,7 @@ public class FileHandler {
         }
     }
 
-    private static void importChildL(JSONObject children, NodeModel parentModel) {
+    private void importChildL(JSONObject children, NodeModel parentModel) {
         if (children == null) {
             return;
         }

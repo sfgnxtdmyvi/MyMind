@@ -29,7 +29,7 @@ public class App extends Application {
             MenuBar menuBar = loader.load();
             MenuController menuController = loader.getController();
             menuController.setWorkspace(workspace);
-            FileHandler.setWorkspace(workspace);
+            menuController.setFileHandler(new FileHandler(workspace));
             borderPane.setTop(menuBar);
 
             borderPane.setCenter(workspace);
@@ -42,7 +42,7 @@ public class App extends Application {
         // Pane 不会自动调整子节点大小，需要手动绑定
         borderPane.prefWidthProperty().bind(root.widthProperty());
         borderPane.prefHeightProperty().bind(root.heightProperty());
-        MessageUtil.init(root);
+        MessageUtil.init(root, stage);
 
         Scene scene = new Scene(root, 1450, 740);
         scene.getStylesheets().add(App.class.getResource("/css/style.css").toExternalForm());
