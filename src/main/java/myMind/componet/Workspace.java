@@ -6,7 +6,8 @@ import javafx.scene.control.IndexRange;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
-import myMind.constants.PosConstants;
+import lombok.Getter;
+import myMind.controller.MenuController;
 import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Workspace extends TabPane {
+    @Getter
     private SubjectController subjectController;
 
     public Workspace() {
@@ -35,6 +37,7 @@ public class Workspace extends TabPane {
                 return;
             }
             subjectController = ((Subject) newTab.getContent()).getSubjectController();
+            MenuController.setSubjectController(subjectController);
         });
 
         getTabs().addListener((ListChangeListener.Change<? extends Tab> c) -> {
@@ -52,133 +55,7 @@ public class Workspace extends TabPane {
             //在 Windows / Linux 上：它等同于 e.isControlDown() (即 Ctrl 键)
             //在 macOS 上：它等同于 e.isMetaDown() (即 Command ⌘ 键)
             boolean shortcutDown = e.isShortcutDown();
-            boolean altDown = e.isAltDown();
-            boolean shiftDown = e.isShiftDown();
             KeyCode code = e.getCode();
-
-            // 切换选中节点
-            if (shiftDown && altDown) {
-                NodeModel selectedModel = subjectController.getSelectedModel();
-                if (selectedModel == null) {
-                    return;
-                }
-                byte pos = selectedModel.getPos();
-
-                if (code == KeyCode.RIGHT) {
-                    // 左边节点 -> 父节点
-                    // 根、右边节点 -> 中间的右子节点
-                    if (pos == PosConstants.LEFT) {
-                        selectedModel = selectedModel.getParent();
-                    } else {
-                        List<NodeModel> children = selectedModel.getChildrenR();
-                        if (!children.isEmpty()) {
-                            selectedModel = children.get(children.size() / 2);
-                        }
-                    }
-                } else if (code == KeyCode.LEFT) {
-                    // 父节点 <- 右边节点
-                    // 中间的左子节点 <- 左边、根节点
-                    if (pos == PosConstants.RIGHT) {
-                        selectedModel = selectedModel.getParent();
-                    } else {
-                        List<NodeModel> children = selectedModel.getChildrenL();
-                        if (!children.isEmpty()) {
-                            selectedModel = children.get(children.size() / 2);
-                        }
-                    }
-                } else if (code == KeyCode.UP || code == KeyCode.DOWN) {
-                    if (pos == PosConstants.MIDDLE) {
-                        return;
-                    }
-
-                    // 得到当前节点的索引
-                    NodeModel parentModel = selectedModel.getParent();
-                    List<NodeModel> children;
-                    if (pos == PosConstants.RIGHT) {
-                        children = parentModel.getChildrenR();
-                    } else {
-                        children = parentModel.getChildrenL();
-                    }
-                    int index = children.indexOf(selectedModel);
-
-                    // 切换成上下兄弟节点
-                    if (code == KeyCode.UP) {
-                        if (index != 0) {
-                            selectedModel = children.get(index - 1);
-                        }
-                    } else {
-                        if (index != children.size() - 1) {
-                            selectedModel = children.get(index + 1);
-                        }
-                    }
-                }
-
-                subjectController.setSelectedModel(selectedModel);
-                return;
-            }
-
-            //新增节点
-            //Ctrl + Alt 批量新增
-            if (shortcutDown && altDown) {
-                // 1个子节点和5个孙节点
-                if (code == KeyCode.RIGHT) {
-                    if (subjectController.getSelectedModel().getPos() == PosConstants.LEFT) {
-                        return;
-                    }
-                    subjectController.addChildR();
-                    subjectController.addChildR();
-                    for (int i = 0; i < 4; i++) {
-                        subjectController.addSiblingR();
-                    }
-                } else if (code == KeyCode.LEFT) {
-                    if (subjectController.getSelectedModel().getPos() == PosConstants.RIGHT) {
-                        return;
-                    }
-                    subjectController.addChildL();
-                    subjectController.addChildL();
-                    for (int i = 0; i < 4; i++) {
-                        subjectController.addSiblingL();
-                    }
-                }
-                // 1个兄弟节点和5个孙节点
-                else if (code == KeyCode.DOWN) {
-                    subjectController.addSibling();
-                    subjectController.addChildR();
-                    subjectController.addChildL();
-                    for (int i = 0; i < 4; i++) {
-                        subjectController.addSibling();
-                    }
-                }
-                return;
-            } else if (altDown && code == KeyCode.RIGHT) {
-                subjectController.addChildR();
-                return;
-            } else if (altDown && code == KeyCode.LEFT) {
-                subjectController.addChildL();
-                return;
-            } else if (altDown && code == KeyCode.DOWN) {
-                subjectController.addSibling();
-                return;
-            } else if (altDown && code == KeyCode.UP) {
-
-                return;
-            }
-
-            // 删除
-            if (altDown && code == KeyCode.DELETE) {
-                subjectController.delete();
-                return;
-            }
-
-            // 节点的复制粘贴
-            if (shortcutDown && shiftDown) {
-                if (code == KeyCode.C) {
-                    subjectController.copy();
-                } else if (code == KeyCode.X) {
-                    subjectController.cut();
-                }
-                return;
-            }
 
             // 文本样式
             if (shortcutDown && (code == KeyCode.B || code == KeyCode.R)) {
@@ -208,12 +85,6 @@ public class Workspace extends TabPane {
 
                     textArea.setStyle(start, selection.getEnd(), styles);
                 }
-                return;
-            }
-
-            //新增主题
-            if (shortcutDown && code == KeyCode.M) {
-                addSubject();
             }
         });
     }
@@ -221,6 +92,7 @@ public class Workspace extends TabPane {
     public void addSubject() {
         subjectController = new SubjectController();
         Subject subject = subjectController.getSubject();
+        MenuController.setSubjectController(subjectController);
 
         String subjectName = "主题" + (getTabs().size() + 1);
         Tab tab = new Tab(subjectName);
@@ -238,18 +110,9 @@ public class Workspace extends TabPane {
         subjectController.getRootNode().getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty()) {
                 tab.setText(newValue);
-            }else {
+            } else {
                 tab.setText(subjectName);
             }
         });
-    }
-
-    /**
-     * 获取当前选中标签页的控制器
-     */
-    public SubjectController getCurrentController() {
-        Tab selectedTab = getSelectionModel().getSelectedItem();
-        subjectController = ((Subject) selectedTab.getContent()).getSubjectController();
-        return subjectController;
     }
 }

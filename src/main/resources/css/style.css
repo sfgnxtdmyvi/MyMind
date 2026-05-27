@@ -1,9 +1,16 @@
-.workspace {
-    -fx-background-color: white;
+/* 菜单 */
+.menu-bar .menu, .menu-item {
+    -fx-padding: 5 15 5 15;
 }
 
+
+/* workspace */
 .tab-label {
     -fx-pref-width: 150px;
+}
+
+.workspace {
+    -fx-background-color: white;
 }
 
 .hide-tabs .tab-header-area {

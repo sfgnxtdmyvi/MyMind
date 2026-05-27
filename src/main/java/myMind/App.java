@@ -37,6 +37,12 @@ public class App extends Application {
             e.printStackTrace();
         }
 
+        stage.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                MenuController.setSubjectController(workspace.getSubjectController());
+            }
+        });
+
         // Pane 用来添加消息提示标签，BorderPane 无法手动指定位置
         Pane root = new Pane(borderPane);
         // Pane 不会自动调整子节点大小，需要手动绑定

@@ -175,7 +175,7 @@ public class FileHandler {
         // 加载主题
         for (int i = 0; i < json.size(); i++) {
             workspace.addSubject();
-            subjectController = workspace.getCurrentController();
+            subjectController = workspace.getSubjectController();
             JSONObject subject = json.getJSONObject(Integer.toString(i));
 
             // 加载根节点
@@ -290,7 +290,7 @@ public class FileHandler {
 
     private void importSubjet(JSONObject json) {
         workspace.addSubject();
-        subjectController = workspace.getCurrentController();
+        subjectController = workspace.getSubjectController();
 
         JSONObject rootJson = json.getJSONObject("root");
         NodeModel rootModel = subjectController.getRootModel();

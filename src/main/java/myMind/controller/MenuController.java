@@ -8,15 +8,18 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
 import myMind.App;
+import myMind.componet.NodeModel;
 import myMind.componet.Workspace;
+import myMind.constants.PosConstants;
 
 import java.io.File;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class MenuController {
 
-    private SubjectController subjectController;
+    private static SubjectController subjectController;
     @Setter
     private FileHandler fileHandler;
     @Setter
@@ -32,6 +35,10 @@ public class MenuController {
         dirFiles = config.getString("directory.files");
     }
 
+    public static void setSubjectController(SubjectController subjectController) {
+        MenuController.subjectController = subjectController;
+    }
+
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
     public void handleNew() {
@@ -40,8 +47,6 @@ public class MenuController {
 
     @FXML
     private void handleLoad() {
-        subjectController = workspace.getCurrentController();
-
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File(dirFiles));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
@@ -94,8 +99,6 @@ public class MenuController {
 
     @FXML
     public String handleSaveAs() {
-        subjectController = workspace.getCurrentController();
-
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File(dirFiles));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
@@ -110,8 +113,6 @@ public class MenuController {
 
     @FXML
     private void handleImport() {
-        subjectController = workspace.getCurrentController();
-
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File("C:\\Users\\k8255\\Documents\\MindLine"));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
@@ -122,15 +123,155 @@ public class MenuController {
     }
 
     //—————————————————————————————————————————编辑—————————————————————————————————————————
+    //—————————————————————————————————————————添加—————————————————————————————————————————
     @FXML
-    private void handleAddChild() {
-        subjectController = workspace.getCurrentController();
-        subjectController.addChild();
+    private void handleAddChildR() {
+        
+        subjectController.addChildR();
+    }
+
+    @FXML
+    private void handleAddChildL() {
+        
+        subjectController.addChildL();
+    }
+
+    @FXML
+    private void handleAddSibling() {
+        
+        subjectController.addSibling();
+    }
+
+    /**
+     * 1个子节点和5个孙节点
+     */
+    @FXML
+    private void handleBatchAddChildR() {
+        if (subjectController.getSelectedModel().getPos() == PosConstants.LEFT) {
+            return;
+        }
+        subjectController.addChildR();
+        subjectController.addChildR();
+        for (int i = 0; i < 4; i++) {
+            subjectController.addSiblingR();
+        }
+    }
+
+    @FXML
+    private void handleBatchAddChildL() {
+        if (subjectController.getSelectedModel().getPos() == PosConstants.RIGHT) {
+            return;
+        }
+        subjectController.addChildL();
+        subjectController.addChildL();
+        for (int i = 0; i < 4; i++) {
+            subjectController.addSiblingL();
+        }
+    }
+
+    /**
+     * 1个兄弟节点和5个孙节点
+     */
+    @FXML
+    private void handleBatchAddSibling() {
+        subjectController.addSibling();
+        subjectController.addChildR();
+        subjectController.addChildL();
+        for (int i = 0; i < 4; i++) {
+            subjectController.addSibling();
+        }
+    }
+
+    @FXML
+    private void handleCopy() {
+        subjectController.copy();
+    }
+
+    //—————————————————————————————————————————复制粘贴—————————————————————————————————————————
+    @FXML
+    private void handleCut() {
+        subjectController.cut();
     }
 
     @FXML
     private void handleDelete() {
-        subjectController = workspace.getCurrentController();
         subjectController.delete();
+    }
+
+    @FXML
+    private void handleAddSubject() {
+        workspace.addSubject();
+    }
+
+    //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
+    @FXML
+    private void handleMoveRight() {
+        NodeModel selectedModel = subjectController.getSelectedModel();
+        // 左边节点 -> 父节点
+        // 根、右边节点 -> 中间的右子节点
+        if (selectedModel.getPos() == PosConstants.LEFT) {
+            subjectController.setSelectedModel(selectedModel.getParent());
+        } else {
+            List<NodeModel> children = selectedModel.getChildrenR();
+            if (!children.isEmpty()) {
+                subjectController.setSelectedModel(children.get(children.size() / 2));
+            }
+        }
+    }
+
+    @FXML
+    private void handleMoveLeft() {
+        NodeModel selectedModel = subjectController.getSelectedModel();
+        // 父节点 <- 右边节点
+        // 中间的左子节点 <- 左边、根节点
+        if (selectedModel.getPos() == PosConstants.RIGHT) {
+            subjectController.setSelectedModel(selectedModel.getParent());
+        } else {
+            List<NodeModel> children = selectedModel.getChildrenL();
+            if (!children.isEmpty()) {
+                subjectController.setSelectedModel(children.get(children.size() / 2));
+            }
+        }
+    }
+
+    @FXML
+    private void handleMoveUp() {
+        NodeModel selectedModel = subjectController.getSelectedModel();
+        if (selectedModel.getPos() == PosConstants.MIDDLE) {
+            return;
+        }
+
+        NodeModel parentModel = selectedModel.getParent();
+        List<NodeModel> children;
+        if (selectedModel.getPos() == PosConstants.RIGHT) {
+            children = parentModel.getChildrenR();
+        } else {
+            children = parentModel.getChildrenL();
+        }
+        int index = children.indexOf(selectedModel);
+        if (index != 0) {
+            subjectController.setSelectedModel(children.get(index - 1));
+        }
+    }
+
+    @FXML
+    private void handleMoveDown() {
+        NodeModel selectedModel = subjectController.getSelectedModel();
+
+        if (selectedModel.getPos() == PosConstants.MIDDLE) {
+            return;
+        }
+
+        NodeModel parentModel = selectedModel.getParent();
+        List<NodeModel> children;
+        if (selectedModel.getPos() == PosConstants.RIGHT) {
+            children = parentModel.getChildrenR();
+        } else {
+            children = parentModel.getChildrenL();
+        }
+        int index = children.indexOf(selectedModel);
+        if (index != children.size() - 1) {
+            subjectController.setSelectedModel(children.get(index + 1));
+        }
     }
 }
