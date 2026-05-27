@@ -206,6 +206,7 @@ public class SubjectController {
 
         if (imageName != null) {
             cloneNode.loadImage(imageName, image.getFitWidth(), image.getFitHeight());
+            cloneNode.getTextArea().setVisible(originalNode.getTextArea().isVisible());
         }
         originalNode.copyStyles(cloneNode, originalNode);
         // 不能在复制时，直接添加到 subject 中，如果后面没有粘贴，会导致内存泄漏
@@ -263,7 +264,6 @@ public class SubjectController {
 
     /**
      *
-     * @param cloneNode
      * @param pos       粘到目标的左边还是右边，跟 cloneNode 的 pos 可以不一致
      */
     private void pasteChild(MindNode cloneNode, byte pos) {

@@ -124,24 +124,24 @@ public class MindNode extends StackPane {
         addListener();
     }
 
-    public void loadImage(String imagePath, double imageWidth, double imageHeight) {
-        this.imageName = imagePath;
+    public void loadImage(String imageName, double imageWidth, double imageHeight) {
+        this.imageName = imageName;
         ratio = imageWidth / imageHeight;
 
         imageContainer.setVisible(true);
         imageContainer.setManaged(true);
-        image.setImage(new Image(new File(imagePath).toURI().toString()));
+        image.setImage(new Image(new File(FileHandler.getDirImage() + imageName).toURI().toString()));
         image.setFitWidth(imageWidth);
         image.setFitHeight(imageHeight);
     }
 
-    public void importImage(String imagePath, double imageWidth, double imageHeight) {
-        this.imageName = imagePath;
+    public void importImage(String imageName, double imageWidth, double imageHeight) {
+        this.imageName = imageName;
         ratio = imageWidth / imageHeight;
 
         imageContainer.setVisible(true);
         imageContainer.setManaged(true);
-        image.setImage(new Image(new File(imagePath).toURI().toString()));
+        image.setImage(new Image(new File("C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName).toURI().toString()));
         image.setFitWidth(imageWidth / 2.2);
         image.setFitHeight(imageHeight / 2.2);
     }

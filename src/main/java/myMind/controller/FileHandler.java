@@ -6,6 +6,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
+import lombok.Getter;
 import myMind.componet.MindNode;
 import myMind.componet.NodeModel;
 import myMind.componet.Subject;
@@ -34,6 +35,7 @@ public class FileHandler {
     private static SubjectController subjectController;
 
     private Workspace workspace;
+    @Getter
     private static String dirImage;
     private static String dirRecentFiles;
 
@@ -215,8 +217,7 @@ public class FileHandler {
         // 图片
         String imageName = json.getString("imageName");
         if (imageName != null) {
-            String imagePath = dirImage + imageName;
-            node.loadImage(imagePath, json.getDouble("imageWidth"), json.getDouble("imageHeight"));
+            node.loadImage(imageName, json.getDouble("imageWidth"), json.getDouble("imageHeight"));
         }
     }
 
@@ -329,9 +330,8 @@ public class FileHandler {
         // 图片
         String imageName = json.getString("imageName");
         if (imageName != null) {
-            String imagePath = "C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName;
             JSONObject imageSize = json.getJSONObject("imageSize");
-            node.importImage(imagePath, imageSize.getDouble("width"), imageSize.getDouble("height"));
+            node.importImage(imageName, imageSize.getDouble("width"), imageSize.getDouble("height"));
         }
     }
 
