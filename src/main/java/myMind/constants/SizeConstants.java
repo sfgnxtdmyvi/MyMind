@@ -23,4 +23,6 @@ public class SizeConstants {
     public static final int FONT_SIZE = 20;
     public static final int LINE_HEIGHT = (int) (FONT_SIZE * 1.35);
 
+    public static final int MAX_RECENT_FILES = 10;
+
 }

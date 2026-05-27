@@ -11,18 +11,21 @@ import myMind.componet.NodeModel;
 import myMind.componet.Subject;
 import myMind.componet.Workspace;
 import myMind.constants.PosConstants;
+import myMind.constants.SizeConstants;
 import myMind.util.MessageUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -31,12 +34,16 @@ public class FileHandler {
     private static SubjectController subjectController;
 
     private Workspace workspace;
-    private static String imageDir;
+    private static String dirImage;
+    private static String dirRecentFiles;
 
     static {
         ResourceBundle config = ResourceBundle.getBundle("config");
-        imageDir = config.getString("directory.image");
+        dirImage = config.getString("directory.images");
+        dirRecentFiles = config.getString("directory.recent_files");
     }
+
+    private LinkedList<String> recentFiles;
 
     public FileHandler(Workspace workspace) {
         this.workspace = workspace;
@@ -62,7 +69,7 @@ public class FileHandler {
             fw.write(subjects.toString());
             MessageUtil.showMessage("保存成功");
         } catch (IOException e) {
-            MessageUtil.showMessage("保存失败");
+            MessageUtil.showMessage("保存失败：" + e.getMessage());
         }
     }
 
@@ -181,6 +188,8 @@ public class FileHandler {
             subjectController.adjustChildrenSize();
             subjectController.adjustXY();
         }
+
+        addRecentFile(file.getName());
     }
 
     private void loadNode(JSONObject json, MindNode node) {
@@ -206,7 +215,7 @@ public class FileHandler {
         // 图片
         String imageName = json.getString("imageName");
         if (imageName != null) {
-            String imagePath = imageDir + imageName;
+            String imagePath = dirImage + imageName;
             node.loadImage(imagePath, json.getDouble("imageWidth"), json.getDouble("imageHeight"));
         }
     }
@@ -363,12 +372,54 @@ public class FileHandler {
         }
     }
 
+    //—————————————————————————————————————————最近打开—————————————————————————————————————————
+    private void addRecentFile(String fileName) {
+        LinkedList<String> recentFiles = getRecentFiles();
+
+        recentFiles.remove(fileName);
+        recentFiles.addFirst(fileName);
+        if (recentFiles.size() > SizeConstants.MAX_RECENT_FILES) {
+            recentFiles.removeLast();
+        }
+
+        saveRecentFiles(recentFiles);
+    }
+
+    public LinkedList<String> getRecentFiles() {
+        if (recentFiles == null) {
+            recentFiles = new LinkedList<>();
+            File file = new File(dirRecentFiles);
+
+            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    recentFiles.add(line);
+                }
+            } catch (IOException e) {
+                MessageUtil.showMessage("读取失败：" + e.getMessage());
+            }
+        }
+
+        return recentFiles;
+    }
+
+    private void saveRecentFiles(List<String> recentFiles) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(dirRecentFiles))) {
+            for (String fileName : recentFiles) {
+                bw.write(fileName);
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            MessageUtil.showMessage("保存失败：" + e.getMessage());
+        }
+    }
+
     //—————————————————————————————————————————图片—————————————————————————————————————————
     public static String saveImage(BufferedImage bufferedImage, String imageName) {
         if (imageName == null) {
             imageName = System.currentTimeMillis() + ".png";
         }
-        String imagePath = imageDir + imageName;
+        String imagePath = dirImage + imageName;
 
         File output = new File(imagePath);
         try {

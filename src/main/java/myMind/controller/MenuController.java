@@ -1,6 +1,9 @@
 package myMind.controller;
 
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
@@ -8,6 +11,7 @@ import myMind.App;
 import myMind.componet.Workspace;
 
 import java.io.File;
+import java.util.LinkedList;
 import java.util.ResourceBundle;
 
 public class MenuController {
@@ -15,15 +19,17 @@ public class MenuController {
     private SubjectController subjectController;
     @Setter
     private FileHandler fileHandler;
-
     @Setter
     private Workspace workspace;
 
-    private static String rootDir;
+    @FXML
+    private Menu recentFilesMenu;
+
+    private static String dirFiles;
 
     static {
         ResourceBundle config = ResourceBundle.getBundle("config");
-        rootDir = config.getString("directory.root");
+        dirFiles = config.getString("directory.files");
     }
 
     //—————————————————————————————————————————文件—————————————————————————————————————————
@@ -37,7 +43,7 @@ public class MenuController {
         subjectController = workspace.getCurrentController();
 
         FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File("D:\\MyMind"));
+        fc.setInitialDirectory(new File(dirFiles));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
@@ -45,8 +51,29 @@ public class MenuController {
         }
     }
 
+    /**
+     * 加载最近文件
+     */
     @FXML
-    public void handleLoadRecently() {
+    public void initialize() {
+        recentFilesMenu.setOnShowing(event -> loadRecentFiles());
+    }
+
+    private void loadRecentFiles() {
+        ObservableList<MenuItem> items = recentFilesMenu.getItems();
+        items.clear();
+
+        LinkedList<String> recentFiles = fileHandler.getRecentFiles();
+        if (recentFiles.isEmpty()) {
+            items.add(new MenuItem("无最近文件"));
+            return;
+        }
+
+        for (String recentFile : recentFiles) {
+            MenuItem menuItem = new MenuItem(recentFile);
+            menuItem.setOnAction(event -> fileHandler.loadFile(new File(dirFiles + recentFile)));
+            items.add(menuItem);
+        }
     }
 
     @FXML
@@ -56,11 +83,11 @@ public class MenuController {
         // 没有保存过，就保存到新建文件，并设置标题
         if (title == null) {
             String fileName = handleSaveAs();
-            if (fileName == null) {
+            if (fileName != null) {
                 stage.setTitle(fileName.substring(0, fileName.length() - 3));
             }
         } else {
-            File file = new File(rootDir + title + ".mm");
+            File file = new File(dirFiles + title + ".mm");
             fileHandler.saveFile(file);
         }
     }
@@ -70,7 +97,7 @@ public class MenuController {
         subjectController = workspace.getCurrentController();
 
         FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File(rootDir));
+        fc.setInitialDirectory(new File(dirFiles));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showSaveDialog(subjectController.getSubject().getScene().getWindow());
         if (file != null) {
