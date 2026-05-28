@@ -8,6 +8,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
 import lombok.Getter;
 import myMind.controller.MenuController;
+import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
@@ -38,6 +39,7 @@ public class Workspace extends TabPane {
             }
             subjectController = ((Subject) newTab.getContent()).getSubjectController();
             MenuController.setSubjectController(subjectController);
+            StyleWheelArcController.setSubjectController(subjectController);
         });
 
         getTabs().addListener((ListChangeListener.Change<? extends Tab> c) -> {

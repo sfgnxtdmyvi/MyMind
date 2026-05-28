@@ -6,6 +6,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.stage.Popup;
 import lombok.Setter;
 import myMind.componet.MindNode;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -17,11 +20,19 @@ public class StyleWheelArcController {
     @Setter
     private static SubjectController subjectController;
 
+    @Setter
+    private Popup popup;
+
     @FXML
     private Pane styleWheel;
 
     @FXML
+    private Text BText;
+
+    @FXML
     public void initialize() {
+        styleWheel.setOnMouseExited(event -> popup.hide());
+
         for (var node : styleWheel.getChildren()) {
             if (node instanceof Arc arc) {
                 arc.setOnMouseClicked(this::toggleStyle);
@@ -83,8 +94,8 @@ public class StyleWheelArcController {
     public void expandArc(MouseEvent event) {
         Arc arc = (Arc) event.getSource();
         // 往外扩大
-        arc.setRadiusX(40);
-        arc.setRadiusY(40);
+        arc.setRadiusX(50);
+        arc.setRadiusY(50);
         // 往两边扩大
         arc.setStartAngle(arc.getStartAngle() - 5);
         arc.setLength(70);
@@ -99,8 +110,8 @@ public class StyleWheelArcController {
     @FXML
     public void shrinkArc(MouseEvent event) {
         Arc arc = (Arc) event.getSource();
-        arc.setRadiusX(30);
-        arc.setRadiusY(30);
+        arc.setRadiusX(40);
+        arc.setRadiusY(40);
         arc.setLength(60);
         arc.setStartAngle(arc.getStartAngle() + 5);
         arc.setViewOrder(0);
@@ -109,12 +120,18 @@ public class StyleWheelArcController {
     @FXML
     public void expandCircle(MouseEvent event) {
         Circle circle = (Circle) event.getSource();
-        circle.setRadius(15);
+        circle.setRadius(20);
+        BText.setFont(new Font("System Bold", 20));
+        BText.setX(118);
+        BText.setY(132);
     }
 
     @FXML
     public void shrinkCircle(MouseEvent event) {
         Circle circle = (Circle) event.getSource();
-        circle.setRadius(10);
+        circle.setRadius(15);
+        BText.setFont(new Font("System Bold", 16));
+        BText.setX(120);
+        BText.setY(130);
     }
 }

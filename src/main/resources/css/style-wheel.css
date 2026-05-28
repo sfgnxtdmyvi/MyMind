@@ -1,41 +1,41 @@
 .arc, #wheelCircle {
-    -fx-stroke:#000000;
-    -fx-stroke-width:2;
+    -fx-stroke: #000000;
+    -fx-stroke-width: 3;
 }
 
 .red-text {
-    -fx-fill:#FF0000;
+    -fx-fill: #FF4500;
 }
 
 .orange-text {
-    -fx-fill:#FF8C00;
+    -fx-fill: #FF8C00;
 }
 
 .yellow-text {
-    -fx-fill:#FFE66D;
+    -fx-fill: #DAA520;
 }
 
 .purple-text {
-    -fx-fill:#D15FEE;
+    -fx-fill: #BA55D3;
 }
 
 .blue-text {
-    -fx-fill:#007AFF;
+    -fx-fill: #4169E1;
 }
 
 .black-text {
-    -fx-fill:#000000;
+    -fx-fill: #000000;
 }
 
 .bold-text {
-    -fx-font-weight:bold;
+    -fx-font-weight: bold;
 }
 
 #wheelCircle {
-    -fx-fill:#C9F5FF;
+    -fx-fill: #C9F5FF;
 }
 
 #BText {
-    -fx-font-weight:bold;
-    -fx-font-size:14;
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
 }

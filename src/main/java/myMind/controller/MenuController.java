@@ -7,7 +7,7 @@ import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
-import myMind.App;
+import myMind.Launch;
 import myMind.componet.Workspace;
 import myMind.constants.PosConstants;
 import myMind.model.NodeModel;
@@ -42,7 +42,7 @@ public class MenuController {
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
     public void newMindMap() {
-        App.newMindMap(new Stage());
+        Launch.newMindMap(new Stage());
     }
 
     @FXML
