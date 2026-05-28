@@ -8,9 +8,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
 import myMind.App;
-import myMind.componet.NodeModel;
 import myMind.componet.Workspace;
 import myMind.constants.PosConstants;
+import myMind.model.NodeModel;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -41,12 +41,12 @@ public class MenuController {
 
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
-    public void handleNew() {
-        App.newMyMind(new Stage());
+    public void newMindMap() {
+        App.newMindMap(new Stage());
     }
 
     @FXML
-    private void handleLoad() {
+    private void load() {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File(dirFiles));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
@@ -82,12 +82,12 @@ public class MenuController {
     }
 
     @FXML
-    private void handleSave() {
+    private void save() {
         Stage stage = (Stage) workspace.getScene().getWindow();
         String title = stage.getTitle();
         // 没有保存过，就保存到新建文件，并设置标题
         if (title == null) {
-            String fileName = handleSaveAs();
+            String fileName = saveAs();
             if (fileName != null) {
                 stage.setTitle(fileName.substring(0, fileName.length() - 3));
             }
@@ -98,7 +98,7 @@ public class MenuController {
     }
 
     @FXML
-    public String handleSaveAs() {
+    public String saveAs() {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File(dirFiles));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
@@ -112,7 +112,7 @@ public class MenuController {
     }
 
     @FXML
-    private void handleImport() {
+    private void importMindMap() {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File("C:\\Users\\k8255\\Documents\\MindLine"));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
@@ -122,22 +122,21 @@ public class MenuController {
         }
     }
 
-    //—————————————————————————————————————————编辑—————————————————————————————————————————
     //—————————————————————————————————————————添加—————————————————————————————————————————
     @FXML
-    private void handleAddChildR() {
+    private void addChildR() {
         
         subjectController.addChildR();
     }
 
     @FXML
-    private void handleAddChildL() {
+    private void addChildL() {
         
         subjectController.addChildL();
     }
 
     @FXML
-    private void handleAddSibling() {
+    private void addSibling() {
         
         subjectController.addSibling();
     }
@@ -146,7 +145,7 @@ public class MenuController {
      * 1个子节点和5个孙节点
      */
     @FXML
-    private void handleBatchAddChildR() {
+    private void batchAddChildR() {
         if (subjectController.getSelectedModel().getPos() == PosConstants.LEFT) {
             return;
         }
@@ -158,7 +157,7 @@ public class MenuController {
     }
 
     @FXML
-    private void handleBatchAddChildL() {
+    private void batchAddChildL() {
         if (subjectController.getSelectedModel().getPos() == PosConstants.RIGHT) {
             return;
         }
@@ -173,7 +172,7 @@ public class MenuController {
      * 1个兄弟节点和5个孙节点
      */
     @FXML
-    private void handleBatchAddSibling() {
+    private void batchAddSibling() {
         subjectController.addSibling();
         subjectController.addChildR();
         subjectController.addChildL();
@@ -182,30 +181,30 @@ public class MenuController {
         }
     }
 
+    //—————————————————————————————————————————复制粘贴—————————————————————————————————————————
     @FXML
-    private void handleCopy() {
+    private void copy() {
         subjectController.copy();
     }
 
-    //—————————————————————————————————————————复制粘贴—————————————————————————————————————————
     @FXML
-    private void handleCut() {
+    private void cut() {
         subjectController.cut();
     }
 
     @FXML
-    private void handleDelete() {
+    private void delete() {
         subjectController.delete();
     }
 
     @FXML
-    private void handleAddSubject() {
+    private void addSubject() {
         workspace.addSubject();
     }
 
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
     @FXML
-    private void handleMoveRight() {
+    private void moveRight() {
         NodeModel selectedModel = subjectController.getSelectedModel();
         // 左边节点 -> 父节点
         // 根、右边节点 -> 中间的右子节点
@@ -220,7 +219,7 @@ public class MenuController {
     }
 
     @FXML
-    private void handleMoveLeft() {
+    private void moveLeft() {
         NodeModel selectedModel = subjectController.getSelectedModel();
         // 父节点 <- 右边节点
         // 中间的左子节点 <- 左边、根节点
@@ -235,7 +234,7 @@ public class MenuController {
     }
 
     @FXML
-    private void handleMoveUp() {
+    private void moveUp() {
         NodeModel selectedModel = subjectController.getSelectedModel();
         if (selectedModel.getPos() == PosConstants.MIDDLE) {
             return;
@@ -255,7 +254,7 @@ public class MenuController {
     }
 
     @FXML
-    private void handleMoveDown() {
+    private void moveDown() {
         NodeModel selectedModel = subjectController.getSelectedModel();
 
         if (selectedModel.getPos() == PosConstants.MIDDLE) {

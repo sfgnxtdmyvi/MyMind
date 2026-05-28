@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.shape.Polygon?>
+
+<Pane fx:id="styleWheel" prefHeight="250" prefWidth="250" xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="myMind.controller.StyleWheelArcController">
+    <children>
+        <Polygon fill="#c9f5ff" layoutX="125.0" layoutY="124.0"
+                 points="30.0, 0.0,15.0, 25.9808, -15.0, 25.9808, -30.0, 0.0, -15.0, -25.9808, 15.0, -25.9808"
+                 stroke="#000000" strokeWidth="2"/>
+    </children>
+</Pane>

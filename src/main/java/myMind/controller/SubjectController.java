@@ -6,7 +6,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.QuadCurve;
 import lombok.Data;
 import myMind.componet.MindNode;
-import myMind.componet.NodeModel;
+import myMind.model.NodeModel;
 import myMind.componet.Subject;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;

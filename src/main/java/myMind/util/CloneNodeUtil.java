@@ -1,7 +1,7 @@
 package myMind.util;
 
 import myMind.componet.MindNode;
-import myMind.componet.NodeModel;
+import myMind.model.NodeModel;
 
 import java.util.HashMap;
 import java.util.Map;

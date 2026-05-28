@@ -11,6 +11,7 @@ import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -22,6 +23,7 @@ import myMind.constants.MindNodeEvent;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 import myMind.controller.FileHandler;
+import myMind.model.NodeModel;
 import myMind.util.MeasureTextUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
@@ -148,7 +150,11 @@ public class MindNode extends StackPane {
 
     private void addListener() {
         // 选中节点
-        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> onAction.accept(MindNodeEvent.SELECT));
+        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+            if (e.getButton() == MouseButton.PRIMARY) {
+                onAction.accept(MindNodeEvent.SELECT);
+            }
+        });
 
         // 粘贴到选中节点上方
         contentBox.setOnMouseClicked(e -> onAction.accept(MindNodeEvent.PASTE_SIBLING));

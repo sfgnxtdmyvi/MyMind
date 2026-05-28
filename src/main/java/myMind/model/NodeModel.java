@@ -1,4 +1,4 @@
-package myMind.componet;
+package myMind.model;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;

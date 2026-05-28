@@ -1,0 +1,41 @@
+.arc, #wheelCircle {
+    -fx-stroke:#000000;
+    -fx-stroke-width:2;
+}
+
+.red-text {
+    -fx-fill:#FF0000;
+}
+
+.orange-text {
+    -fx-fill:#FF8C00;
+}
+
+.yellow-text {
+    -fx-fill:#FFE66D;
+}
+
+.purple-text {
+    -fx-fill:#D15FEE;
+}
+
+.blue-text {
+    -fx-fill:#007AFF;
+}
+
+.black-text {
+    -fx-fill:#000000;
+}
+
+.bold-text {
+    -fx-font-weight:bold;
+}
+
+#wheelCircle {
+    -fx-fill:#C9F5FF;
+}
+
+#BText {
+    -fx-font-weight:bold;
+    -fx-font-size:14;
+}

@@ -43,14 +43,6 @@
     -fx-border-color: #82a7f3;
 }
 
-.bold-text {
-    -fx-font-weight: bold;
-}
-
-.red-text {
-    -fx-fill: red;
-}
-
 /* 选中文本的背景色 */
 .styled-text-area .selection {
     -fx-fill: #aad1ff;

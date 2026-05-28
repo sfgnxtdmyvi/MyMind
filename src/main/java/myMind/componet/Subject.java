@@ -10,6 +10,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.QuadCurve;
 import lombok.Getter;
 import myMind.controller.SubjectController;
+import myMind.model.NodeModel;
 import myMind.util.MessageUtil;
 
 import java.util.HashMap;

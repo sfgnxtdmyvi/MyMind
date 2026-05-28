@@ -10,8 +10,8 @@
     <menus>
         <Menu text="文件">
             <items>
-                <MenuItem onAction="#handleNew" text="新建" accelerator="Ctrl+N"/>
-                <MenuItem onAction="#handleLoad" text="打开" accelerator="Ctrl+O"/>
+                <MenuItem onAction="#newMindMap" text="新建" accelerator="Ctrl+N"/>
+                <MenuItem onAction="#load" text="打开" accelerator="Ctrl+O"/>
                 <Menu fx:id="recentFilesMenu" text="打开最近">
                     <items>
                         <MenuItem text="无最近文件" disable="true"/>
@@ -19,46 +19,38 @@
                 </Menu>
                 <SeparatorMenuItem mnemonicParsing="false"/>
 
-                <MenuItem onAction="#handleSave" text="保存" accelerator="Ctrl+S"/>
-                <MenuItem onAction="#handleSaveAs" text="另存为" accelerator="Ctrl+Shift+S"/>
+                <MenuItem onAction="#save" text="保存" accelerator="Ctrl+S"/>
+                <MenuItem onAction="#saveAs" text="另存为" accelerator="Ctrl+Shift+S"/>
                 <SeparatorMenuItem mnemonicParsing="false"/>
 
-                <MenuItem onAction="#handleImport" text="导入"/>
+                <MenuItem onAction="#importMindMap" text="导入"/>
             </items>
         </Menu>
 
         <Menu text="节点">
             <items>
-                <MenuItem onAction="#handleAddChildR" text="添加右子节点" accelerator="Alt+Right"/>
-                <MenuItem onAction="#handleAddChildL" text="添加左子节点" accelerator="Alt+Left"/>
-                <MenuItem onAction="#handleAddSibling" text="添加兄弟节点" accelerator="Alt+Down"/>
+                <MenuItem onAction="#addChildR" text="添加右子节点" accelerator="Alt+Right"/>
+                <MenuItem onAction="#addChildL" text="添加左子节点" accelerator="Alt+Left"/>
+                <MenuItem onAction="#addSibling" text="添加兄弟节点" accelerator="Alt+Down"/>
                 <SeparatorMenuItem mnemonicParsing="false"/>
 
-                <MenuItem onAction="#handleBatchAddChildR" text="批量添加右子节点" accelerator="Ctrl+Alt+Right"/>
-                <MenuItem onAction="#handleBatchAddChildL" text="批量添加左子节点" accelerator="Ctrl+Alt+Left"/>
-                <MenuItem onAction="#handleBatchAddSibling" text="批量添加兄弟节点" accelerator="Ctrl+Alt+Down"/>
+                <MenuItem onAction="#batchAddChildR" text="批量添加右子节点" accelerator="Ctrl+Alt+Right"/>
+                <MenuItem onAction="#batchAddChildL" text="批量添加左子节点" accelerator="Ctrl+Alt+Left"/>
+                <MenuItem onAction="#batchAddSibling" text="批量添加兄弟节点" accelerator="Ctrl+Alt+Down"/>
                 <SeparatorMenuItem mnemonicParsing="false"/>
 
-                <MenuItem onAction="#handleCopy" text="复制" accelerator="Ctrl+Shift+C"/>
-                <MenuItem onAction="#handleCut" text="剪切" accelerator="Ctrl+Shift+X"/>
+                <MenuItem onAction="#copy" text="复制" accelerator="Ctrl+Shift+C"/>
+                <MenuItem onAction="#cut" text="剪切" accelerator="Ctrl+Shift+X"/>
                 <SeparatorMenuItem mnemonicParsing="false"/>
 
-                <MenuItem onAction="#handleAddSubject" text="新建主题" accelerator="Ctrl+M"/>
-                <MenuItem onAction="#handleDelete" text="删除节点" accelerator="Alt+Delete"/>
+                <MenuItem onAction="#addSubject" text="新建主题" accelerator="Ctrl+M"/>
+                <MenuItem onAction="#delete" text="删除节点" accelerator="Alt+Delete"/>
                 <SeparatorMenuItem mnemonicParsing="false"/>
 
-                <MenuItem onAction="#handleMoveRight" text="右移" accelerator="Shift+Alt+Right"/>
-                <MenuItem onAction="#handleMoveLeft" text="左移" accelerator="Shift+Alt+Left"/>
-                <MenuItem onAction="#handleMoveUp" text="上移" accelerator="Shift+Alt+Up"/>
-                <MenuItem onAction="#handleMoveDown" text="下移" accelerator="Shift+Alt+Down"/>
-            </items>
-        </Menu>
-
-        <Menu text="样式">
-            <items>
-                <MenuItem onAction="#handleMoveRight" text="加粗" accelerator="Ctrl+B"/>
-                <MenuItem onAction="#handleMoveLeft" text="红色" accelerator="Ctrl+R"/>
-                <MenuItem onAction="#handleMoveUp" text="橙色" accelerator="Ctrl+O"/>
+                <MenuItem onAction="#moveRight" text="右移" accelerator="Shift+Alt+Right"/>
+                <MenuItem onAction="#moveLeft" text="左移" accelerator="Shift+Alt+Left"/>
+                <MenuItem onAction="#moveUp" text="上移" accelerator="Shift+Alt+Up"/>
+                <MenuItem onAction="#moveDown" text="下移" accelerator="Shift+Alt+Down"/>
             </items>
         </Menu>
     </menus>

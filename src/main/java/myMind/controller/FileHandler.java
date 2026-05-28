@@ -8,7 +8,7 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import lombok.Getter;
 import myMind.componet.MindNode;
-import myMind.componet.NodeModel;
+import myMind.model.NodeModel;
 import myMind.componet.Subject;
 import myMind.componet.Workspace;
 import myMind.constants.PosConstants;

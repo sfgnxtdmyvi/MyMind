@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.shape.Arc?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.text.Text?>
+<Pane fx:id="styleWheel" prefHeight="250" prefWidth="250" xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="myMind.controller.StyleWheelArcController">
+    <children>
+        <Arc type="ROUND" styleClass="arc,red-text"
+             startAngle="0" length="60" radiusX="30" radiusY="30" centerX="125" centerY="125"
+             userData="red-text"/>
+        <Arc type="ROUND" styleClass="arc,orange-text"
+             startAngle="60" length="60" radiusX="30" radiusY="30" centerX="125" centerY="125"
+             userData="orange-text"/>
+        <Arc type="ROUND" styleClass="arc,yellow-text"
+             startAngle="120" length="60" radiusX="30" radiusY="30" centerX="125" centerY="125"
+             userData="yellow-text"/>
+        <Arc type="ROUND" styleClass="arc,purple-text"
+             startAngle="180" length="60" radiusX="30" radiusY="30" centerX="125" centerY="125"
+             userData="purple-text"/>
+        <Arc type="ROUND" styleClass="arc,blue-text"
+             startAngle="240" length="60" radiusX="30" radiusY="30" centerX="125" centerY="125"
+             userData="blue-text"/>
+        <Arc type="ROUND" styleClass="arc,green-text"
+             startAngle="300" length="60" radiusX="30" radiusY="30" centerX="125" centerY="125"
+             userData="black-text"/>
+
+        <!-- 中心 -->
+        <Circle fx:id="wheelCircle"
+                radius="10" centerX="125" centerY="125" viewOrder="-2"
+                onMouseClicked="#toggleStyle" userData="bold-text"
+                onMouseEntered="#expandCircle" onMouseExited="#shrinkCircle"/>
+        <Text fx:id="BText" text="B"
+              x="120" y="130" viewOrder="-3"
+              mouseTransparent="true"/>
+    </children>
+</Pane>
