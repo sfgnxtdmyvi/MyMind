@@ -2,18 +2,12 @@ package myMind.componet;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
-import javafx.scene.control.IndexRange;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.input.KeyCode;
 import lombok.Getter;
 import myMind.controller.MenuController;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
-import org.fxmisc.richtext.StyleClassedTextArea;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Workspace extends TabPane {
     @Getter
@@ -48,45 +42,6 @@ public class Workspace extends TabPane {
                 getStyleClass().add("hide-tabs");
             } else {
                 getStyleClass().remove("hide-tabs");
-            }
-        });
-
-        // 键盘快捷键
-        setOnKeyPressed(e -> {
-            //跨平台修饰键
-            //在 Windows / Linux 上：它等同于 e.isControlDown() (即 Ctrl 键)
-            //在 macOS 上：它等同于 e.isMetaDown() (即 Command ⌘ 键)
-            boolean shortcutDown = e.isShortcutDown();
-            KeyCode code = e.getCode();
-
-            // 文本样式
-            if (shortcutDown && (code == KeyCode.B || code == KeyCode.R)) {
-                MindNode selectedNode = subjectController.getSelectedNode();
-                StyleClassedTextArea textArea = selectedNode.getTextArea();
-                IndexRange selection = textArea.getSelection();
-
-                if (selection.getLength() > 0) {
-                    int start = selection.getStart();
-                    List<String> styles = new ArrayList<>(textArea.getStyleOfChar(start));
-                    // getStyleAtPosition(p) is equivalent to getStyleOfChar(p-1)
-                    // 用getStyleAtPosition获取的是指定位置的前一个位置的样式
-                    // List<String> styles = new ArrayList<>(textArea.getStyleAtPosition(start + 1));
-                    if (code == KeyCode.B) {
-                        if (styles.contains("bold-text")) {
-                            styles.remove("bold-text");
-                        } else {
-                            styles.add("bold-text");
-                        }
-                    } else if (code == KeyCode.R) {
-                        if (styles.contains("red-text")) {
-                            styles.remove("red-text");
-                        } else {
-                            styles.add("red-text");
-                        }
-                    }
-
-                    textArea.setStyle(start, selection.getEnd(), styles);
-                }
             }
         });
     }

@@ -1,6 +1,8 @@
 package myMind.controller;
 
+import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.QuadCurve;
@@ -14,6 +16,7 @@ import myMind.util.CloneNodeUtil;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class SubjectController {
@@ -198,7 +201,6 @@ public class SubjectController {
 
         MindNode originalNode = getNode(originalModel);
         MindNode cloneNode = new MindNode(cloneModel);
-        setOnAction(cloneNode, cloneModel);
         cloneModel.setNodeWidth(originalModel.getNodeWidth());
         cloneModel.setNodeHeight(originalModel.getNodeHeight());
         String imageName = originalNode.getImageName();
@@ -214,25 +216,28 @@ public class SubjectController {
 
         if (pos == PosConstants.LEFT) {
             for (NodeModel childModel : originalModel.getChildrenL()) {
-                NodeModel clone = clone(childModel).getModel();
-                cloneModel.addChildL(clone);
-                clone.setParent(cloneModel);
+                cloneModel.addChildL(clone(childModel).getModel());
             }
         } else {
             for (NodeModel childModel : originalModel.getChildrenR()) {
-                NodeModel clone = clone(childModel).getModel();
-                cloneModel.addChildR(clone);
-                clone.setParent(cloneModel);
+                cloneModel.addChildR(clone(childModel).getModel());
             }
         }
 
         // 复制根节点时，把左子节点都添加到右边
         if (pos == PosConstants.MIDDLE) {
             cloneModel.setPos(PosConstants.RIGHT);
+            ObservableList<Node> children = cloneNode.getChildren();
+            children.remove(cloneNode.getAddButtonL());
+            cloneNode.addButtonListenR();
+
             for (NodeModel childModel : originalModel.getChildrenL()) {
-                NodeModel clone = clone(childModel).getModel();
-                cloneModel.addChildR(clone);
-                clone.setParent(cloneModel);
+                MindNode childCloneNode = clone(childModel);
+                NodeModel childCloneModel = childCloneNode.getModel();
+                childCloneModel.setPos(PosConstants.RIGHT);
+                cloneModel.addChildR(childCloneModel);
+
+                transBtnToR(childCloneNode);
             }
         }
 
@@ -264,7 +269,7 @@ public class SubjectController {
 
     /**
      *
-     * @param pos       粘到目标的左边还是右边，跟 cloneNode 的 pos 可以不一致
+     * @param pos 粘到目标的左边还是右边，跟 cloneNode 的 pos 可以不一致
      */
     private void pasteChild(MindNode cloneNode, byte pos) {
         if (selectedModel == null) {
@@ -272,16 +277,22 @@ public class SubjectController {
         }
 
         NodeModel cloneModel = cloneNode.getModel();
+        Map<NodeModel, MindNode> cloneMap = CloneNodeUtil.getMap();
+        // 添加事件应在粘贴时，在复制事添加事件是用当前主题添加的，如果粘贴到其他主题则无法使用
+        for (NodeModel nodeModel : cloneMap.keySet()) {
+            setOnAction(cloneMap.get(nodeModel), nodeModel);
+        }
+
         if (pos == PosConstants.RIGHT) {
             cloneModel.setX(calculateChildXR(selectedModel));
 
             if (cloneModel.getPos() == PosConstants.LEFT) {
                 cloneModel.setParent(selectedModel);
-                transLToR(cloneModel);
+                transToR(cloneModel, cloneMap);
             } else {
                 selectedModel.addChildR(cloneModel);
             }
-            subject.addClone(CloneNodeUtil.getMap());
+            subject.addClone(cloneMap);
 
             adjustL(cloneModel);
         } else {
@@ -290,11 +301,11 @@ public class SubjectController {
             // selectedModel 与 cloneModel 的 pos 不一致时，需要移动
             if (cloneModel.getPos() == PosConstants.RIGHT) {
                 cloneModel.setParent(selectedModel);
-                transRToL(cloneModel);
+                transToL(cloneModel, cloneMap);
             } else {
                 selectedModel.addChildL(cloneModel);
             }
-            subject.addClone(CloneNodeUtil.getMap());
+            subject.addClone(cloneMap);
 
             adjustR(cloneModel);
         }
@@ -314,17 +325,22 @@ public class SubjectController {
         NodeModel parentModel = selectedModel.getParent();
         NodeModel cloneModel = cloneNode.getModel();
 
+        Map<NodeModel, MindNode> cloneMap = CloneNodeUtil.getMap();
+        for (NodeModel nodeModel :cloneMap.keySet()) {
+            setOnAction(cloneMap.get(nodeModel), nodeModel);
+        }
+
         if (pos == PosConstants.RIGHT) {
             int index = parentModel.getChildrenR().indexOf(selectedModel);
             cloneModel.setX(calculateChildXR(parentModel));
 
             if (cloneModel.getPos() == PosConstants.LEFT) {
                 cloneModel.setParent(parentModel);
-                transLToRAt(index, cloneModel);
+                transToRAt(index, cloneModel, cloneMap);
             } else {
                 parentModel.addChildAtR(index, cloneModel);
             }
-            subject.addClone(CloneNodeUtil.getMap());
+            subject.addClone(cloneMap);
 
             adjustL(cloneModel);
         } else {
@@ -333,11 +349,11 @@ public class SubjectController {
 
             if (cloneModel.getPos() == PosConstants.RIGHT) {
                 cloneModel.setParent(parentModel);
-                transRToLAt(index, cloneModel);
+                transToLAt(index, cloneModel, cloneMap);
             } else {
                 parentModel.addChildAtL(index, cloneModel);
             }
-            subject.addClone(CloneNodeUtil.getMap());
+            subject.addClone(cloneMap);
 
             adjustR(cloneModel);
         }
@@ -348,31 +364,33 @@ public class SubjectController {
     /**
      * 节点改到右边，再从从左边删除
      */
-    private void transLToR(NodeModel cloneModel) {
+    private void transToR(NodeModel cloneModel, Map<NodeModel, MindNode> cloneMap) {
         cloneModel.setPos(PosConstants.RIGHT);
         cloneModel.getParent().addChildR(cloneModel);
+        transBtnToR(cloneModel, cloneMap);
 
         Iterator<NodeModel> iterator = cloneModel.getChildrenL().iterator();
         while (iterator.hasNext()) {
             NodeModel child = iterator.next();
             iterator.remove();
-            transLToR(child);
+            transToR(child, cloneMap);
         }
     }
 
-    private void transRToL(NodeModel cloneModel) {
+    private void transToL(NodeModel cloneModel, Map<NodeModel, MindNode> cloneMap) {
         cloneModel.setPos(PosConstants.LEFT);
         cloneModel.getParent().addChildL(cloneModel);
+        transBtnToL(cloneModel, cloneMap);
 
         Iterator<NodeModel> iterator = cloneModel.getChildrenR().iterator();
         while (iterator.hasNext()) {
             NodeModel child = iterator.next();
             iterator.remove();
-            transRToL(child);
+            transToL(child, cloneMap);
         }
     }
 
-    private void transLToRAt(int index, NodeModel cloneModel) {
+    private void transToRAt(int index, NodeModel cloneModel, Map<NodeModel, MindNode> cloneMap) {
         // 父节点粘到选中节点的上面，子节点继续跟着父节点
         cloneModel.setPos(PosConstants.RIGHT);
         if (index != -1) {
@@ -380,29 +398,54 @@ public class SubjectController {
         } else {
             cloneModel.getParent().addChildR(cloneModel);
         }
+        transBtnToR(cloneModel, cloneMap);
 
         Iterator<NodeModel> iterator = cloneModel.getChildrenL().iterator();
         while (iterator.hasNext()) {
             NodeModel child = iterator.next();
             iterator.remove();
-            transLToRAt(-1, child);
+            transToRAt(-1, child, cloneMap);
         }
     }
 
-    private void transRToLAt(int index, NodeModel cloneModel) {
+    private void transToLAt(int index, NodeModel cloneModel, Map<NodeModel, MindNode> cloneMap) {
         cloneModel.setPos(PosConstants.LEFT);
         if (index != -1) {
             cloneModel.getParent().addChildAtL(index, cloneModel);
         } else {
             cloneModel.getParent().addChildL(cloneModel);
         }
+        transBtnToL(cloneModel, cloneMap);
 
         Iterator<NodeModel> iterator = cloneModel.getChildrenR().iterator();
         while (iterator.hasNext()) {
             NodeModel child = iterator.next();
             iterator.remove();
-            transRToLAt(-1, child);
+            transToLAt(-1, child, cloneMap);
         }
+    }
+
+    /**
+     * 移动按钮
+     */
+    private static void transBtnToR(NodeModel cloneModel, Map<NodeModel, MindNode> cloneMap) {
+        transBtnToR(cloneMap.get(cloneModel));
+    }
+
+    private static void transBtnToL(NodeModel cloneModel, Map<NodeModel, MindNode> cloneMap) {
+        MindNode cloneNode = cloneMap.get(cloneModel);
+        ObservableList<Node> children = cloneNode.getChildren();
+
+        children.remove(cloneNode.getAddButtonR());
+        cloneNode.addButtonL(children);
+        cloneNode.addButtonListenL();
+    }
+
+    private static void transBtnToR(MindNode cloneNode) {
+        ObservableList<Node> children = cloneNode.getChildren();
+        children.remove(cloneNode.getAddButtonL());
+        cloneNode.addButtonR(children);
+        cloneNode.addButtonListenR();
     }
 
     /**
@@ -444,7 +487,6 @@ public class SubjectController {
             deleteChildrenL(selectedModel);
             deleteL();
         }
-
     }
 
     /**

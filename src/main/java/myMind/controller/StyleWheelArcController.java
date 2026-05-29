@@ -8,7 +8,6 @@ import javafx.scene.shape.Arc;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.stage.Popup;
 import lombok.Setter;
 import myMind.componet.MindNode;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -20,9 +19,6 @@ public class StyleWheelArcController {
     @Setter
     private static SubjectController subjectController;
 
-    @Setter
-    private Popup popup;
-
     @FXML
     private Pane styleWheel;
 
@@ -31,8 +27,6 @@ public class StyleWheelArcController {
 
     @FXML
     public void initialize() {
-        styleWheel.setOnMouseExited(event -> popup.hide());
-
         for (var node : styleWheel.getChildren()) {
             if (node instanceof Arc arc) {
                 arc.setOnMouseClicked(this::toggleStyle);
@@ -69,7 +63,7 @@ public class StyleWheelArcController {
             // List<String> styles = new ArrayList<>(textArea.getStyleAtPosition(start + 1));
             List<String> styles = new ArrayList<>(textArea.getStyleOfChar(start));
             // 点击加粗：有加粗则取消，无加粗则加粗
-            // 点击颜色：改成点击的颜色，有加粗则保留
+            // 点击颜色：改成点击的颜色，有加粗则保留，黑色则不用添加
             boolean containsBold = styles.contains("bold-text");
             if (style.equals("bold-text")) {
                 if (containsBold) {
@@ -79,7 +73,9 @@ public class StyleWheelArcController {
                 }
             } else {
                 styles.clear();
-                styles.add(style);
+                if (!style.equals("black-text")) {
+                    styles.add(style);
+                }
                 if (containsBold) {
                     styles.add("bold-text");
                 }

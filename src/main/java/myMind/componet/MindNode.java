@@ -11,7 +11,6 @@ import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -96,21 +95,10 @@ public class MindNode extends StackPane {
 
         byte pos = model.getPos();
         if (pos != PosConstants.LEFT) {
-            addButtonR = new Button("✚");
-            addButtonR.getStyleClass().add("action-button");
-            addButtonR.setVisible(false);
-            StackPane.setAlignment(addButtonR, Pos.CENTER_RIGHT);
-            addButtonR.setTranslateX(8);
-            children.add(addButtonR);
+            addButtonR(children);
         }
-
         if (pos != PosConstants.RIGHT) {
-            addButtonL = new Button("✚");
-            addButtonL.getStyleClass().add("action-button");
-            addButtonL.setVisible(false);
-            StackPane.setAlignment(addButtonL, Pos.CENTER_LEFT);
-            addButtonL.setTranslateX(-8);
-            children.add(addButtonL);
+            addButtonL(children);
         }
 
         getStyleClass().add("node");
@@ -124,6 +112,24 @@ public class MindNode extends StackPane {
         prefHeightProperty().bind(model.nodeHeightProperty());
 
         addListener();
+    }
+
+    public void addButtonL(ObservableList<Node> children) {
+        addButtonL = new Button("✚");
+        addButtonL.getStyleClass().add("action-button");
+        addButtonL.setVisible(false);
+        StackPane.setAlignment(addButtonL, Pos.CENTER_LEFT);
+        addButtonL.setTranslateX(-8);
+        children.add(addButtonL);
+    }
+
+    public void addButtonR(ObservableList<Node> children) {
+        addButtonR = new Button("✚");
+        addButtonR.getStyleClass().add("action-button");
+        addButtonR.setVisible(false);
+        StackPane.setAlignment(addButtonR, Pos.CENTER_RIGHT);
+        addButtonR.setTranslateX(8);
+        children.add(addButtonR);
     }
 
     public void loadImage(String imageName, double imageWidth, double imageHeight) {
@@ -150,11 +156,7 @@ public class MindNode extends StackPane {
 
     private void addListener() {
         // 选中节点
-        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
-            if (e.getButton() == MouseButton.PRIMARY) {
-                onAction.accept(MindNodeEvent.SELECT);
-            }
-        });
+        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> onAction.accept(MindNodeEvent.SELECT));
 
         // 粘贴到选中节点上方
         contentBox.setOnMouseClicked(e -> onAction.accept(MindNodeEvent.PASTE_SIBLING));
@@ -175,31 +177,11 @@ public class MindNode extends StackPane {
         // 鼠标移入左右中心点时，显示添加按钮
         byte pos = model.getPos();
         if (pos == PosConstants.RIGHT) {
-            setOnMouseMoved(e -> {
-                double midHeight = getBoundsInLocal().getHeight() / 2;
-                double y = e.getY();
-                if (getBoundsInLocal().getWidth() - BUTTON_THRESHOLD < e.getX() &&
-                        midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
-                    addButtonR.setVisible(true);
-                }
-            });
-            setOnMouseExited(e -> addButtonR.setVisible(false));
-
-            addButtonR.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_R));
+            addButtonListenR();
         }
 
         if (pos == PosConstants.LEFT) {
-            setOnMouseMoved(e -> {
-                double midHeight = getBoundsInLocal().getHeight() / 2;
-                double y = e.getY();
-                if (e.getX() < BUTTON_THRESHOLD &&
-                        midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
-                    addButtonL.setVisible(true);
-                }
-            });
-            setOnMouseExited(e -> addButtonL.setVisible(false));
-
-            addButtonL.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_L));
+            addButtonListenL();
         }
 
         // 用 pos != PosConstants.LEFT 写法添加事件的话，根节点添加左按钮的事件时，会覆盖右按钮的事件
@@ -226,6 +208,34 @@ public class MindNode extends StackPane {
             addButtonR.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_R));
             addButtonL.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_L));
         }
+    }
+
+    public void addButtonListenR() {
+        setOnMouseMoved(e -> {
+            double midHeight = getBoundsInLocal().getHeight() / 2;
+            double y = e.getY();
+            if (getBoundsInLocal().getWidth() - BUTTON_THRESHOLD < e.getX() &&
+                    midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
+                addButtonR.setVisible(true);
+            }
+        });
+        setOnMouseExited(e -> addButtonR.setVisible(false));
+
+        addButtonR.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_R));
+    }
+
+    public void addButtonListenL() {
+        setOnMouseMoved(e -> {
+            double midHeight = getBoundsInLocal().getHeight() / 2;
+            double y = e.getY();
+            if (e.getX() < BUTTON_THRESHOLD &&
+                    midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
+                addButtonL.setVisible(true);
+            }
+        });
+        setOnMouseExited(e -> addButtonL.setVisible(false));
+
+        addButtonL.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_L));
     }
 
     /**

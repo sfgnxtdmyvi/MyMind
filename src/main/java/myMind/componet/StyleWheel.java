@@ -4,7 +4,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.Pane;
 import javafx.stage.Popup;
 import myMind.Launch;
-import myMind.controller.StyleWheelArcController;
 
 import java.io.IOException;
 import java.util.ResourceBundle;
@@ -14,14 +13,14 @@ public class StyleWheel extends Popup {
         try {
             ResourceBundle config = ResourceBundle.getBundle("config");
             FXMLLoader loader = new FXMLLoader(Launch.class.getResource(config.getString("styleWheel")));
-            Pane stylePicker = loader.load();
-            getContent().add(stylePicker);
-
-            StyleWheelArcController controller = loader.getController();
-            controller.setPopup(this);
+            Pane styleWheel = loader.load();
+            getContent().add(styleWheel);
+            styleWheel.setOnMouseExited(event -> hide());
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
     }
 
     public static StyleWheel getInstance() {
