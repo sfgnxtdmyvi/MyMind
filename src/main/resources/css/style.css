@@ -48,6 +48,11 @@
     -fx-fill: #aad1ff;
 }
 
+.text-area {
+    -fx-font-family: 'Microsoft YaHei';
+    -fx-font-size: 20px;
+}
+
 /*——————————————————————————————————按钮——————————————————————————————————*/
 .close-button, .action-button {
     -fx-font-weight: bold;

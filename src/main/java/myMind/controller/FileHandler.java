@@ -317,8 +317,12 @@ public class FileHandler {
                 String color = styleItem.getString("color");
                 if (bold != null) {
                     styleList.add("bold-text");
-                } else if (color != null && color.equals("#FF0000")) {
-                    styleList.add("red-text");
+                } else if (color != null) {
+                    if (color.equals("#FF0000")) {
+                        styleList.add("red-text");
+                    } else if (color.equals("#FF8C00")) {
+                        styleList.add("orange-text");
+                    }
                 }
 
                 textArea.setStyle(styleItem.getIntValue("start"),

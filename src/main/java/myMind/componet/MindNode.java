@@ -12,7 +12,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -83,8 +82,9 @@ public class MindNode extends StackPane {
         imageContainer.setManaged(false);
 
         textArea = new StyleClassedTextArea();
-        textArea.setStyle("-fx-font-family: 'Microsoft YaHei'; -fx-font-size: 20px;");
-        VBox.setVgrow(textArea, Priority.ALWAYS);
+        textArea.getStyleClass().add("text-area");
+        textArea.setMaxWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
+        textArea.setWrapText(true);
 
         contentBox = new VBox();
         contentBox.setAlignment(Pos.CENTER);
@@ -344,6 +344,8 @@ public class MindNode extends StackPane {
         // 点击有图片没有文字的节点显示 textArea
         imageContainer.setOnMouseClicked(e -> {
             if (!textArea.isVisible()) {
+                // setVisible(false) 后，maxWidth 就变成0了
+                textArea.setMaxWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
                 textArea.setVisible(true);
                 textArea.requestFocus();
                 model.setNodeHeight(model.getNodeHeight() + SizeConstants.MIN_TEXTAREA_HEIGHT);
@@ -402,23 +404,26 @@ public class MindNode extends StackPane {
         boolean imageVisible = imageContainer.isVisible();
         double nodeWidth;
         double nodeHeight;
+        double textWidth;
+        double textHeight;
 
         if (!imageVisible && text.isEmpty()) {
+            textWidth = SizeConstants.MIN_TEXTAREA_WIDTH;
+            textHeight = SizeConstants.MIN_TEXTAREA_HEIGHT;
             nodeWidth = SizeConstants.MIN_NODE_WIDTH;
             nodeHeight = SizeConstants.MIN_NODE_HEIGHT;
         } else {
+            // todo 宽度
+            textWidth = Math.min(MeasureTextUtil.getTextWidth(text), SizeConstants.MAX_TEXTAREA_WIDTH);
             // textArea 宽度 + border(2px) + padding(20px)
-            nodeWidth = MeasureTextUtil.getTextWidth(text) + 22;
-            // MIN_NODE_WIDTH <= 宽度 <= MAX_NODE_WIDTH
-            nodeWidth = Math.max(SizeConstants.MIN_NODE_WIDTH,
-                    Math.min(nodeWidth, SizeConstants.MAX_NODE_WIDTH));
+            nodeWidth = Math.max(SizeConstants.MIN_NODE_WIDTH, textWidth + 22) * 1.01;
             if (imageVisible) {
                 // 文本宽度 < 图片宽度时，宽度 = 图片宽度 + border(4px) + padding(20px)
                 nodeWidth = Math.max(nodeWidth, image.getFitWidth() + 24);
             }
-
-            // textArea 行数 * 行高 + border(2px) + padding(20px) [+ image 高度 + border(2px)]
-            nodeHeight = text.split("\n", -1).length * SizeConstants.LINE_HEIGHT + 22;
+            // textArea 高度 + border(2px) + padding(20px) [+ image 高度 + border(2px)]
+            textHeight = MeasureTextUtil.getTextHeight() * 1.023;
+            nodeHeight = textHeight + 22;
             if (imageVisible) {
                 nodeHeight += image.getFitHeight() + 2;
             }
@@ -427,7 +432,9 @@ public class MindNode extends StackPane {
         // y 轴 - 高度变动的一半，让中心保持不变
         model.setY(model.getY() - (nodeHeight - getPrefHeight()) / 2.0);
 
-        model.setNodeWidth(nodeWidth * 1.01);
+        textArea.setMaxWidth(textWidth);
+        textArea.setPrefHeight(textHeight);
+        model.setNodeWidth(nodeWidth);
         model.setNodeHeight(nodeHeight);
     }
 
