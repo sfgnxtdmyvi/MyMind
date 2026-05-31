@@ -24,6 +24,7 @@
                 <SeparatorMenuItem mnemonicParsing="false"/>
 
                 <MenuItem onAction="#importMindMap" text="导入"/>
+                <MenuItem onAction="#importMindMapBatch" text="批量导入"/>
             </items>
         </Menu>
 

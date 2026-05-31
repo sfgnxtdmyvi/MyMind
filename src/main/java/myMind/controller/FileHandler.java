@@ -10,7 +10,7 @@ import lombok.Getter;
 import myMind.componet.MindNode;
 import myMind.model.NodeModel;
 import myMind.componet.Subject;
-import myMind.componet.Workspace;
+import myMind.componet.MindMap;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 import myMind.util.MessageUtil;
@@ -34,26 +34,28 @@ public class FileHandler {
 
     private static SubjectController subjectController;
 
-    private Workspace workspace;
+    private MindMap mindMap;
     @Getter
     private static String dirImage;
     private static String dirRecentFiles;
+    private static String dirFiles;
 
     static {
         ResourceBundle config = ResourceBundle.getBundle("config");
         dirImage = config.getString("directory.images");
         dirRecentFiles = config.getString("directory.recent_files");
+        dirFiles = config.getString("directory.files");
     }
 
     private LinkedList<String> recentFiles;
 
-    public FileHandler(Workspace workspace) {
-        this.workspace = workspace;
+    public FileHandler(MindMap mindMap) {
+        this.mindMap = mindMap;
     }
 
     //—————————————————————————————————————————保存—————————————————————————————————————————
     public void saveFile(File file) {
-        ObservableList<Tab> tabs = workspace.getTabs();
+        ObservableList<Tab> tabs = mindMap.getTabs();
         JSONObject subjects = new JSONObject();
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
@@ -174,8 +176,8 @@ public class FileHandler {
         JSONObject json = readFile(file);
         // 加载主题
         for (int i = 0; i < json.size(); i++) {
-            workspace.addSubject();
-            subjectController = workspace.getSubjectController();
+            mindMap.addSubject();
+            subjectController = mindMap.getSubjectController();
             JSONObject subject = json.getJSONObject(Integer.toString(i));
 
             // 加载根节点
@@ -191,7 +193,7 @@ public class FileHandler {
             subjectController.adjustXY();
         }
 
-        addRecentFile(file.getName());
+        addRecentFile(file.getPath().replace(dirFiles, ""));
     }
 
     private void loadNode(JSONObject json, MindNode node) {
@@ -266,8 +268,8 @@ public class FileHandler {
                 content.append(line);
             }
 
-            workspace.getTabs().clear();
-            Stage stage = (Stage) workspace.getScene().getWindow();
+            mindMap.getTabs().clear();
+            Stage stage = (Stage) mindMap.getScene().getWindow();
             stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
         } catch (Exception e) {
             MessageUtil.showMessage("读取失败：" + e.getMessage());
@@ -289,8 +291,8 @@ public class FileHandler {
     }
 
     private void importSubjet(JSONObject json) {
-        workspace.addSubject();
-        subjectController = workspace.getSubjectController();
+        mindMap.addSubject();
+        subjectController = mindMap.getSubjectController();
 
         JSONObject rootJson = json.getJSONObject("root");
         NodeModel rootModel = subjectController.getRootModel();
@@ -334,7 +336,10 @@ public class FileHandler {
         // 图片
         String imageName = json.getString("imageName");
         if (imageName != null) {
-            JSONObject imageSize = json.getJSONObject("imageSize");
+            JSONObject imageSize = json.getJSONObject("imageResize");
+            if (imageSize == null) {
+                imageSize = json.getJSONObject("imageSize");
+            }
             node.importImage(imageName, imageSize.getDouble("width"), imageSize.getDouble("height"));
         }
     }
@@ -434,8 +439,8 @@ public class FileHandler {
         return imageName;
     }
 
-    public static void deleteImage(String imagePath) {
-        File file = new File(imagePath);
+    public static void deleteImage(String imageName) {
+        File file = new File(dirImage +imageName);
         if (file.exists()) {
             file.delete();
         }

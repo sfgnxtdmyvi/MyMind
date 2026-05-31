@@ -30,28 +30,6 @@ public class SubjectController {
         addNode(rootModel);
     }
 
-    public void addChild() {
-        if (selectedModel == null) {
-            return;
-        }
-
-        if (selectedModel.getPos() == PosConstants.LEFT) {
-            NodeModel childModel = new NodeModel(calculateChildXL(selectedModel), 0, PosConstants.LEFT);
-            selectedModel.addChildL(childModel);
-            addNode(childModel);
-
-            adjustChildrenYL();
-            refreshLinesL();
-        } else {
-            NodeModel childModel = new NodeModel(calculateChildXR(selectedModel), 0, PosConstants.RIGHT);
-            selectedModel.addChildR(childModel);
-            addNode(childModel);
-
-            adjustChildrenYR();
-            refreshLinesR();
-        }
-    }
-
     public void addChildR() {
         if (selectedModel == null || selectedModel.getPos() == PosConstants.LEFT) {
             return;

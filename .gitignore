@@ -12,7 +12,7 @@ target/
 .idea/misc.xml
 .idea/dbnavigator.xml
 .idea/vcs.xml
-.idea/workspace.xml
+.idea/mindMap.xml
 *.iws
 *.iml
 *.ipr

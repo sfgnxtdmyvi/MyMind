@@ -7,12 +7,12 @@ import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
-import myMind.Launch;
-import myMind.componet.Workspace;
+import myMind.componet.MindMap;
 import myMind.constants.PosConstants;
 import myMind.model.NodeModel;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -23,7 +23,7 @@ public class MenuController {
     @Setter
     private FileHandler fileHandler;
     @Setter
-    private Workspace workspace;
+    private MindMap mindMap;
 
     @FXML
     private Menu recentFilesMenu;
@@ -42,7 +42,7 @@ public class MenuController {
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
     public void newMindMap() {
-        Launch.newMindMap(new Stage());
+        new MindMap(new Stage());
     }
 
     @FXML
@@ -83,7 +83,7 @@ public class MenuController {
 
     @FXML
     private void save() {
-        Stage stage = (Stage) workspace.getScene().getWindow();
+        Stage stage = (Stage) mindMap.getScene().getWindow();
         String title = stage.getTitle();
         // 没有保存过，就保存到新建文件，并设置标题
         if (title == null) {
@@ -112,7 +112,7 @@ public class MenuController {
     }
 
     @FXML
-    private void importMindMap() {
+    private void importMindMap() throws IOException {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File("C:\\Users\\k8255\\Documents\\MindLine"));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
@@ -122,22 +122,39 @@ public class MenuController {
         }
     }
 
+    @FXML
+    private void importMindMapBatch() throws IOException {
+        File rootFile = new File("C:\\Users\\k8255\\Documents\\MindLine");
+        importMindMapBatch(rootFile);
+    }
+
+    private void importMindMapBatch(File parentFile) throws IOException {
+        for (File file : parentFile.listFiles()) {
+            if (file.isDirectory()) {
+                importMindMapBatch(file);
+            } else if (file.getName().endsWith(".mm")) {
+                fileHandler.importFile(file);
+                File saveFile = new File(dirFiles + file.getPath().replace("C:\\Users\\k8255\\Documents\\MindLine\\", ""));
+                saveFile.getParentFile().mkdirs();
+                saveFile.createNewFile();
+                fileHandler.saveFile(saveFile);
+            }
+        }
+    }
+
     //—————————————————————————————————————————添加—————————————————————————————————————————
     @FXML
     private void addChildR() {
-        
         subjectController.addChildR();
     }
 
     @FXML
     private void addChildL() {
-        
         subjectController.addChildL();
     }
 
     @FXML
     private void addSibling() {
-        
         subjectController.addSibling();
     }
 
@@ -199,7 +216,7 @@ public class MenuController {
 
     @FXML
     private void addSubject() {
-        workspace.addSubject();
+        mindMap.addSubject();
     }
 
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————

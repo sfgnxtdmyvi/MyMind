@@ -53,7 +53,7 @@ public class MindNode extends StackPane {
     private Button addButtonL;
 
     // 拖拽缩放相关变量
-    private static final double RESIZE_THRESHOLD = 8.0;
+    private static final double RESIZE_THRESHOLD = 10.0;
     private static final double BUTTON_THRESHOLD = 15.0;
     private boolean isResizing = false;
     private double startX;
@@ -150,8 +150,8 @@ public class MindNode extends StackPane {
         imageContainer.setVisible(true);
         imageContainer.setManaged(true);
         image.setImage(new Image(new File("C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName).toURI().toString()));
-        image.setFitWidth(imageWidth / 2.2);
-        image.setFitHeight(imageHeight / 2.2);
+        image.setFitWidth(imageWidth);
+        image.setFitHeight(imageHeight);
     }
 
     private void addListener() {
@@ -291,14 +291,12 @@ public class MindNode extends StackPane {
             double imageWidth = image.getBoundsInLocal().getWidth();
             double imageHeight = image.getBoundsInLocal().getHeight();
 
-            if (imageWidth - RESIZE_THRESHOLD < e.getX()) {
-                double y = e.getY();
-                if (imageHeight - RESIZE_THRESHOLD < y) {
-                    imageContainer.setCursor(Cursor.SE_RESIZE);
-                } else if (y < BUTTON_THRESHOLD) {
-                    imageContainer.setCursor(Cursor.HAND);
-                    closeButton.setVisible(true);
-                }
+            // 不能合并两个 x 轴的判断，当在右下角出现了缩放图标后，往上移动，x 轴不变时，会进入 x 轴的分支，导致缩放图标不恢复
+            if (imageWidth - RESIZE_THRESHOLD < e.getX() && imageHeight - RESIZE_THRESHOLD < e.getY()) {
+                imageContainer.setCursor(Cursor.SE_RESIZE);
+            } else if (imageWidth - RESIZE_THRESHOLD < e.getX() && e.getY() < BUTTON_THRESHOLD) {
+                imageContainer.setCursor(Cursor.HAND);
+                closeButton.setVisible(true);
             } else {
                 imageContainer.setCursor(Cursor.DEFAULT);
             }
@@ -359,23 +357,11 @@ public class MindNode extends StackPane {
             }
         });
 
-        // 有图片没有文字的节点失去焦点时隐藏 textArea
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
                 // 清除选区，恢复背景色
                 textArea.deselect();
-
-                if (imageContainer.isVisible() && textArea.getText().isEmpty()) {
-                    textArea.setVisible(false);
-                    model.setNodeHeight(model.getNodeHeight() - SizeConstants.MIN_TEXTAREA_HEIGHT);
-                    model.setY(model.getY() + SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
-
-                    if (model.getPos() == PosConstants.RIGHT) {
-                        onAction.accept(MindNodeEvent.ADJUST_YR);
-                    } else {
-                        onAction.accept(MindNodeEvent.ADJUST_YL);
-                    }
-                }
+                adjustSize();
             }
         });
     }
@@ -407,7 +393,8 @@ public class MindNode extends StackPane {
         double textWidth;
         double textHeight;
 
-        if (!imageVisible && text.isEmpty()) {
+        boolean textEmpty = text.isEmpty();
+        if (!imageVisible && textEmpty) {
             textWidth = SizeConstants.MIN_TEXTAREA_WIDTH;
             textHeight = SizeConstants.MIN_TEXTAREA_HEIGHT;
             nodeWidth = SizeConstants.MIN_NODE_WIDTH;
@@ -426,6 +413,10 @@ public class MindNode extends StackPane {
             nodeHeight = textHeight + 22;
             if (imageVisible) {
                 nodeHeight += image.getFitHeight() + 2;
+                if (textEmpty) {
+                    textArea.setVisible(false);
+                    nodeHeight -= textHeight;
+                }
             }
         }
 

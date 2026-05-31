@@ -16,9 +16,6 @@ import myMind.util.MessageUtil;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * 主题，放节点和连线
- */
 @Getter
 public class Subject extends StackPane {
     /**
