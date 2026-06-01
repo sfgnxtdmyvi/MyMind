@@ -275,7 +275,7 @@ public class SubjectController {
             }
             subject.addClone(cloneMap);
 
-            adjustL(cloneModel);
+            adjustR(cloneModel);
         } else {
             cloneModel.setX(calculateChildXL(selectedModel));
 
@@ -288,7 +288,7 @@ public class SubjectController {
             }
             subject.addClone(cloneMap);
 
-            adjustR(cloneModel);
+            adjustL(cloneModel);
         }
 
         setSelectedModel(cloneModel);
@@ -323,7 +323,7 @@ public class SubjectController {
             }
             subject.addClone(cloneMap);
 
-            adjustL(cloneModel);
+            adjustR(cloneModel);
         } else {
             int index = parentModel.getChildrenL().indexOf(selectedModel);
             cloneModel.setX(calculateChildXL(parentModel));
@@ -336,7 +336,7 @@ public class SubjectController {
             }
             subject.addClone(cloneMap);
 
-            adjustR(cloneModel);
+            adjustL(cloneModel);
         }
 
         setSelectedModel(cloneModel);
@@ -553,14 +553,14 @@ public class SubjectController {
     }
 
     private void adjustR(NodeModel model) {
-        adjustChildrenXL(model);
-        adjustChildrenYL();
+        adjustChildrenXR(model);
+        adjustChildrenYR();
         refreshLinesL();
     }
 
     private void adjustL(NodeModel model) {
-        adjustChildrenXR(model);
-        adjustChildrenYR();
+        adjustChildrenXL(model);
+        adjustChildrenYL();
         refreshLinesR();
     }
 

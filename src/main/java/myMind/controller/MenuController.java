@@ -29,7 +29,7 @@ public class MenuController {
     @FXML
     private Menu recentFilesMenu;
 
-    private static String dirFiles;
+    private static final String dirFiles;
 
     static {
         ResourceBundle config = ResourceBundle.getBundle("config");
@@ -90,16 +90,15 @@ public class MenuController {
     @FXML
     private void save() {
         Stage stage = (Stage) mindMap.getScene().getWindow();
-        String title = stage.getTitle();
         // 没有保存过，就保存到新建文件，并设置标题
-        if (title == null) {
+        if (mindMap.getFilePath() == null) {
             File file = saveAs();
             if (file != null) {
                 stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
                 fileHandler.addRecentFile(file);
             }
         } else {
-            File file = new File(dirFiles + title + ".mm");
+            File file = new File(mindMap.getFilePath());
             fileHandler.saveFile(file);
         }
     }
@@ -113,6 +112,7 @@ public class MenuController {
         // 取消时，file 为 null
         if (file != null) {
             fileHandler.saveFile(file);
+            mindMap.setFilePath(file.getAbsolutePath());
             return file;
         }
 
@@ -120,7 +120,7 @@ public class MenuController {
     }
 
     @FXML
-    private void importMindMap() throws IOException {
+    private void importMindMap() {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File("C:\\Users\\k8255\\Documents\\MindLine"));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));

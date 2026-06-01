@@ -15,7 +15,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import lombok.Getter;
+import lombok.Data;
 import myMind.Launch;
 import myMind.constants.SizeConstants;
 import myMind.controller.FileHandler;
@@ -28,13 +28,14 @@ import org.fxmisc.richtext.StyleClassedTextArea;
 import java.io.IOException;
 import java.util.List;
 
+@Data
 public class MindMap extends TabPane {
     private final Pane root;
     private final Stage stage;
     private final StyleWheel styleWheel = StyleWheel.getInstance();
-    @Getter
     private SubjectController subjectController;
     private Subject subject;
+    private String filePath;
 
     private static final List<String> STYLE_SHEETS = List.of(
             MindMap.class.getResource("/css/style.css").toExternalForm(),

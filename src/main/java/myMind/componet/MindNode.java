@@ -378,9 +378,9 @@ public class MindNode extends StackPane {
         // 调整位置
         if (model.getPos() == PosConstants.LEFT) {
             model.setX(model.getX() - (getPrefWidth() - oldWidth));
-            onAction.accept(MindNodeEvent.ADJUST_R);
-        } else {
             onAction.accept(MindNodeEvent.ADJUST_L);
+        } else {
+            onAction.accept(MindNodeEvent.ADJUST_R);
         }
     }
 

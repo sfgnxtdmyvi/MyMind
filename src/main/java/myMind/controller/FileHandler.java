@@ -34,10 +34,10 @@ public class FileHandler {
 
     private static SubjectController subjectController;
 
-    private MindMap mindMap;
+    private final MindMap mindMap;
     @Getter
-    private static String dirImage;
-    private static String dirRecentFiles;
+    private static final String dirImage;
+    private static final String dirRecentFiles;
 
     static {
         ResourceBundle config = ResourceBundle.getBundle("config");
@@ -46,7 +46,7 @@ public class FileHandler {
     }
 
     @Getter
-    private static LinkedList<String> recentFiles;
+    private static final LinkedList<String> recentFiles;
 
     public FileHandler(MindMap mindMap) {
         this.mindMap = mindMap;
@@ -191,7 +191,7 @@ public class FileHandler {
             subjectController.adjustChildrenSize();
             subjectController.adjustXY();
         }
-
+        mindMap.setFilePath(file.getAbsolutePath());
         addRecentFile(file);
     }
 
@@ -397,7 +397,7 @@ public class FileHandler {
 
     public void addRecentFile(File file) {
         // 导图可能在多级目录下，不能通过根目录名 + file.getName()读取
-        String string = file.getName() + "=" + file.getAbsolutePath();
+        String string = file.getName().substring(0, file.getName().length() - 3) + "=" + file.getAbsolutePath();
         recentFiles.remove(string);
         recentFiles.addFirst(string);
         if (recentFiles.size() > SizeConstants.MAX_RECENT_FILES) {
