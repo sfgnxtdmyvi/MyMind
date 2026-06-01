@@ -9,11 +9,15 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.ContextMenuEvent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import lombok.Getter;
 import myMind.Launch;
+import myMind.constants.SizeConstants;
 import myMind.controller.FileHandler;
 import myMind.controller.MenuController;
 import myMind.controller.StyleWheelArcController;
@@ -30,6 +34,7 @@ public class MindMap extends TabPane {
     private final StyleWheel styleWheel = StyleWheel.getInstance();
     @Getter
     private SubjectController subjectController;
+    private Subject subject;
 
     private static final List<String> STYLE_SHEETS = List.of(
             MindMap.class.getResource("/css/style.css").toExternalForm(),
@@ -83,7 +88,8 @@ public class MindMap extends TabPane {
             if (newTab == null) {
                 return;
             }
-            subjectController = ((Subject) newTab.getContent()).getSubjectController();
+            subject = ((Subject) newTab.getContent());
+            subjectController = subject.getSubjectController();
             MenuController.setSubjectController(subjectController);
             StyleWheelArcController.setSubjectController(subjectController);
         });
@@ -129,11 +135,94 @@ public class MindMap extends TabPane {
             }
             event.consume();
         });
+
+        addTranslateListener();
+    }
+
+    // 画布移动和缩放
+    private void addTranslateListener() {
+        // EventFilter 能让节点不干扰鼠标滚动
+        addEventFilter(ScrollEvent.SCROLL, e -> {
+            double deltaY = e.getDeltaY();
+            if (e.isShortcutDown()) {
+                double scale = subject.getScaleX() + (deltaY > 0 ? 0.1 : -0.1);
+                subject.changeScale(scale);
+            } else {
+                for (int i = 0; i < 3; i++) {
+                    subject.setTranslateY(subject.getTranslateY() + deltaY);
+                }
+                subject.constrainTranslationY();
+            }
+        });
+
+        setOnMousePressed(e -> {
+            //PRIMARY = 左键
+            //SECONDARY = 右键
+            //MIDDLE = 滚轮
+            if (e.getButton() == MouseButton.PRIMARY) {
+                subject.setDragStartX(e.getSceneX());
+                subject.setDragStartY(e.getSceneY());
+            }
+        });
+
+        setOnMouseDragged(e -> {
+            // 调整图片大小时，不能移动画布
+            if (e.getButton() == MouseButton.PRIMARY && !subjectController.getSelectedNode().isResizing()) {
+                subject.setTranslateX(subject.getTranslateX() + e.getSceneX() - subject.getDragStartX());
+                subject.setTranslateY(subject.getTranslateY() + e.getSceneY() - subject.getDragStartY());
+                subject.setDragStartX(e.getSceneX());
+                subject.setDragStartY(e.getSceneY());
+
+                subject.constrainTranslation();
+            }
+            e.consume();
+        });
+
+        setOnKeyPressed(e -> {
+            KeyCode code = e.getCode();
+            boolean shortcutDown = e.isShortcutDown();
+
+            if (code == KeyCode.HOME) {
+                subject.setTranslateY(subject.getTranslateY() - subject.getBoundsInParent().getMinY() + SizeConstants.TRANSLATE_OFFSET);
+            }
+            if (code == KeyCode.END) {
+                double deltaY = getLayoutBounds().getHeight() - subject.getBoundsInParent().getMaxY() - SizeConstants.TRANSLATE_OFFSET;
+                subject.setTranslateY(subject.getTranslateY() + deltaY);
+                return;
+            }
+
+            if (code == KeyCode.PAGE_UP) {
+                subject.setTranslateY(subject.getTranslateY() + 400);
+                subject.constrainTranslationY();
+                return;
+            }
+            if (code == KeyCode.PAGE_DOWN || code == KeyCode.SPACE) {
+                subject.setTranslateY(subject.getTranslateY() - 400);
+                subject.constrainTranslationY();
+                return;
+            }
+
+            // 回到中心
+            if (shortcutDown && code == KeyCode.G) {
+                subject.setTranslateX(0);
+                subject.setTranslateY(0);
+            }
+
+            if (shortcutDown) {
+                if (code == KeyCode.DIGIT0) {
+                    subject.changeScale(1.0);
+                } else if (code == KeyCode.MINUS) {
+                    subject.changeScale(getScaleX() - 0.1);
+                } else if (code == KeyCode.EQUALS) {
+                    subject.changeScale(getScaleX() + 0.1);
+                }
+            }
+        });
     }
 
     public void addSubject() {
         subjectController = new SubjectController();
-        Subject subject = subjectController.getSubject();
+        subject = subjectController.getSubject();
         MenuController.setSubjectController(subjectController);
         StyleWheelArcController.setSubjectController(subjectController);
 

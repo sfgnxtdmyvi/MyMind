@@ -11,7 +11,6 @@ import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -155,11 +154,14 @@ public class MindNode extends StackPane {
     }
 
     private void addListener() {
-        // 选中节点
-        addEventFilter(MouseEvent.MOUSE_PRESSED, e -> onAction.accept(MindNodeEvent.SELECT));
-
-        // 粘贴到选中节点上方
-        contentBox.setOnMouseClicked(e -> onAction.accept(MindNodeEvent.PASTE_SIBLING));
+        // 使用 addEventFilter 的话，OnMouseClicked 的默认行为会让 MindNode 获得焦点，TextArea 就会失去焦点
+        // 添加 e.consume() 的话，能阻止 OnMouseClicked 的默认行为，但是 addButton 就不会触发
+        // 使用 setOnMouseClicked 的话，由于 addButton 是一个独立的 Button 组件，它会消费鼠标事件，事件不会冒泡到父节点 MindNode，
+        // 需要在 addButton 的事件处理逻辑中添加 setSelectedModel(model);
+        contentBox.setOnMouseClicked(e -> {
+            onAction.accept(MindNodeEvent.SELECT);
+            onAction.accept(MindNodeEvent.PASTE_SIBLING);
+        });
 
         addAddBtnListener();
 

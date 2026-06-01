@@ -4,6 +4,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import myMind.constants.SizeConstants;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 @Data
 @EqualsAndHashCode(of = "id")
+@ToString(of = "id")
 public class NodeModel {
     private final String id = UUID.randomUUID().toString();
     // 属性

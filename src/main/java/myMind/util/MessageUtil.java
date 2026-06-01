@@ -43,7 +43,6 @@ public class MessageUtil {
     /**
      * 显示缩放比例
      *
-     * @param scale 缩放比例 (0.1 - 3.0)
      */
     public static void showScale(double scale) {
         int percentage = (int) Math.round(scale * 100);

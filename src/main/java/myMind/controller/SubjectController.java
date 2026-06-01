@@ -117,6 +117,7 @@ public class SubjectController {
             switch (event) {
                 case SELECT -> setSelectedModel(model);
 
+                // 粘贴到选中节点上方
                 case PASTE_SIBLING -> {
                     MindNode cloneNode = CloneNodeUtil.getNode();
                     if (cloneNode != null) {
@@ -124,6 +125,7 @@ public class SubjectController {
                     }
                 }
                 case ADD_BUTTON_R -> {
+                    setSelectedModel(model);
                     MindNode cloneNode = CloneNodeUtil.getNode();
                     if (cloneNode == null) {
                         addChildR();
@@ -132,6 +134,7 @@ public class SubjectController {
                     }
                 }
                 case ADD_BUTTON_L -> {
+                    setSelectedModel(model);
                     MindNode cloneNode = CloneNodeUtil.getNode();
                     if (cloneNode == null) {
                         addChildL();
@@ -304,7 +307,7 @@ public class SubjectController {
         NodeModel cloneModel = cloneNode.getModel();
 
         Map<NodeModel, MindNode> cloneMap = CloneNodeUtil.getMap();
-        for (NodeModel nodeModel :cloneMap.keySet()) {
+        for (NodeModel nodeModel : cloneMap.keySet()) {
             setOnAction(cloneMap.get(nodeModel), nodeModel);
         }
 
@@ -799,11 +802,7 @@ public class SubjectController {
     //———————————————————————————————————————————其他———————————————————————————————————————————
     public void setSelectedModel(NodeModel nodeModel) {
         this.selectedModel = nodeModel;
-        if (nodeModel != null) {
-            getSelectedNode().getTextArea().requestFocus();
-        } else {
-            subject.requestFocus();
-        }
+        getSelectedNode().getTextArea().requestFocus();
     }
 
     public MindNode getNode(NodeModel model) {

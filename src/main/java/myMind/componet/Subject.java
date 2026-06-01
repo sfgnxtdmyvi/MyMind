@@ -1,14 +1,14 @@
 package myMind.componet;
 
 import javafx.collections.ObservableList;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.QuadCurve;
 import lombok.Getter;
+import lombok.Setter;
+import myMind.constants.SizeConstants;
 import myMind.controller.SubjectController;
 import myMind.model.NodeModel;
 import myMind.util.MessageUtil;
@@ -30,7 +30,9 @@ public class Subject extends StackPane {
     private final Map<NodeModel, MindNode> modelToView = new HashMap<>();
     private final SubjectController subjectController;
 
+    @Setter
     private double dragStartX;
+    @Setter
     private double dragStartY;
 
     public Subject(SubjectController subjectController) {
@@ -40,86 +42,7 @@ public class Subject extends StackPane {
         linesLayerL.setMouseTransparent(true);
         linesLayerR.setMouseTransparent(true);
         nodesLayer.setMouseTransparent(false);
-
         getChildren().addAll(linesLayerL, linesLayerR, nodesLayer);
-
-        addListener();
-    }
-
-    private void addListener() {
-        // EventFilter 能让节点不干扰鼠标滚动
-        addEventFilter(ScrollEvent.SCROLL, e -> {
-            double deltaY = e.getDeltaY();
-            if (e.isShortcutDown()) {
-                double scale = getScaleX() + (deltaY > 0 ? 0.1 : -0.1);
-                changeScale(scale);
-            } else {
-                for (int i = 0; i < 3; i++) {
-                    setTranslateY(getTranslateY() + deltaY);
-                }
-            }
-        });
-
-        //拖拽画布
-        setOnMousePressed(e -> {
-            //PRIMARY = 左键
-            //SECONDARY = 右键
-            //MIDDLE = 滚轮
-            if (e.getButton() == MouseButton.PRIMARY && e.getTarget() == nodesLayer) {
-                subjectController.setSelectedModel(null);
-                dragStartX = e.getSceneX();
-                dragStartY = e.getSceneY();
-            }
-            e.consume();
-        });
-
-        setOnMouseDragged(e -> {
-            if (e.getButton() == MouseButton.PRIMARY && isFocused()) {
-                double translateX = getTranslateX() + e.getSceneX() - dragStartX;
-                double translateY = getTranslateY() + e.getSceneY() - dragStartY;
-
-                // 应用偏移量到图层
-                setTranslateX(translateX);
-                setTranslateY(translateY);
-
-                dragStartX = e.getSceneX();
-                dragStartY = e.getSceneY();
-            }
-            e.consume();
-        });
-
-        // 键盘快捷键
-        setOnKeyPressed(e -> {
-            KeyCode code = e.getCode();
-            boolean shortcutDown = e.isShortcutDown();
-
-            if (code == KeyCode.PAGE_UP) {
-                setTranslateY(getTranslateY() + 400);
-                return;
-            }
-
-            if (code == KeyCode.PAGE_DOWN || code == KeyCode.SPACE) {
-                setTranslateY(getTranslateY() - 400);
-                return;
-            }
-
-            // 回到中心
-            if (shortcutDown && code == KeyCode.G) {
-                setTranslateX(0);
-                setTranslateY(0);
-                return;
-            }
-
-            if (shortcutDown) {
-                if (code == KeyCode.DIGIT0) {
-                    changeScale(1.0);
-                } else if (code == KeyCode.MINUS) {
-                    changeScale(getScaleX() - 0.1);
-                } else if (code == KeyCode.EQUALS) {
-                    changeScale(getScaleX() + 0.1);
-                }
-            }
-        });
     }
 
     /**
@@ -127,13 +50,72 @@ public class Subject extends StackPane {
      *
      * @param scale
      */
-    private void changeScale(Double scale) {
+    public void changeScale(Double scale) {
         scale = Math.round(scale * 10.0) / 10.0;
-        scale = Math.max(0.1, Math.min(scale, 3.0));
+        scale = Math.max(0.5, Math.min(scale, 2.0));
         setScaleX(scale);
         setScaleY(scale);
+        constrainTranslation();
 
         MessageUtil.showScale(scale);
+    }
+
+    /**
+     * 限制 Subject 的移动
+     */
+    public void constrainTranslation() {
+        double dx = 0, dy = 0;
+        // 父容器视口大小
+        Bounds parentBounds = getParent().getLayoutBounds();
+        double parentWidth = parentBounds.getWidth();
+        double parentHeight = parentBounds.getHeight();
+        // Subject（包含所有子节点）在父容器中的实际边界
+        Bounds subjectBounds = getBoundsInParent();
+
+        //        |                 |
+        // 视口的左边缘（0） 视口的右边缘（parentWidth）
+        //         |                    |
+        //  Subject 的左边缘（10） Subject 的右边缘（parentWidth+10）
+        // - subjectBounds.getMinX()后 Subject 左边缘与视口的左边缘重合
+        //        |        |            |
+        // 视口的左边缘（0） 200 视口的右边缘（parentWidth）
+        //                  |                     |
+        //          Subject 的左边缘（210） Subject 的右边缘（parentWidth+210）
+        // 调整后 Subject 左边缘与 SizeConstants.TRANSLATE_OFFSET 重合，中间存在 SizeConstants.TRANSLATE_OFFSET 的间隔
+
+        // 变小后，四周的间隔要变大
+        // 0 200         800 1000
+        // 0     400 600     1000
+        double translateOffset = getScaleX() < 1 ? SizeConstants.TRANSLATE_OFFSET / getScaleX() : SizeConstants.TRANSLATE_OFFSET;
+        if (translateOffset < subjectBounds.getMinX()) {
+            dx = translateOffset - subjectBounds.getMinX();
+        } else if (subjectBounds.getMaxX() < parentWidth - translateOffset) {
+            dx = parentWidth - translateOffset - subjectBounds.getMaxX();
+        }
+        if (translateOffset < subjectBounds.getMinY()) {
+            dy = translateOffset - subjectBounds.getMinY();
+        } else if (subjectBounds.getMaxY() < parentHeight - translateOffset) {
+            dy = parentHeight - translateOffset - subjectBounds.getMaxY();
+        }
+
+        setTranslateX(getTranslateX() + dx);
+        setTranslateY(getTranslateY() + dy);
+    }
+
+    public void constrainTranslationY() {
+        double dy = 0;
+        Bounds parentBounds = getParent().getLayoutBounds();
+        double parentHeight = parentBounds.getHeight();
+        Bounds subjectBounds = getBoundsInParent();
+
+        double translateOffset = SizeConstants.TRANSLATE_OFFSET / getScaleX();
+        if (translateOffset < subjectBounds.getMinY()) {
+            dy = translateOffset - subjectBounds.getMinY();
+        } else if (subjectBounds.getMaxY() < parentHeight - translateOffset) {
+            dy = parentHeight - translateOffset - subjectBounds.getMaxY();
+        }
+
+        setTranslateY(getTranslateY() + dy);
     }
 
     //———————————————————————————————————————————节点———————————————————————————————————————————
