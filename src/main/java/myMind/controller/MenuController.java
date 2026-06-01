@@ -13,6 +13,7 @@ import myMind.model.NodeModel;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -56,28 +57,33 @@ public class MenuController {
         }
     }
 
-    /**
-     * 加载最近文件
-     */
     @FXML
-    public void initialize() {
-        recentFilesMenu.setOnShowing(event -> loadRecentFiles());
-    }
-
     private void loadRecentFiles() {
         ObservableList<MenuItem> items = recentFilesMenu.getItems();
         items.clear();
 
-        LinkedList<String> recentFiles = fileHandler.getRecentFiles();
+        LinkedList<String> recentFiles = FileHandler.getRecentFiles();
         if (recentFiles.isEmpty()) {
             items.add(new MenuItem("无最近文件"));
             return;
         }
 
-        for (String recentFile : recentFiles) {
-            MenuItem menuItem = new MenuItem(recentFile);
-            menuItem.setOnAction(event -> fileHandler.loadFile(new File(dirFiles + recentFile)));
-            items.add(menuItem);
+        Iterator<String> iterator = recentFiles.iterator();
+        boolean changed = false;
+        while (iterator.hasNext()) {
+            String[] split = iterator.next().split("=");
+            File file = new File(split[1]);
+            if (file.exists()) {
+                MenuItem menuItem = new MenuItem(split[0]);
+                menuItem.setOnAction(event -> fileHandler.loadFile(file));
+                items.add(menuItem);
+            } else {
+                iterator.remove();
+                changed = true;
+            }
+        }
+        if (changed) {
+            fileHandler.saveRecentFiles();
         }
     }
 
@@ -87,9 +93,10 @@ public class MenuController {
         String title = stage.getTitle();
         // 没有保存过，就保存到新建文件，并设置标题
         if (title == null) {
-            String fileName = saveAs();
-            if (fileName != null) {
-                stage.setTitle(fileName.substring(0, fileName.length() - 3));
+            File file = saveAs();
+            if (file != null) {
+                stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
+                fileHandler.addRecentFile(file);
             }
         } else {
             File file = new File(dirFiles + title + ".mm");
@@ -98,14 +105,15 @@ public class MenuController {
     }
 
     @FXML
-    public String saveAs() {
+    public File saveAs() {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File(dirFiles));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showSaveDialog(subjectController.getSubject().getScene().getWindow());
+        // 取消时，file 为 null
         if (file != null) {
             fileHandler.saveFile(file);
-            return file.getName();
+            return file;
         }
 
         return null;

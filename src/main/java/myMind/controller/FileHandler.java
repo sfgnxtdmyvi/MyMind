@@ -38,16 +38,15 @@ public class FileHandler {
     @Getter
     private static String dirImage;
     private static String dirRecentFiles;
-    private static String dirFiles;
 
     static {
         ResourceBundle config = ResourceBundle.getBundle("config");
         dirImage = config.getString("directory.images");
         dirRecentFiles = config.getString("directory.recent_files");
-        dirFiles = config.getString("directory.files");
     }
 
-    private LinkedList<String> recentFiles;
+    @Getter
+    private static LinkedList<String> recentFiles;
 
     public FileHandler(MindMap mindMap) {
         this.mindMap = mindMap;
@@ -193,7 +192,7 @@ public class FileHandler {
             subjectController.adjustXY();
         }
 
-        addRecentFile(file.getPath().replace(dirFiles, ""));
+        addRecentFile(file);
     }
 
     private void loadNode(JSONObject json, MindNode node) {
@@ -382,37 +381,33 @@ public class FileHandler {
     }
 
     //—————————————————————————————————————————最近打开—————————————————————————————————————————
-    private void addRecentFile(String fileName) {
-        LinkedList<String> recentFiles = getRecentFiles();
+    static {
+        recentFiles = new LinkedList<>();
+        File file = new File(dirRecentFiles);
 
-        recentFiles.remove(fileName);
-        recentFiles.addFirst(fileName);
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                recentFiles.add(line);
+            }
+        } catch (IOException e) {
+            MessageUtil.showMessage("读取失败：" + e.getMessage());
+        }
+    }
+
+    public void addRecentFile(File file) {
+        // 导图可能在多级目录下，不能通过根目录名 + file.getName()读取
+        String string = file.getName() + "=" + file.getAbsolutePath();
+        recentFiles.remove(string);
+        recentFiles.addFirst(string);
         if (recentFiles.size() > SizeConstants.MAX_RECENT_FILES) {
             recentFiles.removeLast();
         }
 
-        saveRecentFiles(recentFiles);
+        saveRecentFiles();
     }
 
-    public LinkedList<String> getRecentFiles() {
-        if (recentFiles == null) {
-            recentFiles = new LinkedList<>();
-            File file = new File(dirRecentFiles);
-
-            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    recentFiles.add(line);
-                }
-            } catch (IOException e) {
-                MessageUtil.showMessage("读取失败：" + e.getMessage());
-            }
-        }
-
-        return recentFiles;
-    }
-
-    private void saveRecentFiles(List<String> recentFiles) {
+    public void saveRecentFiles() {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(dirRecentFiles))) {
             for (String fileName : recentFiles) {
                 bw.write(fileName);
@@ -440,7 +435,7 @@ public class FileHandler {
     }
 
     public static void deleteImage(String imageName) {
-        File file = new File(dirImage +imageName);
+        File file = new File(dirImage + imageName);
         if (file.exists()) {
             file.delete();
         }
