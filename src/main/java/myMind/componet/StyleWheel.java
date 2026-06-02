@@ -19,8 +19,6 @@ public class StyleWheel extends Popup {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     public static StyleWheel getInstance() {

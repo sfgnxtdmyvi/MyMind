@@ -235,11 +235,31 @@ public class MindMap extends TabPane {
         getSelectionModel().select(tab);
 
         // todo 动态计算中心点
-//        Platform.runLater(() -> {
-//            double centerX = (getWidth() - SizeConstants.MIN_NODE_WIDTH) / 2.0;
-//            double centerY = getHeight() / 2.0 - SizeConstants.MIN_NODE_HEIGHT;
-//        });
         subjectController.initRootNode(670, 311);
+        subjectController.getRootNode().getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.isEmpty()) {
+                tab.setText(newValue);
+            } else {
+                tab.setText(subjectName);
+            }
+        });
+    }
+
+    public void addSubject(MindNode node) {
+        subjectController = new SubjectController();
+        subject = subjectController.getSubject();
+        MenuController.setSubjectController(subjectController);
+        StyleWheelArcController.setSubjectController(subjectController);
+
+        String subjectName = "主题" + (getTabs().size() + 1);
+        Tab tab = new Tab(subjectName);
+        tab.setContent(subject);
+
+        getTabs().add(tab);
+        getSelectionModel().select(tab);
+
+        // todo 动态计算中心点
+        subjectController.initRootNode(node);
         subjectController.getRootNode().getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty()) {
                 tab.setText(newValue);

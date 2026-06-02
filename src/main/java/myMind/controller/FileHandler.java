@@ -175,14 +175,11 @@ public class FileHandler {
         JSONObject json = readFile(file);
         // 加载主题
         for (int i = 0; i < json.size(); i++) {
-            mindMap.addSubject();
-            subjectController = mindMap.getSubjectController();
+            NodeModel rootModel = new NodeModel(670, 311, PosConstants.MIDDLE);
             JSONObject subject = json.getJSONObject(Integer.toString(i));
-
-            // 加载根节点
-            NodeModel rootModel = subjectController.getRootModel();
-            MindNode rootNode = subjectController.getRootNode();
-            loadNode(subject, rootNode);
+            MindNode node = buildNode(subject, rootModel);
+            mindMap.addSubject(node);
+            subjectController = mindMap.getSubjectController();
 
             // 加载子节点
             loadChildR(subject.getJSONObject("childrenR"), rootModel);
@@ -195,12 +192,59 @@ public class FileHandler {
         addRecentFile(file);
     }
 
-    private void loadNode(JSONObject json, MindNode node) {
-        // 文本样式
-        node.getTextArea().replaceText(json.getString("text"));
+    private void loadChildR(JSONObject children, NodeModel parentModel) {
+        if (children == null) {
+            return;
+        }
+
+        for (int i = 0; i < children.size(); i++) {
+            JSONObject json = children.getJSONObject(Integer.toString(i));
+
+            NodeModel model = new NodeModel(PosConstants.RIGHT);
+            parentModel.addChildR(model);
+            MindNode node = buildNode(json, model);
+            subjectController.addNode(node);
+
+            loadChildR(json.getJSONObject("childrenR"), model);
+        }
+    }
+
+    private void loadChildL(JSONObject children, NodeModel parentModel) {
+        if (children == null) {
+            return;
+        }
+
+        for (int i = 0; i < children.size(); i++) {
+            JSONObject json = children.getJSONObject(Integer.toString(i));
+
+            NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
+            parentModel.addChildL(model);
+            MindNode node = buildNode(json, model);
+            subjectController.addNode(node);
+
+            loadChildL(json.getJSONObject("childrenL"), model);
+        }
+    }
+
+    private MindNode buildNode(JSONObject json, NodeModel model) {
+        String imageName = json.getString("imageName");
+        MindNode node;
+        if (imageName != null) {
+            node = new MindNode(model, imageName, json.getDouble("imageWidth"), json.getDouble("imageHeight"), buildTextArea(json));
+        } else {
+            node = new MindNode(model, buildTextArea(json));
+        }
+        return node;
+    }
+
+    private StyleClassedTextArea buildTextArea(JSONObject json) {
+        StyleClassedTextArea textArea = new StyleClassedTextArea();
+        textArea.getStyleClass().add("text-area");
+        textArea.setWrapText(true);
+        textArea.replaceText(json.getString("text"));
+
         JSONArray styles = json.getJSONArray("styles");
         if (styles != null) {
-            StyleClassedTextArea textArea = node.getTextArea();
             for (int i = 0; i < styles.size(); i++) {
                 JSONObject styleItem = styles.getJSONObject(i);
                 JSONArray styleArray = styleItem.getJSONArray("style");
@@ -215,47 +259,7 @@ public class FileHandler {
             }
         }
 
-        // 图片
-        String imageName = json.getString("imageName");
-        if (imageName != null) {
-            node.loadImage(imageName, json.getDouble("imageWidth"), json.getDouble("imageHeight"));
-        }
-    }
-
-    private void loadChildR(JSONObject children, NodeModel parentModel) {
-        if (children == null) {
-            return;
-        }
-
-        for (int i = 0; i < children.size(); i++) {
-            JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
-
-            NodeModel model = new NodeModel(0, 0, PosConstants.RIGHT);
-            parentModel.addChildR(model);
-            MindNode node = new MindNode(model);
-            loadNode(jsonNode, node);
-            subjectController.addNode(node);
-
-            loadChildR(jsonNode.getJSONObject("childrenR"), model);
-        }
-    }
-
-    private void loadChildL(JSONObject children, NodeModel parentModel) {
-        if (children == null) {
-            return;
-        }
-
-        for (int i = 0; i < children.size(); i++) {
-            JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
-
-            NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
-            parentModel.addChildL(model);
-            MindNode node = new MindNode(model);
-            loadNode(jsonNode, node);
-            subjectController.addNode(node);
-
-            loadChildL(jsonNode.getJSONObject("childrenL"), model);
-        }
+        return textArea;
     }
 
     //—————————————————————————————————————————导入—————————————————————————————————————————
@@ -352,7 +356,7 @@ public class FileHandler {
         for (int i = 0; i < children.size() - 1; i++) {
             JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
 
-            NodeModel model = new NodeModel(0, 0, PosConstants.RIGHT);
+            NodeModel model = new NodeModel(PosConstants.RIGHT);
             parentModel.addChildR(model);
             MindNode node = new MindNode(model);
             importNode(jsonNode, node);

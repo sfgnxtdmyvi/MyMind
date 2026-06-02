@@ -34,6 +34,10 @@ public class NodeModel {
         this.pos = pos;
     }
 
+    public NodeModel(byte pos) {
+        this.pos = pos;
+    }
+
     //———————————————————————————————————————————增删———————————————————————————————————————————
     public void addChildR(NodeModel child) {
         childrenR.add(child);

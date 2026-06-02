@@ -1,6 +1,5 @@
 package myMind.componet;
 
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
@@ -31,7 +30,6 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.function.Consumer;
 
 @Data
@@ -41,12 +39,12 @@ public class MindNode extends StackPane {
     private NodeModel model;
     private Consumer<MindNodeEvent> onAction;
 
-    private final VBox contentBox;
+    private VBox contentBox;
     private String imageName;
-    private final ImageView image;
-    private final StackPane imageContainer;
-    private final Button closeButton;
-    private final StyleClassedTextArea textArea;
+    private ImageView image;
+    private StackPane imageContainer;
+    private Button closeButton;
+    private StyleClassedTextArea textArea;
 
     private Button addButtonR;
     private Button addButtonL;
@@ -60,30 +58,42 @@ public class MindNode extends StackPane {
     private double ratio;
 
     public MindNode(NodeModel model) {
-        this.model = model;
-
-        image = new ImageView();
-        image.setSmooth(true);
-
-        closeButton = new Button("✖");
-        closeButton.getStyleClass().add("close-button");
-        closeButton.setVisible(false);
-        StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
-
-        // StackPane 负责显示边框
-        // 只有 Region 及其子类才能通过 CSS 设置边框和背景
-        imageContainer = new StackPane(image, closeButton);
-        // 在一个会拉伸子节点的布局容器中，如果子节点没有设置最大尺寸限制，它会填满可用空间
-        imageContainer.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-        imageContainer.setVisible(false);
-        //true：组件会参与布局计算
-        //false：组件脱离布局管理
-        imageContainer.setManaged(false);
-
-        textArea = new StyleClassedTextArea();
+        buildImageContainer();
+        StyleClassedTextArea textArea = new StyleClassedTextArea();
         textArea.getStyleClass().add("text-area");
         textArea.setMaxWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
         textArea.setWrapText(true);
+
+        // 不能用 this()，它必须在第一行
+        // 用 this() 或 super() 时，不能使用任何实例字段
+        buildNode(model, textArea);
+    }
+
+    public MindNode(NodeModel model, StyleClassedTextArea textArea) {
+        buildImageContainer();
+        buildNode(model, textArea);
+    }
+
+    public MindNode(NodeModel model, String imageName, double imageWidth, double imageHeight, StyleClassedTextArea textArea) {
+        image = new ImageView(new Image(new File(FileHandler.getDirImage() + imageName).toURI().toString()));
+        image.setSmooth(true);
+        image.setFitWidth(imageWidth);
+        image.setFitHeight(imageHeight);
+        ratio = imageWidth / imageHeight;
+        this.imageName = imageName;
+        buildCloseButton();
+
+        imageContainer = new StackPane(image, closeButton);
+        imageContainer.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        imageContainer.setVisible(true);
+        imageContainer.setManaged(true);
+
+        buildNode(model, textArea);
+    }
+
+    private void buildNode(NodeModel model, StyleClassedTextArea textArea) {
+        this.model = model;
+        this.textArea = textArea;
 
         contentBox = new VBox();
         contentBox.setAlignment(Pos.CENTER);
@@ -113,6 +123,29 @@ public class MindNode extends StackPane {
         addListener();
     }
 
+    private void buildImageContainer() {
+        image = new ImageView();
+        image.setSmooth(true);
+        buildCloseButton();
+
+        // StackPane 负责显示边框
+        // 只有 Region 及其子类才能通过 CSS 设置边框和背景
+        imageContainer = new StackPane(image, closeButton);
+        // 在一个会拉伸子节点的布局容器中，如果子节点没有设置最大尺寸限制，它会填满可用空间
+        imageContainer.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        imageContainer.setVisible(false);
+        //true：组件会参与布局计算
+        //false：组件脱离布局管理
+        imageContainer.setManaged(false);
+    }
+
+    private void buildCloseButton() {
+        closeButton = new Button("✖");
+        closeButton.getStyleClass().add("close-button");
+        closeButton.setVisible(false);
+        StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
+    }
+
     public void addButtonL(ObservableList<Node> children) {
         addButtonL = new Button("✚");
         addButtonL.getStyleClass().add("action-button");
@@ -129,17 +162,6 @@ public class MindNode extends StackPane {
         StackPane.setAlignment(addButtonR, Pos.CENTER_RIGHT);
         addButtonR.setTranslateX(8);
         children.add(addButtonR);
-    }
-
-    public void loadImage(String imageName, double imageWidth, double imageHeight) {
-        this.imageName = imageName;
-        ratio = imageWidth / imageHeight;
-
-        imageContainer.setVisible(true);
-        imageContainer.setManaged(true);
-        image.setImage(new Image(new File(FileHandler.getDirImage() + imageName).toURI().toString()));
-        image.setFitWidth(imageWidth);
-        image.setFitHeight(imageHeight);
     }
 
     public void importImage(String imageName, double imageWidth, double imageHeight) {
@@ -168,8 +190,8 @@ public class MindNode extends StackPane {
         addImageListener();
 
         // 文本变化调整节点大小
-        textArea.textProperty().addListener((obs, oldText, newText) ->
-                Platform.runLater(this::adjust));
+        textArea.textProperty()
+                .addListener((obs, oldText, newText) -> adjust());
     }
 
     /**
@@ -431,35 +453,4 @@ public class MindNode extends StackPane {
         model.setNodeHeight(nodeHeight);
     }
 
-    public void copyStyles(MindNode cloneNode, MindNode originalNode) {
-        StyleClassedTextArea originalTextArea = originalNode.getTextArea();
-        int length = originalTextArea.getLength();
-        if (length == 0) {
-            return;
-        }
-
-        StyleClassedTextArea cloneTextArea = cloneNode.getTextArea();
-        cloneTextArea.replaceText(originalTextArea.getText());
-        int start = 0;
-        Collection<String> lastStyles = originalTextArea.getStyleOfChar(0);
-
-        for (int i = 1; i < length; i++) {
-            Collection<String> currentStyles = originalTextArea.getStyleOfChar(i);
-
-            // 样式变化时保存前一段
-            if (!currentStyles.equals(lastStyles)) {
-                if (!lastStyles.isEmpty()) {
-                    cloneTextArea.setStyle(start, i, lastStyles);
-                }
-
-                lastStyles = currentStyles;
-                start = i;
-            }
-        }
-
-        // 由于最后一段不会变化，额外处理
-        if (!lastStyles.isEmpty()) {
-            cloneTextArea.setStyle(start, length, lastStyles);
-        }
-    }
 }

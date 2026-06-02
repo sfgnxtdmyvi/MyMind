@@ -8,12 +8,14 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.QuadCurve;
 import lombok.Data;
 import myMind.componet.MindNode;
-import myMind.model.NodeModel;
 import myMind.componet.Subject;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
+import myMind.model.NodeModel;
 import myMind.util.CloneNodeUtil;
+import org.fxmisc.richtext.StyleClassedTextArea;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,11 @@ public class SubjectController {
     public void initRootNode(double centerX, double centerY) {
         rootModel = new NodeModel(centerX, centerY, PosConstants.MIDDLE);
         addNode(rootModel);
+    }
+
+    public void initRootNode(MindNode node) {
+        rootModel = node.getModel();
+        addNode(node);
     }
 
     public void addChildR() {
@@ -181,17 +188,19 @@ public class SubjectController {
         );
 
         MindNode originalNode = getNode(originalModel);
-        MindNode cloneNode = new MindNode(cloneModel);
+        MindNode cloneNode;
+
+        String imageName = originalNode.getImageName();
+        if (imageName != null) {
+            ImageView image = originalNode.getImage();
+            cloneNode = new MindNode(cloneModel, imageName, image.getFitWidth(), image.getFitHeight(), buildTextArea(originalNode.getTextArea()));
+            cloneNode.getTextArea().setVisible(originalNode.getTextArea().isVisible());
+        } else {
+            cloneNode = new MindNode(cloneModel, buildTextArea(originalNode.getTextArea()));
+        }
         cloneModel.setNodeWidth(originalModel.getNodeWidth());
         cloneModel.setNodeHeight(originalModel.getNodeHeight());
-        String imageName = originalNode.getImageName();
-        ImageView image = originalNode.getImage();
 
-        if (imageName != null) {
-            cloneNode.loadImage(imageName, image.getFitWidth(), image.getFitHeight());
-            cloneNode.getTextArea().setVisible(originalNode.getTextArea().isVisible());
-        }
-        originalNode.copyStyles(cloneNode, originalNode);
         // 不能在复制时，直接添加到 subject 中，如果后面没有粘贴，会导致内存泄漏
         CloneNodeUtil.putMap(cloneModel, cloneNode);
 
@@ -223,6 +232,46 @@ public class SubjectController {
         }
 
         return cloneNode;
+    }
+
+    private StyleClassedTextArea buildTextArea(StyleClassedTextArea originalTextArea) {
+        StyleClassedTextArea textArea = new StyleClassedTextArea();
+        textArea.getStyleClass().add("text-area");
+        textArea.setWrapText(true);
+
+        int length = originalTextArea.getLength();
+        if (length == 0) {
+            textArea.setMaxWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
+            return textArea;
+        }
+
+        textArea.setMaxHeight(originalTextArea.getMaxHeight());
+        textArea.setMaxWidth(originalTextArea.getMaxWidth());
+        textArea.replaceText(originalTextArea.getText());
+        // 样式
+        int start = 0;
+        Collection<String> lastStyles = originalTextArea.getStyleOfChar(0);
+
+        for (int i = 1; i < length; i++) {
+            Collection<String> currentStyles = originalTextArea.getStyleOfChar(i);
+
+            // 样式变化时保存前一段
+            if (!currentStyles.equals(lastStyles)) {
+                if (!lastStyles.isEmpty()) {
+                    textArea.setStyle(start, i, lastStyles);
+                }
+
+                lastStyles = currentStyles;
+                start = i;
+            }
+        }
+
+        // 由于最后一段不会变化，额外处理
+        if (!lastStyles.isEmpty()) {
+            textArea.setStyle(start, length, lastStyles);
+        }
+
+        return textArea;
     }
 
     public void cut() {
@@ -555,13 +604,13 @@ public class SubjectController {
     private void adjustR(NodeModel model) {
         adjustChildrenXR(model);
         adjustChildrenYR();
-        refreshLinesL();
+        refreshLinesR();
     }
 
     private void adjustL(NodeModel model) {
         adjustChildrenXL(model);
         adjustChildrenYL();
-        refreshLinesR();
+        refreshLinesL();
     }
 
     public void adjustChildrenXR(NodeModel parentModel) {
