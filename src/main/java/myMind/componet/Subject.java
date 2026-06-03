@@ -3,6 +3,7 @@ package myMind.componet;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.QuadCurve;
@@ -43,6 +44,16 @@ public class Subject extends StackPane {
         linesLayerR.setMouseTransparent(true);
         nodesLayer.setMouseTransparent(false);
         getChildren().addAll(linesLayerL, linesLayerR, nodesLayer);
+        // 阻止焦点从 textArea 转移出去，导致清空选区，进行无法唤出样式轮盘
+        // 不能用空处理器，如果事件冒泡给 TabPane，在 setOnMousePressed 之前就会获取焦点
+        setOnMousePressed(e -> {
+            //PRIMARY = 左键
+            //SECONDARY = 右键
+            //MIDDLE = 滚轮
+            if (e.getButton() == MouseButton.SECONDARY) {
+                e.consume();
+            }
+        });
     }
 
     /**

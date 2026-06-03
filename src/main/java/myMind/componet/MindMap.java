@@ -124,6 +124,7 @@ public class MindMap extends TabPane {
 
         // 防止被 StyleClassedTextArea 阻止事件
         root.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> {
+            event.consume();
             MindNode selectedNode = subjectController.getSelectedNode();
             if (selectedNode == null) {
                 return;
@@ -134,7 +135,6 @@ public class MindMap extends TabPane {
                 // 默认将 content 的左上角放到 (x, y) 处，所以加上偏移，使轮盘居中
                 styleWheel.show(stage, event.getScreenX() - 125, event.getScreenY() - 125);
             }
-            event.consume();
         });
 
         addTranslateListener();
@@ -157,13 +157,9 @@ public class MindMap extends TabPane {
         });
 
         setOnMousePressed(e -> {
-            //PRIMARY = 左键
-            //SECONDARY = 右键
-            //MIDDLE = 滚轮
-            if (e.getButton() == MouseButton.PRIMARY) {
-                subject.setDragStartX(e.getSceneX());
-                subject.setDragStartY(e.getSceneY());
-            }
+            subject.setDragStartX(e.getSceneX());
+            subject.setDragStartY(e.getSceneY());
+            e.consume();
         });
 
         setOnMouseDragged(e -> {

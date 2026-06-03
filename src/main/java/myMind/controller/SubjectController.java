@@ -326,7 +326,8 @@ public class SubjectController {
 
             adjustR(cloneModel);
         } else {
-            cloneModel.setX(calculateChildXL(selectedModel));
+            // calculateChildXL 算的是新增空节点的 x 坐标
+            cloneModel.setX(selectedModel.getX() - SizeConstants.NODE_GAP_X - cloneModel.getNodeWidth());
 
             // selectedModel 与 cloneModel 的 pos 不一致时，需要移动
             if (cloneModel.getPos() == PosConstants.RIGHT) {
@@ -375,7 +376,7 @@ public class SubjectController {
             adjustR(cloneModel);
         } else {
             int index = parentModel.getChildrenL().indexOf(selectedModel);
-            cloneModel.setX(calculateChildXL(parentModel));
+            cloneModel.setX(parentModel.getX() - SizeConstants.NODE_GAP_X - cloneModel.getNodeWidth());
 
             if (cloneModel.getPos() == PosConstants.RIGHT) {
                 cloneModel.setParent(parentModel);
