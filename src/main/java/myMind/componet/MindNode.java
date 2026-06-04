@@ -18,8 +18,7 @@ import lombok.EqualsAndHashCode;
 import myMind.constants.MindNodeEvent;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
-import myMind.controller.FileHandler;
-import myMind.model.NodeModel;
+import myMind.util.FileHandler;
 import myMind.util.MeasureTextUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
@@ -30,13 +29,23 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Data
 // 从 nodesLayer 中 remove 时，要用到 equals，不能依赖可变的属性
-@EqualsAndHashCode(of = "model")
+@EqualsAndHashCode(of = "nodeId")
 public class MindNode extends StackPane {
-    private NodeModel model;
+    private final String nodeId = UUID.randomUUID().toString();
+
+    //节点之间的关系
+    private byte pos;
+    private MindNode nodeParent;
+    private final List<MindNode> childrenR = new ArrayList<>();
+    private final List<MindNode> childrenL = new ArrayList<>();
+
     private Consumer<MindNodeEvent> onAction;
 
     private VBox contentBox;
@@ -50,6 +59,7 @@ public class MindNode extends StackPane {
     private Button addButtonL;
 
     // 拖拽缩放相关变量
+    // todo 常量类
     private static final double RESIZE_THRESHOLD = 10.0;
     private static final double BUTTON_THRESHOLD = 15.0;
     private boolean isResizing = false;
@@ -57,7 +67,8 @@ public class MindNode extends StackPane {
     private double startWidth;
     private double ratio;
 
-    public MindNode(NodeModel model) {
+    public MindNode(byte pos) {
+        this.pos = pos;
         buildImageContainer();
         StyleClassedTextArea textArea = new StyleClassedTextArea();
         textArea.getStyleClass().add("text-area");
@@ -66,15 +77,23 @@ public class MindNode extends StackPane {
 
         // 不能用 this()，它必须在第一行
         // 用 this() 或 super() 时，不能使用任何实例字段
-        buildNode(model, textArea);
+        buildNode(textArea);
     }
 
-    public MindNode(NodeModel model, StyleClassedTextArea textArea) {
+    public MindNode(byte pos, double x, double y) {
+        this(pos);
+        setLayoutX(x);
+        setLayoutY(y);
+    }
+
+    public MindNode(byte pos, StyleClassedTextArea textArea) {
+        this.pos = pos;
         buildImageContainer();
-        buildNode(model, textArea);
+        buildNode(textArea);
     }
 
-    public MindNode(NodeModel model, String imageName, double imageWidth, double imageHeight, StyleClassedTextArea textArea) {
+    public MindNode(byte pos, String imageName, double imageWidth, double imageHeight, StyleClassedTextArea textArea) {
+        this.pos = pos;
         image = new ImageView(new Image(new File(FileHandler.getDirImage() + imageName).toURI().toString()));
         image.setSmooth(true);
         image.setFitWidth(imageWidth);
@@ -88,11 +107,10 @@ public class MindNode extends StackPane {
         imageContainer.setVisible(true);
         imageContainer.setManaged(true);
 
-        buildNode(model, textArea);
+        buildNode(textArea);
     }
 
-    private void buildNode(NodeModel model, StyleClassedTextArea textArea) {
-        this.model = model;
+    private void buildNode(StyleClassedTextArea textArea) {
         this.textArea = textArea;
 
         contentBox = new VBox();
@@ -102,7 +120,6 @@ public class MindNode extends StackPane {
         ObservableList<Node> children = getChildren();
         children.add(contentBox);
 
-        byte pos = model.getPos();
         if (pos != PosConstants.LEFT) {
             addButtonR(children);
         }
@@ -111,14 +128,8 @@ public class MindNode extends StackPane {
         }
 
         getStyleClass().add("node");
-        model.setNodeWidth(SizeConstants.MIN_NODE_WIDTH);
-        model.setNodeHeight(SizeConstants.MIN_NODE_HEIGHT);
-
-        // view 绑定 model
-        layoutXProperty().bind(model.xProperty());
-        layoutYProperty().bind(model.yProperty());
-        prefWidthProperty().bind(model.nodeWidthProperty());
-        prefHeightProperty().bind(model.nodeHeightProperty());
+        setPrefWidth(SizeConstants.MIN_NODE_WIDTH);
+        setPrefHeight(SizeConstants.MIN_NODE_HEIGHT);
 
         addListener();
     }
@@ -164,17 +175,6 @@ public class MindNode extends StackPane {
         children.add(addButtonR);
     }
 
-    public void importImage(String imageName, double imageWidth, double imageHeight) {
-        this.imageName = imageName;
-        ratio = imageWidth / imageHeight;
-
-        imageContainer.setVisible(true);
-        imageContainer.setManaged(true);
-        image.setImage(new Image(new File("C:\\Users\\k8255\\AppData\\Roaming\\MindLine\\Images\\" + imageName).toURI().toString()));
-        image.setFitWidth(imageWidth);
-        image.setFitHeight(imageHeight);
-    }
-
     private void addListener() {
         // 使用 addEventFilter 的话，OnMouseClicked 的默认行为会让 MindNode 获得焦点，TextArea 就会失去焦点
         // 添加 e.consume() 的话，能阻止 OnMouseClicked 的默认行为，但是 addButton 就不会触发
@@ -199,7 +199,6 @@ public class MindNode extends StackPane {
      */
     private void addAddBtnListener() {
         // 鼠标移入左右中心点时，显示添加按钮
-        byte pos = model.getPos();
         if (pos == PosConstants.RIGHT) {
             addButtonListenR();
         }
@@ -370,10 +369,10 @@ public class MindNode extends StackPane {
                 textArea.setMaxWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
                 textArea.setVisible(true);
                 textArea.requestFocus();
-                model.setNodeHeight(model.getNodeHeight() + SizeConstants.MIN_TEXTAREA_HEIGHT);
-                model.setY(model.getY() - SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
+                setPrefHeight(getPrefHeight() + SizeConstants.MIN_TEXTAREA_HEIGHT);
+                setLayoutY(getLayoutY() - SizeConstants.HALF_MIN_TEXTAREA_HEIGHT);
 
-                if (model.getPos() == PosConstants.RIGHT) {
+                if (pos == PosConstants.RIGHT) {
                     onAction.accept(MindNodeEvent.ADJUST_YR);
                 } else {
                     onAction.accept(MindNodeEvent.ADJUST_YL);
@@ -398,8 +397,8 @@ public class MindNode extends StackPane {
         adjustSize();
 
         // 调整位置
-        if (model.getPos() == PosConstants.LEFT) {
-            model.setX(model.getX() - (getPrefWidth() - oldWidth));
+        if (pos == PosConstants.LEFT) {
+            setLayoutX(getLayoutX() - (getPrefWidth() - oldWidth));
             onAction.accept(MindNodeEvent.ADJUST_L);
         } else {
             onAction.accept(MindNodeEvent.ADJUST_R);
@@ -445,12 +444,125 @@ public class MindNode extends StackPane {
         }
 
         // y 轴 - 高度变动的一半，让中心保持不变
-        model.setY(model.getY() - (nodeHeight - getPrefHeight()) / 2.0);
+        setLayoutY(getLayoutY() - (nodeHeight - getPrefHeight()) / 2.0);
 
         textArea.setMaxWidth(textWidth);
         textArea.setPrefHeight(textHeight);
-        model.setNodeWidth(nodeWidth);
-        model.setNodeHeight(nodeHeight);
+        setPrefWidth(nodeWidth);
+        setPrefHeight(nodeHeight);
+    }
+
+    //—————————————————————————————————————————增删—————————————————————————————————————————
+    public void addChildR(MindNode child) {
+        childrenR.add(child);
+        child.setNodeParent(this);
+    }
+
+    public void addChildL(MindNode child) {
+        childrenL.add(child);
+        child.setNodeParent(this);
+    }
+
+    public void addChildRAt(int index, MindNode child) {
+        childrenR.add(index, child);
+        child.setNodeParent(this);
+    }
+
+    public void addChildLAt(int index, MindNode child) {
+        childrenL.add(index, child);
+        child.setNodeParent(this);
+    }
+
+    public void removeChildR(MindNode child) {
+        childrenR.remove(child);
+        child.setNodeParent(null);
+    }
+
+    public void removeChildL(MindNode child) {
+        childrenL.remove(child);
+        child.setNodeParent(null);
+    }
+
+    //———————————————————————————————————————————宽高计算———————————————————————————————————————————
+
+    /**
+     * 子节点的总高度
+     * 所有子节点的高度 + 间隔
+     */
+    public double getChildrenHeightR() {
+        double totalHeight = 0;
+        for (MindNode child : childrenR) {
+            totalHeight += child.getHeightR();
+        }
+        totalHeight += SizeConstants.NODE_GAP_Y * (childrenR.size() - 1);
+        return totalHeight;
+    }
+
+    public double getChildrenHeightL() {
+        double totalHeight = 0;
+        for (MindNode child : childrenL) {
+            totalHeight += child.getHeightL();
+        }
+        totalHeight += SizeConstants.NODE_GAP_Y * (childrenL.size() - 1);
+        return totalHeight;
+    }
+
+    /**
+     * 节点的高度
+     * Math.max（当前节点的高度，子节点的总高度）
+     */
+    private double getHeightR() {
+        if (childrenR.isEmpty()) {
+            return getPrefHeight();
+        }
+        return Math.max(getPrefHeight(), getChildrenHeightR());
+    }
+
+    private double getHeightL() {
+        if (childrenL.isEmpty()) {
+            return getPrefHeight();
+        }
+        return Math.max(getPrefHeight(), getChildrenHeightL());
+    }
+
+    //———————————————————————————————————————————位置计算———————————————————————————————————————————
+    public double getStartYR() {
+        MindNode fistNode = childrenR.get(0);
+        if (!fistNode.childrenR.isEmpty()) {
+            // 当前节点可能比子节节点的总高度更高
+            return Math.min(fistNode.getLayoutY(), fistNode.getStartYR());
+        } else {
+            return fistNode.getLayoutY();
+        }
+    }
+
+    public double getStartYL() {
+        MindNode fistNode = childrenL.get(0);
+        if (!fistNode.childrenL.isEmpty()) {
+            return Math.min(fistNode.getLayoutY(), fistNode.getStartYL());
+        } else {
+            return fistNode.getLayoutY();
+        }
+    }
+
+    public double getEndYR() {
+        MindNode lastNode = childrenR.get(childrenR.size() - 1);
+        double selfEndY = lastNode.getLayoutY() + lastNode.getPrefHeight();
+        if (!lastNode.childrenR.isEmpty()) {
+            return Math.max(selfEndY, lastNode.getEndYR());
+        } else {
+            return selfEndY;
+        }
+    }
+
+    public double getEndYL() {
+        MindNode lastNode = childrenL.get(childrenL.size() - 1);
+        double selfEndY = lastNode.getLayoutY() + lastNode.getPrefHeight();
+        if (!lastNode.childrenL.isEmpty()) {
+            return Math.max(selfEndY, lastNode.getEndYL());
+        } else {
+            return selfEndY;
+        }
     }
 
 }

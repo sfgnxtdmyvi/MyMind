@@ -22,9 +22,6 @@
                 <MenuItem onAction="#save" text="保存" accelerator="Ctrl+S"/>
                 <MenuItem onAction="#saveAs" text="另存为" accelerator="Ctrl+Shift+S"/>
                 <SeparatorMenuItem mnemonicParsing="false"/>
-
-                <MenuItem onAction="#importMindMap" text="导入"/>
-                <MenuItem onAction="#importMindMapBatch" text="批量导入"/>
             </items>
         </Menu>
 

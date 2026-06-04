@@ -2,7 +2,9 @@ package myMind.componet;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -22,7 +24,7 @@ import javafx.stage.Stage;
 import lombok.Data;
 import myMind.Launch;
 import myMind.constants.SizeConstants;
-import myMind.controller.FileHandler;
+import myMind.util.FileHandler;
 import myMind.controller.MenuController;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
@@ -111,7 +113,10 @@ public class MindMap extends TabPane {
         stage.setOnCloseRequest(event -> {
             if (filePath == null) {
                 for (Tab tab : getTabs()) {
-                    for (MindNode node : ((Subject) tab.getContent()).getModelToView().values()) {
+
+                    ObservableList<Node> children = ((Subject) tab.getContent()).getNodesLayer().getChildren();
+                    for (Node child : children) {
+                        MindNode node = (MindNode) child;
                         FileHandler.deleteImage(node.getImageName());
                     }
                 }
@@ -290,6 +295,8 @@ public class MindMap extends TabPane {
         Tab tab = addTab();
 
         subjectController.initRootNode(node);
+        node.setLayoutX(670);
+        node.setLayoutY(311);
         StyleClassedTextArea textArea = node.getTextArea();
         if (!textArea.getText().isEmpty()) {
             tab.setText(textArea.getText());

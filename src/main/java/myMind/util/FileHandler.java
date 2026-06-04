@@ -1,4 +1,4 @@
-package myMind.controller;
+package myMind.util;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
@@ -7,13 +7,15 @@ import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import lombok.Getter;
-import myMind.componet.MindMap;
 import myMind.componet.MindNode;
+import myMind.controller.MenuController;
+import myMind.controller.StyleWheelArcController;
+import myMind.controller.SubjectController;
+import myMind.componet.MindMap;
 import myMind.componet.Subject;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
-import myMind.model.NodeModel;
-import myMind.util.MessageUtil;
+
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import javax.imageio.ImageIO;
@@ -85,15 +87,14 @@ public class FileHandler {
         JSONObject json = readFile(file);
         // 加载主题
         for (int i = 0; i < json.size(); i++) {
-            NodeModel rootModel = new NodeModel(670, 311, PosConstants.MIDDLE);
             JSONObject subject = json.getJSONObject(Integer.toString(i));
-            MindNode rootNode = buildNode(subject, rootModel);
+            MindNode rootNode = buildNode(subject, PosConstants.MIDDLE);
             mindMap.addSubject(rootNode);
             subjectController = mindMap.getSubjectController();
 
             // 加载子节点
-            loadChildR(subject.getJSONObject("childrenR"), rootModel);
-            loadChildL(subject.getJSONObject("childrenL"), rootModel);
+            loadChildR(subject.getJSONObject("childrenR"), rootNode);
+            loadChildL(subject.getJSONObject("childrenL"), rootNode);
 
             subjectController.adjustChildrenSize();
             subjectController.adjustXY();
@@ -112,47 +113,45 @@ public class FileHandler {
         addRecentFile(file);
     }
 
-    private void loadChildR(JSONObject children, NodeModel parentModel) {
-        if (children == null) {
+    private void loadChildR(JSONObject json, MindNode parentNode) {
+        if (json == null) {
             return;
         }
 
-        for (int i = 0; i < children.size(); i++) {
-            JSONObject json = children.getJSONObject(Integer.toString(i));
+        for (int i = 0; i < json.size(); i++) {
+            JSONObject childrenJson = json.getJSONObject(Integer.toString(i));
 
-            NodeModel model = new NodeModel(PosConstants.RIGHT);
-            parentModel.addChildR(model);
-            MindNode node = buildNode(json, model);
+            MindNode node = buildNode(childrenJson, PosConstants.RIGHT);
+            parentNode.addChildR(node);
             subjectController.addNode(node);
 
-            loadChildR(json.getJSONObject("childrenR"), model);
+            loadChildR(childrenJson.getJSONObject("childrenR"), node);
         }
     }
 
-    private void loadChildL(JSONObject children, NodeModel parentModel) {
-        if (children == null) {
+    private void loadChildL(JSONObject json, MindNode parentNode) {
+        if (json == null) {
             return;
         }
 
-        for (int i = 0; i < children.size(); i++) {
-            JSONObject json = children.getJSONObject(Integer.toString(i));
+        for (int i = 0; i < json.size(); i++) {
+            JSONObject childrenJson = json.getJSONObject(Integer.toString(i));
 
-            NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
-            parentModel.addChildL(model);
-            MindNode node = buildNode(json, model);
+            MindNode node = buildNode(childrenJson, PosConstants.LEFT);
+            parentNode.addChildL(node);
             subjectController.addNode(node);
 
-            loadChildL(json.getJSONObject("childrenL"), model);
+            loadChildL(childrenJson.getJSONObject("childrenL"), node);
         }
     }
 
-    private MindNode buildNode(JSONObject json, NodeModel model) {
+    private MindNode buildNode(JSONObject json, byte pos) {
         String imageName = json.getString("imageName");
         MindNode node;
         if (imageName != null) {
-            node = new MindNode(model, imageName, json.getDouble("imageWidth"), json.getDouble("imageHeight"), buildTextArea(json));
+            node = new MindNode(pos, imageName, json.getDouble("imageWidth"), json.getDouble("imageHeight"), buildTextArea(json));
         } else {
-            node = new MindNode(model, buildTextArea(json));
+            node = new MindNode(pos, buildTextArea(json));
         }
         return node;
     }
@@ -184,7 +183,7 @@ public class FileHandler {
 
     //—————————————————————————————————————————保存—————————————————————————————————————————
     public void saveFile(File file) {
-        JSONObject subjects = buildJson();
+        JSONObject subjects = saveSubjects();
 
         try (FileWriter fw = new FileWriter(file)) {
             fw.write(subjects.toString());
@@ -195,7 +194,7 @@ public class FileHandler {
     }
 
     public void saveFileScheduled(File file) {
-        JSONObject subjects = buildJson();
+        JSONObject subjects = saveSubjects();
 
         try (FileWriter fw = new FileWriter(file)) {
             fw.write(subjects.toString());
@@ -204,44 +203,71 @@ public class FileHandler {
         }
     }
 
-    private JSONObject buildJson() {
+    private JSONObject saveSubjects() {
         ObservableList<Tab> tabs = mindMap.getTabs();
         JSONObject subjects = new JSONObject();
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
             subjectController = ((Subject) tab.getContent()).getSubjectController();
-            NodeModel rootModel = subjectController.getRootModel();
+            MindNode rootNode = subjectController.getRootNode();
 
-            JSONObject subject = saveNode(rootModel);
-            saveChildrenR(subject, rootModel.getChildrenR());
-            saveChildrenL(subject, rootModel.getChildrenL());
+            JSONObject subject = saveNode(rootNode);
+            saveChildrenR(subject, rootNode.getChildrenR());
+            saveChildrenL(subject, rootNode.getChildrenL());
 
             subjects.put(Integer.toString(i), subject);
         }
         return subjects;
     }
 
-    private JSONObject saveNode(NodeModel model) {
+    private void saveChildrenR(JSONObject parentJson, List<MindNode> childrenR) {
+        if (!childrenR.isEmpty()) {
+            JSONObject childrenRJson = new JSONObject();
+            for (int i = 0; i < childrenR.size(); i++) {
+                MindNode node = childrenR.get(i);
+                JSONObject childJson = saveNode(node);
+                childrenRJson.put(Integer.toString(i), childJson);
+
+                saveChildrenR(childJson, node.getChildrenR());
+            }
+            parentJson.put("childrenR", childrenRJson);
+        }
+    }
+
+    private void saveChildrenL(JSONObject parentJson, List<MindNode> childrenL) {
+        if (!childrenL.isEmpty()) {
+            JSONObject childrenLJson = new JSONObject();
+            for (int i = 0; i < childrenL.size(); i++) {
+                MindNode node = childrenL.get(i);
+                JSONObject childJson = saveNode(node);
+                childrenLJson.put(Integer.toString(i), childJson);
+
+                saveChildrenL(childJson, node.getChildrenL());
+            }
+            parentJson.put("childrenL", childrenLJson);
+        }
+    }
+
+    private JSONObject saveNode(MindNode node) {
         JSONObject json = new JSONObject();
 
-        MindNode mindNode = subjectController.getNode(model);
         // 文本
-        StyleClassedTextArea textArea = mindNode.getTextArea();
+        StyleClassedTextArea textArea = node.getTextArea();
         String text = textArea.getText();
         json.put("text", text);
         // 样式
         if (!text.isEmpty()) {
-            JSONArray styles = extractStyles(textArea);
+            JSONArray styles = saveStyles(textArea);
             if (!styles.isEmpty()) {
                 json.put("styles", styles);
             }
         }
 
         // 图片
-        String imageName = mindNode.getImageName();
+        String imageName = node.getImageName();
         if (imageName != null) {
             json.put("imageName", imageName);
-            ImageView image = mindNode.getImage();
+            ImageView image = node.getImage();
             json.put("imageWidth", image.getFitWidth());
             json.put("imageHeight", image.getFitHeight());
         }
@@ -249,35 +275,7 @@ public class FileHandler {
         return json;
     }
 
-    private void saveChildrenR(JSONObject parentJson, List<NodeModel> childrenR) {
-        if (!childrenR.isEmpty()) {
-            JSONObject childrenRJson = new JSONObject();
-            for (int i = 0; i < childrenR.size(); i++) {
-                NodeModel childModel = childrenR.get(i);
-                JSONObject childJson = saveNode(childModel);
-                childrenRJson.put(Integer.toString(i), childJson);
-
-                saveChildrenR(childJson, childModel.getChildrenR());
-            }
-            parentJson.put("childrenR", childrenRJson);
-        }
-    }
-
-    private void saveChildrenL(JSONObject parentJson, List<NodeModel> childrenL) {
-        if (!childrenL.isEmpty()) {
-            JSONObject childrenLJson = new JSONObject();
-            for (int i = 0; i < childrenL.size(); i++) {
-                NodeModel childModel = childrenL.get(i);
-                JSONObject childJson = saveNode(childModel);
-                childrenLJson.put(Integer.toString(i), childJson);
-
-                saveChildrenL(childJson, childModel.getChildrenL());
-            }
-            parentJson.put("childrenL", childrenLJson);
-        }
-    }
-
-    public JSONArray extractStyles(StyleClassedTextArea textArea) {
+    public JSONArray saveStyles(StyleClassedTextArea textArea) {
         JSONArray styles = new JSONArray();
         int start = 0;
         Collection<String> lastStyles = textArea.getStyleOfChar(0);
@@ -343,113 +341,6 @@ public class FileHandler {
             }
         } catch (InterruptedException e) {
             scheduler.shutdownNow();
-        }
-    }
-
-    //—————————————————————————————————————————导入—————————————————————————————————————————
-
-    public void importFile(File file) {
-        JSONObject json = readFile(file);
-
-        importSubjet(json);
-
-        JSONObject subjects = json.getJSONObject("subjects");
-        if (subjects != null) {
-            for (int i = 0; i < subjects.size() - 1; i++) {
-                importSubjet(subjects.getJSONObject(Integer.toString(i)));
-            }
-        }
-        mindMap.getSelectionModel().select(0);
-    }
-
-    private void importSubjet(JSONObject json) {
-        mindMap.addSubject();
-        subjectController = mindMap.getSubjectController();
-
-        JSONObject rootJson = json.getJSONObject("root");
-        NodeModel rootModel = subjectController.getRootModel();
-        MindNode rootNode = subjectController.getRootNode();
-        importNode(rootJson, rootNode);
-
-        importChildR(rootJson.getJSONObject("children"), rootModel);
-        importChildL(rootJson.getJSONObject("children2"), rootModel);
-
-        subjectController.adjustChildrenSize();
-        subjectController.adjustXY();
-    }
-
-    private void importNode(JSONObject json, MindNode node) {
-        // 文本样式
-        node.getTextArea().replaceText(json.getString("text"));
-        JSONArray style = json.getJSONArray("style");
-        if (style != null) {
-            StyleClassedTextArea textArea = node.getTextArea();
-            for (int i = 0; i < style.size(); i++) {
-                JSONObject styleItem = style.getJSONObject(i);
-                Boolean bold = styleItem.getBoolean("bold");
-                List<String> styleList = new ArrayList<>();
-                String color = styleItem.getString("color");
-                if (bold != null) {
-                    styleList.add("bold-text");
-                } else if (color != null) {
-                    if (color.equals("#FF0000")) {
-                        styleList.add("red-text");
-                    } else if (color.equals("#FF8C00")) {
-                        styleList.add("orange-text");
-                    }
-                }
-
-                textArea.setStyle(styleItem.getIntValue("start"),
-                        styleItem.getIntValue("end"),
-                        styleList);
-            }
-        }
-
-        // 图片
-        String imageName = json.getString("imageName");
-        if (imageName != null) {
-            JSONObject imageSize = json.getJSONObject("imageResize");
-            if (imageSize == null) {
-                imageSize = json.getJSONObject("imageSize");
-            }
-            node.importImage(imageName, imageSize.getDouble("width"), imageSize.getDouble("height"));
-        }
-    }
-
-    private void importChildR(JSONObject children, NodeModel parentModel) {
-        if (children == null) {
-            return;
-        }
-
-        //children里有一个"objectClass": "NSArray"
-        for (int i = 0; i < children.size() - 1; i++) {
-            JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
-
-            NodeModel model = new NodeModel(PosConstants.RIGHT);
-            parentModel.addChildR(model);
-            MindNode node = new MindNode(model);
-            importNode(jsonNode, node);
-            subjectController.addNode(node);
-
-            importChildR(jsonNode.getJSONObject("children"), model);
-        }
-    }
-
-    private void importChildL(JSONObject children, NodeModel parentModel) {
-        if (children == null) {
-            return;
-        }
-
-        for (int i = 0; i < children.size() - 1; i++) {
-            JSONObject jsonNode = children.getJSONObject(Integer.toString(i));
-
-            NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
-            parentModel.addChildL(model);
-            MindNode node = new MindNode(model);
-            importNode(jsonNode, node);
-            subjectController.addNode(node);
-
-            importChildL(jsonNode.getJSONObject("children"), model);
         }
     }
 

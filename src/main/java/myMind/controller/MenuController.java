@@ -8,11 +8,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Setter;
 import myMind.componet.MindMap;
+import myMind.componet.MindNode;
 import myMind.constants.PosConstants;
-import myMind.model.NodeModel;
+import myMind.util.FileHandler;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -121,36 +121,36 @@ public class MenuController {
         }
     }
 
-    @FXML
-    private void importMindMap() {
-        FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File("C:\\Users\\k8255\\Documents\\MindLine"));
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
-        File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
-        if (file != null) {
-            fileHandler.importFile(file);
-        }
-    }
-
-    @FXML
-    private void importMindMapBatch() throws IOException {
-        File rootFile = new File("C:\\Users\\k8255\\Documents\\MindLine");
-        importMindMapBatch(rootFile);
-    }
-
-    private void importMindMapBatch(File parentFile) throws IOException {
-        for (File file : parentFile.listFiles()) {
-            if (file.isDirectory()) {
-                importMindMapBatch(file);
-            } else if (file.getName().endsWith(".mm")) {
-                fileHandler.importFile(file);
-                File saveFile = new File(dirFiles + file.getPath().replace("C:\\Users\\k8255\\Documents\\MindLine\\", ""));
-                saveFile.getParentFile().mkdirs();
-                saveFile.createNewFile();
-                fileHandler.saveFile(saveFile);
-            }
-        }
-    }
+//    @FXML
+//    private void importMindMap() {
+//        FileChooser fc = new FileChooser();
+//        fc.setInitialDirectory(new File("C:\\Users\\k8255\\Documents\\MindLine"));
+//        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
+//        File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
+//        if (file != null) {
+//            fileHandler.importFile(file);
+//        }
+//    }
+//
+//    @FXML
+//    private void importMindMapBatch() throws IOException {
+//        File rootFile = new File("C:\\Users\\k8255\\Documents\\MindLine");
+//        importMindMapBatch(rootFile);
+//    }
+//
+//    private void importMindMapBatch(File parentFile) throws IOException {
+//        for (File file : parentFile.listFiles()) {
+//            if (file.isDirectory()) {
+//                importMindMapBatch(file);
+//            } else if (file.getName().endsWith(".mm")) {
+//                fileHandler.importFile(file);
+//                File saveFile = new File(dirFiles + file.getPath().replace("C:\\Users\\k8255\\Documents\\MindLine\\", ""));
+//                saveFile.getParentFile().mkdirs();
+//                saveFile.createNewFile();
+//                fileHandler.saveFile(saveFile);
+//            }
+//        }
+//    }
 
     //—————————————————————————————————————————添加—————————————————————————————————————————
     @FXML
@@ -173,7 +173,7 @@ public class MenuController {
      */
     @FXML
     private void batchAddChildR() {
-        if (subjectController.getSelectedModel().getPos() == PosConstants.LEFT) {
+        if (subjectController.getSelectedNode().getPos() == PosConstants.LEFT) {
             return;
         }
         subjectController.addChildR();
@@ -185,7 +185,7 @@ public class MenuController {
 
     @FXML
     private void batchAddChildL() {
-        if (subjectController.getSelectedModel().getPos() == PosConstants.RIGHT) {
+        if (subjectController.getSelectedNode().getPos() == PosConstants.RIGHT) {
             return;
         }
         subjectController.addChildL();
@@ -232,43 +232,43 @@ public class MenuController {
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
     @FXML
     private void moveRight() {
-        NodeModel selectedModel = subjectController.getSelectedModel();
+        MindNode selectedNode = subjectController.getSelectedNode();
         // 左边节点 -> 父节点
         // 根、右边节点 -> 中间的右子节点
-        if (selectedModel.getPos() == PosConstants.LEFT) {
-            subjectController.setSelectedModel(selectedModel.getParent());
+        if (selectedNode.getPos() == PosConstants.LEFT) {
+            subjectController.setSelectedNode(selectedNode.getNodeParent());
         } else {
-            List<NodeModel> children = selectedModel.getChildrenR();
+            List<MindNode> children = selectedNode.getChildrenR();
             if (!children.isEmpty()) {
-                subjectController.setSelectedModel(children.get(children.size() / 2));
+                subjectController.setSelectedNode(children.get(children.size() / 2));
             }
         }
     }
 
     @FXML
     private void moveLeft() {
-        NodeModel selectedModel = subjectController.getSelectedModel();
+        MindNode selectedModel = subjectController.getSelectedNode();
         // 父节点 <- 右边节点
         // 中间的左子节点 <- 左边、根节点
         if (selectedModel.getPos() == PosConstants.RIGHT) {
-            subjectController.setSelectedModel(selectedModel.getParent());
+            subjectController.setSelectedNode(selectedModel.getNodeParent());
         } else {
-            List<NodeModel> children = selectedModel.getChildrenL();
+            List<MindNode> children = selectedModel.getChildrenL();
             if (!children.isEmpty()) {
-                subjectController.setSelectedModel(children.get(children.size() / 2));
+                subjectController.setSelectedNode(children.get(children.size() / 2));
             }
         }
     }
 
     @FXML
     private void moveUp() {
-        NodeModel selectedModel = subjectController.getSelectedModel();
+        MindNode selectedModel = subjectController.getSelectedNode();
         if (selectedModel.getPos() == PosConstants.MIDDLE) {
             return;
         }
 
-        NodeModel parentModel = selectedModel.getParent();
-        List<NodeModel> children;
+        MindNode parentModel = selectedModel.getNodeParent();
+        List<MindNode> children;
         if (selectedModel.getPos() == PosConstants.RIGHT) {
             children = parentModel.getChildrenR();
         } else {
@@ -276,20 +276,20 @@ public class MenuController {
         }
         int index = children.indexOf(selectedModel);
         if (index != 0) {
-            subjectController.setSelectedModel(children.get(index - 1));
+            subjectController.setSelectedNode(children.get(index - 1));
         }
     }
 
     @FXML
     private void moveDown() {
-        NodeModel selectedModel = subjectController.getSelectedModel();
+        MindNode selectedModel = subjectController.getSelectedNode();
 
         if (selectedModel.getPos() == PosConstants.MIDDLE) {
             return;
         }
 
-        NodeModel parentModel = selectedModel.getParent();
-        List<NodeModel> children;
+        MindNode parentModel = selectedModel.getNodeParent();
+        List<MindNode> children;
         if (selectedModel.getPos() == PosConstants.RIGHT) {
             children = parentModel.getChildrenR();
         } else {
@@ -297,7 +297,7 @@ public class MenuController {
         }
         int index = children.indexOf(selectedModel);
         if (index != children.size() - 1) {
-            subjectController.setSelectedModel(children.get(index + 1));
+            subjectController.setSelectedNode(children.get(index + 1));
         }
     }
 }

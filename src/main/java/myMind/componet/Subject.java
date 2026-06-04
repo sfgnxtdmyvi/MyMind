@@ -11,11 +11,7 @@ import lombok.Getter;
 import lombok.Setter;
 import myMind.constants.SizeConstants;
 import myMind.controller.SubjectController;
-import myMind.model.NodeModel;
 import myMind.util.MessageUtil;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Getter
 public class Subject extends StackPane {
@@ -28,7 +24,6 @@ public class Subject extends StackPane {
      */
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
-    private final Map<NodeModel, MindNode> modelToView = new HashMap<>();
     private final SubjectController subjectController;
 
     @Setter
@@ -132,21 +127,31 @@ public class Subject extends StackPane {
     //———————————————————————————————————————————节点———————————————————————————————————————————
     public void addNode(MindNode node) {
         nodesLayer.getChildren().add(node);
-        modelToView.put(node.getModel(), node);
     }
 
-    public void addClone(Map<NodeModel, MindNode> cloneMap) {
-        ObservableList<Node> children = nodesLayer.getChildren();
+    public void addClone(MindNode CloneNode) {
+        addNode(CloneNode);
+        addCloneChildrenR(CloneNode);
+        addCloneChildrenL(CloneNode);
+    }
 
-        for (Map.Entry<NodeModel, MindNode> entry : cloneMap.entrySet()) {
-            MindNode node = entry.getValue();
+    public void addCloneChildrenR(MindNode CloneNode) {
+        ObservableList<Node> children = nodesLayer.getChildren();
+        for (MindNode node : CloneNode.getChildrenR()) {
             children.add(node);
-            modelToView.put(entry.getKey(), node);
+            addCloneChildrenR(node);
         }
     }
 
-    public void remove(NodeModel model) {
-        MindNode node = modelToView.remove(model);
+    public void addCloneChildrenL(MindNode CloneNode) {
+        ObservableList<Node> children = nodesLayer.getChildren();
+        for (MindNode node :CloneNode.getChildrenL()) {
+            children.add(node);
+            addCloneChildrenL(node);
+        }
+    }
+
+    public void remove(MindNode node) {
         nodesLayer.getChildren().remove(node);
     }
 
