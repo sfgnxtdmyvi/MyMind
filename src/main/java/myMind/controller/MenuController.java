@@ -89,34 +89,36 @@ public class MenuController {
 
     @FXML
     private void save() {
-        Stage stage = (Stage) mindMap.getScene().getWindow();
-        // 没有保存过，就保存到新建文件，并设置标题
+        // 没有保存过，就保存到新建文件
         if (mindMap.getFilePath() == null) {
-            File file = saveAs();
-            if (file != null) {
-                stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
-                fileHandler.addRecentFile(file);
-            }
+            saveAs();
         } else {
-            File file = new File(mindMap.getFilePath());
-            fileHandler.saveFile(file);
+            fileHandler.saveFile(new File(mindMap.getFilePath()));
         }
     }
 
     @FXML
-    public File saveAs() {
+    public void saveAs() {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File(dirFiles));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         File file = fc.showSaveDialog(subjectController.getSubject().getScene().getWindow());
+
         // 取消时，file 为 null
         if (file != null) {
             fileHandler.saveFile(file);
-            mindMap.setFilePath(file.getAbsolutePath());
-            return file;
-        }
 
-        return null;
+            if (mindMap.getFilePath() != null) {
+                fileHandler.CancelSchedule(mindMap.getFilePath());
+            }
+            String absolutePath = file.getAbsolutePath();
+            fileHandler.scheduleAutoSave(absolutePath);
+
+            fileHandler.addRecentFile(file);
+            mindMap.setFilePath(absolutePath);
+            Stage stage = (Stage) mindMap.getScene().getWindow();
+            stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
+        }
     }
 
     @FXML

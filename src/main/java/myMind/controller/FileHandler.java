@@ -7,12 +7,12 @@ import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import lombok.Getter;
-import myMind.componet.MindNode;
-import myMind.model.NodeModel;
-import myMind.componet.Subject;
 import myMind.componet.MindMap;
+import myMind.componet.MindNode;
+import myMind.componet.Subject;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
+import myMind.model.NodeModel;
 import myMind.util.MessageUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
@@ -28,11 +28,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class FileHandler {
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(3);
+    private static final Map<String, ScheduledFuture<?>> fileSaveFutures = new ConcurrentHashMap<>();
 
-    private static SubjectController subjectController;
+    private SubjectController subjectController;
 
     private final MindMap mindMap;
     @Getter
@@ -52,8 +60,151 @@ public class FileHandler {
         this.mindMap = mindMap;
     }
 
+    //—————————————————————————————————————————打开—————————————————————————————————————————
+    private JSONObject readFile(File file) {
+        if (mindMap.getFilePath() != null) {
+            CancelSchedule(mindMap.getFilePath());
+        }
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                content.append(line);
+            }
+
+            mindMap.getTabs().clear();
+            Stage stage = (Stage) mindMap.getScene().getWindow();
+            stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
+        } catch (Exception e) {
+            MessageUtil.showMessage("读取失败：" + e.getMessage());
+        }
+        return JSONObject.parseObject(content.toString());
+    }
+
+    public void loadFile(File file) {
+        JSONObject json = readFile(file);
+        // 加载主题
+        for (int i = 0; i < json.size(); i++) {
+            NodeModel rootModel = new NodeModel(670, 311, PosConstants.MIDDLE);
+            JSONObject subject = json.getJSONObject(Integer.toString(i));
+            MindNode rootNode = buildNode(subject, rootModel);
+            mindMap.addSubject(rootNode);
+            subjectController = mindMap.getSubjectController();
+
+            // 加载子节点
+            loadChildR(subject.getJSONObject("childrenR"), rootModel);
+            loadChildL(subject.getJSONObject("childrenL"), rootModel);
+
+            subjectController.adjustChildrenSize();
+            subjectController.adjustXY();
+        }
+
+        Subject firstSubject = (Subject) mindMap.getTabs().get(0).getContent();
+        subjectController = firstSubject.getSubjectController();
+        mindMap.setSubjectController(subjectController);
+        mindMap.setSubject(firstSubject);
+        MenuController.setSubjectController(subjectController);
+        StyleWheelArcController.setSubjectController(subjectController);
+
+        String absolutePath = file.getAbsolutePath();
+        mindMap.setFilePath(absolutePath);
+        scheduleAutoSave(absolutePath);
+        addRecentFile(file);
+    }
+
+    private void loadChildR(JSONObject children, NodeModel parentModel) {
+        if (children == null) {
+            return;
+        }
+
+        for (int i = 0; i < children.size(); i++) {
+            JSONObject json = children.getJSONObject(Integer.toString(i));
+
+            NodeModel model = new NodeModel(PosConstants.RIGHT);
+            parentModel.addChildR(model);
+            MindNode node = buildNode(json, model);
+            subjectController.addNode(node);
+
+            loadChildR(json.getJSONObject("childrenR"), model);
+        }
+    }
+
+    private void loadChildL(JSONObject children, NodeModel parentModel) {
+        if (children == null) {
+            return;
+        }
+
+        for (int i = 0; i < children.size(); i++) {
+            JSONObject json = children.getJSONObject(Integer.toString(i));
+
+            NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
+            parentModel.addChildL(model);
+            MindNode node = buildNode(json, model);
+            subjectController.addNode(node);
+
+            loadChildL(json.getJSONObject("childrenL"), model);
+        }
+    }
+
+    private MindNode buildNode(JSONObject json, NodeModel model) {
+        String imageName = json.getString("imageName");
+        MindNode node;
+        if (imageName != null) {
+            node = new MindNode(model, imageName, json.getDouble("imageWidth"), json.getDouble("imageHeight"), buildTextArea(json));
+        } else {
+            node = new MindNode(model, buildTextArea(json));
+        }
+        return node;
+    }
+
+    private StyleClassedTextArea buildTextArea(JSONObject json) {
+        StyleClassedTextArea textArea = new StyleClassedTextArea();
+        textArea.getStyleClass().add("text-area");
+        textArea.setWrapText(true);
+        textArea.replaceText(json.getString("text"));
+
+        JSONArray styles = json.getJSONArray("styles");
+        if (styles != null) {
+            for (int i = 0; i < styles.size(); i++) {
+                JSONObject styleItem = styles.getJSONObject(i);
+                JSONArray styleArray = styleItem.getJSONArray("style");
+                List<String> styleList = new ArrayList<>();
+                for (int j = 0; j < styleArray.size(); j++) {
+                    styleList.add(styleArray.getString(j));
+                }
+
+                textArea.setStyle(styleItem.getIntValue("start"),
+                        styleItem.getIntValue("end"),
+                        styleList);
+            }
+        }
+
+        return textArea;
+    }
+
     //—————————————————————————————————————————保存—————————————————————————————————————————
     public void saveFile(File file) {
+        JSONObject subjects = buildJson();
+
+        try (FileWriter fw = new FileWriter(file)) {
+            fw.write(subjects.toString());
+            MessageUtil.showMessage("保存成功");
+        } catch (IOException e) {
+            MessageUtil.showMessage("保存失败：" + e.getMessage());
+        }
+    }
+
+    public void saveFileScheduled(File file) {
+        JSONObject subjects = buildJson();
+
+        try (FileWriter fw = new FileWriter(file)) {
+            fw.write(subjects.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private JSONObject buildJson() {
         ObservableList<Tab> tabs = mindMap.getTabs();
         JSONObject subjects = new JSONObject();
         for (int i = 0; i < tabs.size(); i++) {
@@ -67,13 +218,7 @@ public class FileHandler {
 
             subjects.put(Integer.toString(i), subject);
         }
-
-        try (FileWriter fw = new FileWriter(file)) {
-            fw.write(subjects.toString());
-            MessageUtil.showMessage("保存成功");
-        } catch (IOException e) {
-            MessageUtil.showMessage("保存失败：" + e.getMessage());
-        }
+        return subjects;
     }
 
     private JSONObject saveNode(NodeModel model) {
@@ -170,115 +315,38 @@ public class FileHandler {
         return styles;
     }
 
-    //—————————————————————————————————————————打开—————————————————————————————————————————
-    public void loadFile(File file) {
-        JSONObject json = readFile(file);
-        // 加载主题
-        for (int i = 0; i < json.size(); i++) {
-            NodeModel rootModel = new NodeModel(670, 311, PosConstants.MIDDLE);
-            JSONObject subject = json.getJSONObject(Integer.toString(i));
-            MindNode node = buildNode(subject, rootModel);
-            mindMap.addSubject(node);
-            subjectController = mindMap.getSubjectController();
+    //—————————————————————————————————————————定时保存—————————————————————————————————————————
 
-            // 加载子节点
-            loadChildR(subject.getJSONObject("childrenR"), rootModel);
-            loadChildL(subject.getJSONObject("childrenL"), rootModel);
-
-            subjectController.adjustChildrenSize();
-            subjectController.adjustXY();
-        }
-        mindMap.setFilePath(file.getAbsolutePath());
-        addRecentFile(file);
-    }
-
-    private void loadChildR(JSONObject children, NodeModel parentModel) {
-        if (children == null) {
+    public void scheduleAutoSave(String filePath) {
+        if (fileSaveFutures.containsKey(filePath)) {
             return;
         }
 
-        for (int i = 0; i < children.size(); i++) {
-            JSONObject json = children.getJSONObject(Integer.toString(i));
+        ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() ->
+                saveFileScheduled(new File(filePath)), 1, 1, TimeUnit.SECONDS);
+        fileSaveFutures.put(filePath, future);
+    }
 
-            NodeModel model = new NodeModel(PosConstants.RIGHT);
-            parentModel.addChildR(model);
-            MindNode node = buildNode(json, model);
-            subjectController.addNode(node);
-
-            loadChildR(json.getJSONObject("childrenR"), model);
+    public void CancelSchedule(String filePath) {
+        ScheduledFuture<?> future = fileSaveFutures.remove(filePath);
+        if (future != null) {
+            future.cancel(false);
         }
     }
 
-    private void loadChildL(JSONObject children, NodeModel parentModel) {
-        if (children == null) {
-            return;
-        }
-
-        for (int i = 0; i < children.size(); i++) {
-            JSONObject json = children.getJSONObject(Integer.toString(i));
-
-            NodeModel model = new NodeModel(0, 0, PosConstants.LEFT);
-            parentModel.addChildL(model);
-            MindNode node = buildNode(json, model);
-            subjectController.addNode(node);
-
-            loadChildL(json.getJSONObject("childrenL"), model);
-        }
-    }
-
-    private MindNode buildNode(JSONObject json, NodeModel model) {
-        String imageName = json.getString("imageName");
-        MindNode node;
-        if (imageName != null) {
-            node = new MindNode(model, imageName, json.getDouble("imageWidth"), json.getDouble("imageHeight"), buildTextArea(json));
-        } else {
-            node = new MindNode(model, buildTextArea(json));
-        }
-        return node;
-    }
-
-    private StyleClassedTextArea buildTextArea(JSONObject json) {
-        StyleClassedTextArea textArea = new StyleClassedTextArea();
-        textArea.getStyleClass().add("text-area");
-        textArea.setWrapText(true);
-        textArea.replaceText(json.getString("text"));
-
-        JSONArray styles = json.getJSONArray("styles");
-        if (styles != null) {
-            for (int i = 0; i < styles.size(); i++) {
-                JSONObject styleItem = styles.getJSONObject(i);
-                JSONArray styleArray = styleItem.getJSONArray("style");
-                List<String> styleList = new ArrayList<>();
-                for (int j = 0; j < styleArray.size(); j++) {
-                    styleList.add(styleArray.getString(j));
-                }
-
-                textArea.setStyle(styleItem.getIntValue("start"),
-                        styleItem.getIntValue("end"),
-                        styleList);
+    // ScheduledExecutorService 创建的是非守护线程，会阻止 JVM 自然退出，需要关闭
+    public void CancelSchedule() {
+        scheduler.shutdown();
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
             }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
         }
-
-        return textArea;
     }
 
     //—————————————————————————————————————————导入—————————————————————————————————————————
-    private JSONObject readFile(File file) {
-        StringBuilder content = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                content.append(line);
-            }
-
-            mindMap.getTabs().clear();
-            Stage stage = (Stage) mindMap.getScene().getWindow();
-            stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
-        } catch (Exception e) {
-            MessageUtil.showMessage("读取失败：" + e.getMessage());
-        }
-        return JSONObject.parseObject(content.toString());
-    }
 
     public void importFile(File file) {
         JSONObject json = readFile(file);
@@ -291,6 +359,7 @@ public class FileHandler {
                 importSubjet(subjects.getJSONObject(Integer.toString(i)));
             }
         }
+        mindMap.getSelectionModel().select(0);
     }
 
     private void importSubjet(JSONObject json) {
@@ -395,7 +464,7 @@ public class FileHandler {
                 recentFiles.add(line);
             }
         } catch (IOException e) {
-            MessageUtil.showMessage("读取失败：" + e.getMessage());
+            e.printStackTrace();
         }
     }
 

@@ -4,12 +4,16 @@ import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
@@ -53,12 +57,13 @@ public class MindMap extends TabPane {
         Platform.runLater(() -> subjectController.getSelectedNode().getTextArea().requestFocus());
 
         BorderPane borderPane = new BorderPane();
+        FileHandler fileHandler = new FileHandler(this);
         try {
             FXMLLoader loader = new FXMLLoader(Launch.class.getResource("/fxml/menu.fxml"));
             MenuBar menuBar = loader.load();
             MenuController menuController = loader.getController();
             menuController.setMindMap(this);
-            menuController.setFileHandler(new FileHandler(this));
+            menuController.setFileHandler(fileHandler);
             borderPane.setTop(menuBar);
             borderPane.setCenter(this);
         } catch (IOException e) {
@@ -80,10 +85,10 @@ public class MindMap extends TabPane {
         stage.setMaximized(true);
         stage.show();
 
-        addListener();
+        addListener(fileHandler);
     }
 
-    private void addListener() {
+    private void addListener(FileHandler fileHandler) {
         // 切换主题
         getSelectionModel().selectedItemProperty().addListener((observable, oldtab, newTab) -> {
             if (newTab == null) {
@@ -104,14 +109,38 @@ public class MindMap extends TabPane {
         });
 
         stage.setOnCloseRequest(event -> {
-            if (stage.getTitle() == null) {
+            if (filePath == null) {
                 for (Tab tab : getTabs()) {
                     for (MindNode node : ((Subject) tab.getContent()).getModelToView().values()) {
                         FileHandler.deleteImage(node.getImageName());
                     }
                 }
+
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("保存导图");
+                alert.setHeaderText(null);
+                alert.setContentText("是否保存当前导图？");
+                alert.getButtonTypes().setAll(new ButtonType("保存", ButtonBar.ButtonData.YES),
+                        new ButtonType("不保存", ButtonBar.ButtonData.NO),
+                        new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE));
+                ButtonBar.ButtonData buttonData = alert.showAndWait().get().getButtonData();
+                switch (buttonData) {
+                    case YES -> {
+//                        menuController.
+                        Platform.exit();
+                    }
+                    case NO -> Platform.exit();
+                    default -> event.consume();
+                }
+            } else {
+                if (Stage.getWindows().size() <= 1) {
+                    fileHandler.CancelSchedule();
+                } else {
+                    fileHandler.CancelSchedule(filePath);
+                }
             }
         });
+
 
         // 只有一个主题时，隐藏标签栏
         getTabs().addListener((ListChangeListener.Change<? extends Tab> c) -> {
@@ -175,12 +204,27 @@ public class MindMap extends TabPane {
             e.consume();
         });
 
+        addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            KeyCode code = event.getCode();
+            if (code == KeyCode.HOME) {
+                subject.setTranslateY(subject.getTranslateY() - subject.getBoundsInParent().getMinY() + SizeConstants.TRANSLATE_OFFSET);
+                event.consume();
+                return;
+            }
+            if (code == KeyCode.END) {
+                double deltaY = getLayoutBounds().getHeight() - subject.getBoundsInParent().getMaxY() - SizeConstants.TRANSLATE_OFFSET;
+                subject.setTranslateY(subject.getTranslateY() + deltaY);
+                event.consume();
+            }
+        });
+
         setOnKeyPressed(e -> {
             KeyCode code = e.getCode();
             boolean shortcutDown = e.isShortcutDown();
 
             if (code == KeyCode.HOME) {
                 subject.setTranslateY(subject.getTranslateY() - subject.getBoundsInParent().getMinY() + SizeConstants.TRANSLATE_OFFSET);
+                return;
             }
             if (code == KeyCode.END) {
                 double deltaY = getLayoutBounds().getHeight() - subject.getBoundsInParent().getMaxY() - SizeConstants.TRANSLATE_OFFSET;
@@ -189,12 +233,12 @@ public class MindMap extends TabPane {
             }
 
             if (code == KeyCode.PAGE_UP) {
-                subject.setTranslateY(subject.getTranslateY() + 400);
+                subject.setTranslateY(subject.getTranslateY() + 500);
                 subject.constrainTranslationY();
                 return;
             }
             if (code == KeyCode.PAGE_DOWN || code == KeyCode.SPACE) {
-                subject.setTranslateY(subject.getTranslateY() - 400);
+                subject.setTranslateY(subject.getTranslateY() - 500);
                 subject.constrainTranslationY();
                 return;
             }
@@ -203,6 +247,7 @@ public class MindMap extends TabPane {
             if (shortcutDown && code == KeyCode.G) {
                 subject.setTranslateX(0);
                 subject.setTranslateY(0);
+                return;
             }
 
             if (shortcutDown) {
@@ -217,17 +262,13 @@ public class MindMap extends TabPane {
         });
     }
 
+    /**
+     * 添加导图
+     */
     public void addSubject() {
-        subjectController = new SubjectController();
-        subject = subjectController.getSubject();
-        MenuController.setSubjectController(subjectController);
-        StyleWheelArcController.setSubjectController(subjectController);
-
         String subjectName = "主题" + (getTabs().size() + 1);
-        Tab tab = new Tab(subjectName);
-        tab.setContent(subject);
-
-        getTabs().add(tab);
+        Tab tab = addTab();
+        tab.setText(subjectName);
         getSelectionModel().select(tab);
 
         // todo 动态计算中心点
@@ -241,27 +282,38 @@ public class MindMap extends TabPane {
         });
     }
 
+    /**
+     * 打开导图
+     */
     public void addSubject(MindNode node) {
-        subjectController = new SubjectController();
-        subject = subjectController.getSubject();
-        MenuController.setSubjectController(subjectController);
-        StyleWheelArcController.setSubjectController(subjectController);
-
         String subjectName = "主题" + (getTabs().size() + 1);
-        Tab tab = new Tab(subjectName);
-        tab.setContent(subject);
+        Tab tab = addTab();
 
-        getTabs().add(tab);
-        getSelectionModel().select(tab);
-
-        // todo 动态计算中心点
         subjectController.initRootNode(node);
-        subjectController.getRootNode().getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
+        StyleClassedTextArea textArea = node.getTextArea();
+        if (!textArea.getText().isEmpty()) {
+            tab.setText(textArea.getText());
+        } else {
+            tab.setText(subjectName);
+        }
+        textArea.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty()) {
                 tab.setText(newValue);
             } else {
                 tab.setText(subjectName);
             }
         });
+    }
+
+    private Tab addTab() {
+        subjectController = new SubjectController();
+        subject = subjectController.getSubject();
+        MenuController.setSubjectController(subjectController);
+        StyleWheelArcController.setSubjectController(subjectController);
+
+        Tab tab = new Tab();
+        tab.setContent(subject);
+        getTabs().add(tab);
+        return tab;
     }
 }
