@@ -51,7 +51,7 @@ public class MenuController {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File(dirFiles));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
-        File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
+        File file = fc.showOpenDialog(mindMap.getScene().getWindow());
         if (file != null) {
             fileHandler.loadFile(file);
         }
@@ -102,7 +102,7 @@ public class MenuController {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File(dirFiles));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
-        File file = fc.showSaveDialog(subjectController.getSubject().getScene().getWindow());
+        File file = fc.showSaveDialog(mindMap.getScene().getWindow());
 
         // 取消时，file 为 null
         if (file != null) {
@@ -120,37 +120,6 @@ public class MenuController {
             stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
         }
     }
-
-//    @FXML
-//    private void importMindMap() {
-//        FileChooser fc = new FileChooser();
-//        fc.setInitialDirectory(new File("C:\\Users\\k8255\\Documents\\MindLine"));
-//        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
-//        File file = fc.showOpenDialog(subjectController.getSubject().getScene().getWindow());
-//        if (file != null) {
-//            fileHandler.importFile(file);
-//        }
-//    }
-//
-//    @FXML
-//    private void importMindMapBatch() throws IOException {
-//        File rootFile = new File("C:\\Users\\k8255\\Documents\\MindLine");
-//        importMindMapBatch(rootFile);
-//    }
-//
-//    private void importMindMapBatch(File parentFile) throws IOException {
-//        for (File file : parentFile.listFiles()) {
-//            if (file.isDirectory()) {
-//                importMindMapBatch(file);
-//            } else if (file.getName().endsWith(".mm")) {
-//                fileHandler.importFile(file);
-//                File saveFile = new File(dirFiles + file.getPath().replace("C:\\Users\\k8255\\Documents\\MindLine\\", ""));
-//                saveFile.getParentFile().mkdirs();
-//                saveFile.createNewFile();
-//                fileHandler.saveFile(saveFile);
-//            }
-//        }
-//    }
 
     //—————————————————————————————————————————添加—————————————————————————————————————————
     @FXML

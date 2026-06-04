@@ -97,7 +97,7 @@ public class MindMap extends TabPane {
                 return;
             }
             subject = ((Subject) newTab.getContent());
-            subjectController = subject.getSubjectController();
+            subjectController = (SubjectController) newTab.getUserData();
             MenuController.setSubjectController(subjectController);
             StyleWheelArcController.setSubjectController(subjectController);
         });
@@ -320,6 +320,7 @@ public class MindMap extends TabPane {
 
         Tab tab = new Tab();
         tab.setContent(subject);
+        tab.setUserData(subjectController);
         getTabs().add(tab);
         return tab;
     }

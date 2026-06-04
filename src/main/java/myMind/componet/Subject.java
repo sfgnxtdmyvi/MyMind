@@ -7,13 +7,11 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.QuadCurve;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import myMind.constants.SizeConstants;
-import myMind.controller.SubjectController;
 import myMind.util.MessageUtil;
 
-@Getter
+@Data
 public class Subject extends StackPane {
     /**
      * 节点层
@@ -24,16 +22,11 @@ public class Subject extends StackPane {
      */
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
-    private final SubjectController subjectController;
 
-    @Setter
     private double dragStartX;
-    @Setter
     private double dragStartY;
 
-    public Subject(SubjectController subjectController) {
-        this.subjectController = subjectController;
-
+    public Subject() {
         // 让连线不干扰鼠标事件
         linesLayerL.setMouseTransparent(true);
         linesLayerR.setMouseTransparent(true);
@@ -145,7 +138,7 @@ public class Subject extends StackPane {
 
     public void addCloneChildrenL(MindNode CloneNode) {
         ObservableList<Node> children = nodesLayer.getChildren();
-        for (MindNode node :CloneNode.getChildrenL()) {
+        for (MindNode node : CloneNode.getChildrenL()) {
             children.add(node);
             addCloneChildrenL(node);
         }

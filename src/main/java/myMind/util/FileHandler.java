@@ -100,8 +100,9 @@ public class FileHandler {
             subjectController.adjustXY();
         }
 
-        Subject firstSubject = (Subject) mindMap.getTabs().get(0).getContent();
-        subjectController = firstSubject.getSubjectController();
+        Tab tab = mindMap.getTabs().get(0);
+        Subject firstSubject = (Subject) tab.getContent();
+        subjectController = (SubjectController) tab.getUserData();
         mindMap.setSubjectController(subjectController);
         mindMap.setSubject(firstSubject);
         MenuController.setSubjectController(subjectController);
@@ -207,8 +208,7 @@ public class FileHandler {
         ObservableList<Tab> tabs = mindMap.getTabs();
         JSONObject subjects = new JSONObject();
         for (int i = 0; i < tabs.size(); i++) {
-            Tab tab = tabs.get(i);
-            subjectController = ((Subject) tab.getContent()).getSubjectController();
+            subjectController = (SubjectController) tabs.get(i).getUserData();
             MindNode rootNode = subjectController.getRootNode();
 
             JSONObject subject = saveNode(rootNode);

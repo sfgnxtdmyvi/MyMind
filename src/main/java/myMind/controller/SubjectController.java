@@ -20,7 +20,7 @@ import java.util.List;
 
 @Data
 public class SubjectController {
-    private final Subject subject = new Subject(this);
+    private final Subject subject = new Subject();
     private MindNode rootNode;
     private MindNode selectedNode;
 
@@ -162,7 +162,7 @@ public class SubjectController {
     }
 
     private void setOnActionChildrenL(MindNode cloneNode) {
-        for (MindNode node :cloneNode.getChildrenL()) {
+        for (MindNode node : cloneNode.getChildrenL()) {
             setOnAction(node);
             setOnActionChildrenL(node);
         }
@@ -706,6 +706,7 @@ public class SubjectController {
     }
 
     public void adjustChildrenSize() {
+        rootNode.adjustSize();
         adjustChildrenSizeR(rootNode);
         adjustChildrenSizeL(rootNode);
     }
