@@ -2,53 +2,26 @@ package myMind.componet;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.IndexRange;
-import javafx.scene.control.MenuBar;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
-import javafx.stage.Stage;
 import lombok.Data;
-import myMind.Launch;
 import myMind.constants.SizeConstants;
-import myMind.util.FileHandler;
 import myMind.controller.MenuController;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
-import myMind.util.MessageUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
-
-import java.io.IOException;
-import java.util.List;
 
 @Data
 public class MindMap extends TabPane {
-    private final Pane root;
-    private final Stage stage;
-    private final StyleWheel styleWheel = StyleWheel.getInstance();
     private SubjectController subjectController;
     private Subject subject;
     private String filePath;
 
-    private static final List<String> STYLE_SHEETS = List.of(
-            MindMap.class.getResource("/css/style.css").toExternalForm(),
-            MindMap.class.getResource("/css/style-wheel.css").toExternalForm()
-    );
-
-    public MindMap(Stage stage) {
+    public MindMap() {
         //关闭按钮的显示策略
         //SELECTED_TAB：只在当前被选中的标签页显示
         //ALL_TABS：在所有标签页上都显示
@@ -57,40 +30,10 @@ public class MindMap extends TabPane {
         getStyleClass().addAll("hide-tabs", "workspace");
         addSubject();
         Platform.runLater(() -> subjectController.getSelectedNode().getTextArea().requestFocus());
-
-        BorderPane borderPane = new BorderPane();
-        FileHandler fileHandler = new FileHandler(this);
-        try {
-            FXMLLoader loader = new FXMLLoader(Launch.class.getResource("/fxml/menu.fxml"));
-            MenuBar menuBar = loader.load();
-            MenuController menuController = loader.getController();
-            menuController.setMindMap(this);
-            menuController.setFileHandler(fileHandler);
-            borderPane.setTop(menuBar);
-            borderPane.setCenter(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Pane 用来添加消息提示标签，BorderPane 无法手动指定位置
-        root = new Pane(borderPane);
-        // Pane 不会自动调整子节点大小，需要手动绑定
-        borderPane.prefWidthProperty().bind(root.widthProperty());
-        borderPane.prefHeightProperty().bind(root.heightProperty());
-        MessageUtil.init(root, stage);
-
-        Scene scene = new Scene(root, 1450, 740);
-        scene.getStylesheets().addAll(STYLE_SHEETS);
-
-        this.stage = stage;
-        stage.setScene(scene);
-        stage.setMaximized(true);
-        stage.show();
-
-        addListener(fileHandler);
+        addListener();
     }
 
-    private void addListener(FileHandler fileHandler) {
+    private void addListener() {
         // 切换主题
         getSelectionModel().selectedItemProperty().addListener((observable, oldtab, newTab) -> {
             if (newTab == null) {
@@ -102,51 +45,6 @@ public class MindMap extends TabPane {
             StyleWheelArcController.setSubjectController(subjectController);
         });
 
-        // 切换导图
-        stage.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {
-                MenuController.setSubjectController(subjectController);
-                StyleWheelArcController.setSubjectController(subjectController);
-            }
-        });
-
-        stage.setOnCloseRequest(event -> {
-            if (filePath == null) {
-                for (Tab tab : getTabs()) {
-
-                    ObservableList<Node> children = ((Subject) tab.getContent()).getNodesLayer().getChildren();
-                    for (Node child : children) {
-                        MindNode node = (MindNode) child;
-                        FileHandler.deleteImage(node.getImageName());
-                    }
-                }
-
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("保存导图");
-                alert.setHeaderText(null);
-                alert.setContentText("是否保存当前导图？");
-                alert.getButtonTypes().setAll(new ButtonType("保存", ButtonBar.ButtonData.YES),
-                        new ButtonType("不保存", ButtonBar.ButtonData.NO),
-                        new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE));
-                ButtonBar.ButtonData buttonData = alert.showAndWait().get().getButtonData();
-                switch (buttonData) {
-                    case YES -> {
-//                        menuController.
-                        Platform.exit();
-                    }
-                    case NO -> Platform.exit();
-                    default -> event.consume();
-                }
-            } else {
-                if (Stage.getWindows().size() <= 1) {
-                    fileHandler.CancelSchedule();
-                } else {
-                    fileHandler.CancelSchedule(filePath);
-                }
-            }
-        });
-
-
         // 只有一个主题时，隐藏标签栏
         getTabs().addListener((ListChangeListener.Change<? extends Tab> c) -> {
             if (getTabs().size() == 1) {
@@ -156,26 +54,7 @@ public class MindMap extends TabPane {
             }
         });
 
-        // 防止被 StyleClassedTextArea 阻止事件
-        root.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> {
-            event.consume();
-            MindNode selectedNode = subjectController.getSelectedNode();
-            if (selectedNode == null) {
-                return;
-            }
-            StyleClassedTextArea textArea = selectedNode.getTextArea();
-            IndexRange selection = textArea.getSelection();
-            if (selection.getLength() != 0) {
-                // 默认将 content 的左上角放到 (x, y) 处，所以加上偏移，使轮盘居中
-                styleWheel.show(stage, event.getScreenX() - 125, event.getScreenY() - 125);
-            }
-        });
-
-        addTranslateListener();
-    }
-
-    // 画布移动和缩放
-    private void addTranslateListener() {
+        // 画布移动和缩放
         // EventFilter 能让节点不干扰鼠标滚动
         addEventFilter(ScrollEvent.SCROLL, e -> {
             double deltaY = e.getDeltaY();
@@ -271,8 +150,8 @@ public class MindMap extends TabPane {
      * 添加导图
      */
     public void addSubject() {
-        String subjectName = "主题" + (getTabs().size() + 1);
         Tab tab = addTab();
+        String subjectName = "主题" + (getTabs().size());
         tab.setText(subjectName);
         getSelectionModel().select(tab);
 
@@ -291,13 +170,13 @@ public class MindMap extends TabPane {
      * 打开导图
      */
     public void addSubject(MindNode node) {
-        String subjectName = "主题" + (getTabs().size() + 1);
         Tab tab = addTab();
 
         subjectController.initRootNode(node);
         node.setLayoutX(670);
         node.setLayoutY(311);
         StyleClassedTextArea textArea = node.getTextArea();
+        String subjectName = "主题" + (getTabs().size());
         if (!textArea.getText().isEmpty()) {
             tab.setText(textArea.getText());
         } else {
