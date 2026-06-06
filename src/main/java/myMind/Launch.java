@@ -21,7 +21,8 @@ import myMind.componet.StyleWheel;
 import myMind.componet.Subject;
 import myMind.controller.MenuController;
 import myMind.controller.StyleWheelArcController;
-import myMind.util.FileHandler;
+import myMind.controller.SubjectController;
+import myMind.util.FileUtil;
 import myMind.util.MessageUtil;
 
 import java.io.IOException;
@@ -39,13 +40,11 @@ public class Launch extends Application {
     public static void createMindMap(Stage stage) {
         MindMap mindMap = new MindMap();
         BorderPane borderPane = new BorderPane();
-        FileHandler fileHandler = new FileHandler(mindMap);
         try {
             FXMLLoader loader = new FXMLLoader(Launch.class.getResource("/fxml/menu.fxml"));
             MenuBar menuBar = loader.load();
             menuController = loader.getController();
             menuController.setMindMap(mindMap);
-            menuController.setFileHandler(fileHandler);
             borderPane.setTop(menuBar);
             borderPane.setCenter(mindMap);
         } catch (IOException e) {
@@ -80,10 +79,21 @@ public class Launch extends Application {
             }
         });
 
+        // 切换主题
+        mindMap.getSelectionModel().selectedItemProperty().addListener((observable, oldtab, newTab) -> {
+            if (newTab == null) {
+                return;
+            }
+            SubjectController subjectController = (SubjectController) newTab.getUserData();
+            mindMap.setSubject(((Subject) newTab.getContent()));
+            mindMap.setSubjectController(subjectController);
+            menuController.setSubjectController(subjectController);
+            StyleWheelArcController.setSubjectController(subjectController);
+        });
+
         // 切换导图
         stage.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
-                MenuController.setSubjectController(mindMap.getSubjectController());
                 StyleWheelArcController.setSubjectController(mindMap.getSubjectController());
             }
         });
@@ -95,7 +105,7 @@ public class Launch extends Application {
                     ObservableList<Node> children = ((Subject) tab.getContent()).getNodesLayer().getChildren();
                     for (Node child : children) {
                         MindNode node = (MindNode) child;
-                        FileHandler.deleteImage(node.getImageName());
+                        FileUtil.deleteImage(node.getImageName());
                     }
                 }
 
@@ -118,9 +128,9 @@ public class Launch extends Application {
             }
 
             if (Stage.getWindows().size() <= 1) {
-                fileHandler.CancelSchedule();
+                FileUtil.cancelSchedule();
             } else {
-                fileHandler.CancelSchedule(mindMap.getFilePath());
+                FileUtil.cancelSchedule(mindMap.getFilePath());
             }
         });
     }

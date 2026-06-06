@@ -5,17 +5,15 @@ import com.alibaba.fastjson2.JSONObject;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
-import myMind.componet.MindNode;
-import myMind.controller.MenuController;
-import myMind.controller.StyleWheelArcController;
-import myMind.controller.SubjectController;
 import myMind.componet.MindMap;
-import myMind.componet.Subject;
+import myMind.componet.MindNode;
+import myMind.constants.FileConstants;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
-
+import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import javax.imageio.ImageIO;
@@ -31,90 +29,84 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class FileHandler {
+public class FileUtil {
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(3);
     private static final Map<String, ScheduledFuture<?>> fileSaveFutures = new ConcurrentHashMap<>();
-
-    private SubjectController subjectController;
-
-    private final MindMap mindMap;
-    @Getter
-    private static final String dirImage;
-    private static final String dirRecentFiles;
-
-    static {
-        ResourceBundle config = ResourceBundle.getBundle("config");
-        dirImage = config.getString("directory.images");
-        dirRecentFiles = config.getString("directory.recent_files");
-    }
 
     @Getter
     private static final LinkedList<String> recentFiles;
 
-    public FileHandler(MindMap mindMap) {
-        this.mindMap = mindMap;
+    private static File openFileChooser(int type, MindMap mindMap) {
+        FileChooser fc = new FileChooser();
+        fc.setInitialDirectory(new File(FileConstants.DIR_FILES));
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
+        if (type == FileConstants.OPEN_TYPE) {
+            return fc.showOpenDialog(mindMap.getScene().getWindow());
+        } else {
+            return fc.showSaveDialog(mindMap.getScene().getWindow());
+        }
     }
 
     //—————————————————————————————————————————打开—————————————————————————————————————————
-    private JSONObject readFile(File file) {
-        if (mindMap.getFilePath() != null) {
-            CancelSchedule(mindMap.getFilePath());
+
+    public static void load(MindMap mindMap) {
+        File file = openFileChooser(FileConstants.OPEN_TYPE, mindMap);
+        if (file != null) {
+            FileUtil.loadFile(file, mindMap);
         }
+    }
+
+    public static void loadFile(File file, MindMap mindMap) {
+        if (mindMap.getFilePath() != null) {
+            cancelSchedule(mindMap.getFilePath());
+        }
+        mindMap.getTabs().clear();
+
+        JSONObject json = readFile(file);
+        Stage stage = (Stage) mindMap.getScene().getWindow();
+        stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
+
+        // 加载主题
+        for (int i = 0; i < json.size(); i++) {
+            JSONObject subject = json.getJSONObject(Integer.toString(i));
+            MindNode rootNode = buildNode(subject, PosConstants.MIDDLE);
+            mindMap.addSubject(rootNode);
+            SubjectController subjectController = mindMap.getSubjectController();
+
+            // 加载子节点
+            loadChildR(subject.getJSONObject("childrenR"), rootNode, subjectController);
+            loadChildL(subject.getJSONObject("childrenL"), rootNode, subjectController);
+
+            subjectController.adjustChildrenSize();
+            subjectController.adjustXY();
+        }
+
+        String absolutePath = file.getAbsolutePath();
+        mindMap.setFilePath(absolutePath);
+        scheduleAutoSave(absolutePath, mindMap);
+        addRecentFile(file);
+    }
+
+    private static JSONObject readFile(File file) {
         StringBuilder content = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
                 content.append(line);
             }
-
-            mindMap.getTabs().clear();
-            Stage stage = (Stage) mindMap.getScene().getWindow();
-            stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
         } catch (Exception e) {
             MessageUtil.showMessage("读取失败：" + e.getMessage());
         }
         return JSONObject.parseObject(content.toString());
     }
 
-    public void loadFile(File file) {
-        JSONObject json = readFile(file);
-        // 加载主题
-        for (int i = 0; i < json.size(); i++) {
-            JSONObject subject = json.getJSONObject(Integer.toString(i));
-            MindNode rootNode = buildNode(subject, PosConstants.MIDDLE);
-            mindMap.addSubject(rootNode);
-            subjectController = mindMap.getSubjectController();
-
-            // 加载子节点
-            loadChildR(subject.getJSONObject("childrenR"), rootNode);
-            loadChildL(subject.getJSONObject("childrenL"), rootNode);
-
-            subjectController.adjustChildrenSize();
-            subjectController.adjustXY();
-        }
-
-        Tab tab = mindMap.getTabs().get(0);
-        Subject firstSubject = (Subject) tab.getContent();
-        subjectController = (SubjectController) tab.getUserData();
-        mindMap.setSubjectController(subjectController);
-        mindMap.setSubject(firstSubject);
-        MenuController.setSubjectController(subjectController);
-        StyleWheelArcController.setSubjectController(subjectController);
-
-        String absolutePath = file.getAbsolutePath();
-        mindMap.setFilePath(absolutePath);
-        scheduleAutoSave(absolutePath);
-        addRecentFile(file);
-    }
-
-    private void loadChildR(JSONObject json, MindNode parentNode) {
+    private static void loadChildR(JSONObject json, MindNode parentNode, SubjectController subjectController) {
         if (json == null) {
             return;
         }
@@ -126,11 +118,11 @@ public class FileHandler {
             parentNode.addChildR(node);
             subjectController.addNode(node);
 
-            loadChildR(childrenJson.getJSONObject("childrenR"), node);
+            loadChildR(childrenJson.getJSONObject("childrenR"), node, subjectController);
         }
     }
 
-    private void loadChildL(JSONObject json, MindNode parentNode) {
+    private static void loadChildL(JSONObject json, MindNode parentNode, SubjectController subjectController) {
         if (json == null) {
             return;
         }
@@ -142,11 +134,11 @@ public class FileHandler {
             parentNode.addChildL(node);
             subjectController.addNode(node);
 
-            loadChildL(childrenJson.getJSONObject("childrenL"), node);
+            loadChildL(childrenJson.getJSONObject("childrenL"), node, subjectController);
         }
     }
 
-    private MindNode buildNode(JSONObject json, byte pos) {
+    private static MindNode buildNode(JSONObject json, byte pos) {
         String imageName = json.getString("imageName");
         MindNode node;
         if (imageName != null) {
@@ -157,7 +149,7 @@ public class FileHandler {
         return node;
     }
 
-    private StyleClassedTextArea buildTextArea(JSONObject json) {
+    private static StyleClassedTextArea buildTextArea(JSONObject json) {
         StyleClassedTextArea textArea = new StyleClassedTextArea();
         textArea.getStyleClass().add("text-area");
         textArea.setWrapText(true);
@@ -183,8 +175,39 @@ public class FileHandler {
     }
 
     //—————————————————————————————————————————保存—————————————————————————————————————————
-    public void saveFile(File file) {
-        JSONObject subjects = saveSubjects();
+
+    public static void save(MindMap mindMap) {
+        if (mindMap.getFilePath() == null) {
+            saveAs(mindMap);
+        } else {
+            saveFile(new File(mindMap.getFilePath()), mindMap);
+        }
+    }
+
+    /**
+     * 保存到新文件
+     */
+    public static void saveAs(MindMap mindMap) {
+        File file = openFileChooser(FileConstants.SAVE_TYPE, mindMap);
+        // 取消时，file 为 null
+        if (file != null) {
+            saveFile(file, mindMap);
+
+            if (mindMap.getFilePath() != null) {
+                cancelSchedule(mindMap.getFilePath());
+            }
+            String absolutePath = file.getAbsolutePath();
+            scheduleAutoSave(absolutePath, mindMap);
+
+            addRecentFile(file);
+            mindMap.setFilePath(absolutePath);
+            Stage stage = (Stage) mindMap.getScene().getWindow();
+            stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
+        }
+    }
+
+    public static void saveFile(File file, MindMap mindMap) {
+        JSONObject subjects = saveSubjects(mindMap);
 
         try (FileWriter fw = new FileWriter(file)) {
             fw.write(subjects.toString());
@@ -194,8 +217,8 @@ public class FileHandler {
         }
     }
 
-    public void saveFileScheduled(File file) {
-        JSONObject subjects = saveSubjects();
+    public static void saveFileScheduled(File file, MindMap mindMap) {
+        JSONObject subjects = saveSubjects(mindMap);
 
         try (FileWriter fw = new FileWriter(file)) {
             fw.write(subjects.toString());
@@ -204,11 +227,11 @@ public class FileHandler {
         }
     }
 
-    private JSONObject saveSubjects() {
+    private static JSONObject saveSubjects(MindMap mindMap) {
         ObservableList<Tab> tabs = mindMap.getTabs();
         JSONObject subjects = new JSONObject();
         for (int i = 0; i < tabs.size(); i++) {
-            subjectController = (SubjectController) tabs.get(i).getUserData();
+            SubjectController subjectController = (SubjectController) tabs.get(i).getUserData();
             MindNode rootNode = subjectController.getRootNode();
 
             JSONObject subject = saveNode(rootNode);
@@ -220,7 +243,7 @@ public class FileHandler {
         return subjects;
     }
 
-    private void saveChildrenR(JSONObject parentJson, List<MindNode> childrenR) {
+    private static void saveChildrenR(JSONObject parentJson, List<MindNode> childrenR) {
         if (!childrenR.isEmpty()) {
             JSONObject childrenRJson = new JSONObject();
             for (int i = 0; i < childrenR.size(); i++) {
@@ -234,7 +257,7 @@ public class FileHandler {
         }
     }
 
-    private void saveChildrenL(JSONObject parentJson, List<MindNode> childrenL) {
+    private static void saveChildrenL(JSONObject parentJson, List<MindNode> childrenL) {
         if (!childrenL.isEmpty()) {
             JSONObject childrenLJson = new JSONObject();
             for (int i = 0; i < childrenL.size(); i++) {
@@ -248,7 +271,7 @@ public class FileHandler {
         }
     }
 
-    private JSONObject saveNode(MindNode node) {
+    private static JSONObject saveNode(MindNode node) {
         JSONObject json = new JSONObject();
 
         // 文本
@@ -275,7 +298,7 @@ public class FileHandler {
         return json;
     }
 
-    public JSONArray saveStyles(StyleClassedTextArea textArea) {
+    public static JSONArray saveStyles(StyleClassedTextArea textArea) {
         JSONArray styles = new JSONArray();
         int start = 0;
         Collection<String> lastStyles = textArea.getStyleOfChar(0);
@@ -315,17 +338,17 @@ public class FileHandler {
 
     //—————————————————————————————————————————定时保存—————————————————————————————————————————
 
-    public void scheduleAutoSave(String filePath) {
+    public static void scheduleAutoSave(String filePath, MindMap mindMap) {
         if (fileSaveFutures.containsKey(filePath)) {
             return;
         }
 
         ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() ->
-                saveFileScheduled(new File(filePath)), 1, 1, TimeUnit.SECONDS);
+                saveFileScheduled(new File(filePath), mindMap), 1, 1, TimeUnit.SECONDS);
         fileSaveFutures.put(filePath, future);
     }
 
-    public void CancelSchedule(String filePath) {
+    public static void cancelSchedule(String filePath) {
         ScheduledFuture<?> future = fileSaveFutures.remove(filePath);
         if (future != null) {
             future.cancel(false);
@@ -333,7 +356,7 @@ public class FileHandler {
     }
 
     // ScheduledExecutorService 创建的是非守护线程，会阻止 JVM 自然退出，需要关闭
-    public void CancelSchedule() {
+    public static void cancelSchedule() {
         scheduler.shutdown();
         try {
             if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -347,7 +370,7 @@ public class FileHandler {
     //—————————————————————————————————————————最近打开—————————————————————————————————————————
     static {
         recentFiles = new LinkedList<>();
-        File file = new File(dirRecentFiles);
+        File file = new File(FileConstants.DIR_RECENT_FILES);
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
@@ -359,7 +382,7 @@ public class FileHandler {
         }
     }
 
-    public void addRecentFile(File file) {
+    public static void addRecentFile(File file) {
         // 导图可能在多级目录下，不能通过根目录名 + file.getName()读取
         String string = file.getName().substring(0, file.getName().length() - 3) + "=" + file.getAbsolutePath();
         recentFiles.remove(string);
@@ -371,8 +394,8 @@ public class FileHandler {
         saveRecentFiles();
     }
 
-    public void saveRecentFiles() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(dirRecentFiles))) {
+    public static void saveRecentFiles() {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FileConstants.DIR_RECENT_FILES))) {
             for (String fileName : recentFiles) {
                 bw.write(fileName);
                 bw.newLine();
@@ -387,7 +410,7 @@ public class FileHandler {
         if (imageName == null) {
             imageName = System.currentTimeMillis() + ".png";
         }
-        String imagePath = dirImage + imageName;
+        String imagePath = FileConstants.DIR_IMAGE + imageName;
 
         File output = new File(imagePath);
         try {
@@ -399,7 +422,7 @@ public class FileHandler {
     }
 
     public static void deleteImage(String imageName) {
-        File file = new File(dirImage + imageName);
+        File file = new File(FileConstants.DIR_IMAGE + imageName);
         if (file.exists()) {
             file.delete();
         }

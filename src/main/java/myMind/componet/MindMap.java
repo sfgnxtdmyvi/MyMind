@@ -10,7 +10,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import lombok.Data;
 import myMind.constants.SizeConstants;
-import myMind.controller.MenuController;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -34,17 +33,6 @@ public class MindMap extends TabPane {
     }
 
     private void addListener() {
-        // 切换主题
-        getSelectionModel().selectedItemProperty().addListener((observable, oldtab, newTab) -> {
-            if (newTab == null) {
-                return;
-            }
-            subject = ((Subject) newTab.getContent());
-            subjectController = (SubjectController) newTab.getUserData();
-            MenuController.setSubjectController(subjectController);
-            StyleWheelArcController.setSubjectController(subjectController);
-        });
-
         // 只有一个主题时，隐藏标签栏
         getTabs().addListener((ListChangeListener.Change<? extends Tab> c) -> {
             if (getTabs().size() == 1) {
@@ -194,7 +182,6 @@ public class MindMap extends TabPane {
     private Tab addTab() {
         subjectController = new SubjectController();
         subject = subjectController.getSubject();
-        MenuController.setSubjectController(subjectController);
         StyleWheelArcController.setSubjectController(subjectController);
 
         Tab tab = new Tab();

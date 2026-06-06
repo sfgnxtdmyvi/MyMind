@@ -4,42 +4,30 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
-import javafx.stage.FileChooser;
+import javafx.scene.control.Tab;
 import javafx.stage.Stage;
 import lombok.Setter;
 import myMind.Launch;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
+import myMind.componet.Subject;
 import myMind.constants.PosConstants;
-import myMind.util.FileHandler;
+import myMind.util.FileUtil;
 
 import java.io.File;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ResourceBundle;
 
 public class MenuController {
 
-    private static SubjectController subjectController;
     @Setter
-    private FileHandler fileHandler;
+    private SubjectController subjectController;
     @Setter
     private MindMap mindMap;
 
     @FXML
     private Menu recentFilesMenu;
-
-    private static final String dirFiles;
-
-    static {
-        ResourceBundle config = ResourceBundle.getBundle("config");
-        dirFiles = config.getString("directory.files");
-    }
-
-    public static void setSubjectController(SubjectController subjectController) {
-        MenuController.subjectController = subjectController;
-    }
 
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
@@ -49,13 +37,8 @@ public class MenuController {
 
     @FXML
     private void load() {
-        FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File(dirFiles));
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
-        File file = fc.showOpenDialog(mindMap.getScene().getWindow());
-        if (file != null) {
-            fileHandler.loadFile(file);
-        }
+        FileUtil.load(mindMap);
+        selectFirstSubject();
     }
 
     @FXML
@@ -63,7 +46,7 @@ public class MenuController {
         ObservableList<MenuItem> items = recentFilesMenu.getItems();
         items.clear();
 
-        LinkedList<String> recentFiles = FileHandler.getRecentFiles();
+        LinkedList<String> recentFiles = FileUtil.getRecentFiles();
         if (recentFiles.isEmpty()) {
             items.add(new MenuItem("无最近文件"));
             return;
@@ -76,7 +59,10 @@ public class MenuController {
             File file = new File(split[1]);
             if (file.exists()) {
                 MenuItem menuItem = new MenuItem(split[0]);
-                menuItem.setOnAction(event -> fileHandler.loadFile(file));
+                menuItem.setOnAction(event -> {
+                    FileUtil.loadFile(file, mindMap);
+                    selectFirstSubject();
+                });
                 items.add(menuItem);
             } else {
                 iterator.remove();
@@ -84,42 +70,29 @@ public class MenuController {
             }
         }
         if (changed) {
-            fileHandler.saveRecentFiles();
+            FileUtil.saveRecentFiles();
         }
+    }
+
+    private void selectFirstSubject() {
+        // 选中第一个主题
+        Tab tab = mindMap.getTabs().get(0);
+        Subject firstSubject = (Subject) tab.getContent();
+        SubjectController subjectController = (SubjectController) tab.getUserData();
+        mindMap.setSubjectController(subjectController);
+        mindMap.setSubject(firstSubject);
+        this.subjectController = subjectController;
+        StyleWheelArcController.setSubjectController(subjectController);
     }
 
     @FXML
     private void save() {
-        // 没有保存过，就保存到新建文件
-        if (mindMap.getFilePath() == null) {
-            saveAs();
-        } else {
-            fileHandler.saveFile(new File(mindMap.getFilePath()));
-        }
+        FileUtil.save(mindMap);
     }
 
     @FXML
     public void saveAs() {
-        FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File(dirFiles));
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
-        File file = fc.showSaveDialog(mindMap.getScene().getWindow());
-
-        // 取消时，file 为 null
-        if (file != null) {
-            fileHandler.saveFile(file);
-
-            if (mindMap.getFilePath() != null) {
-                fileHandler.CancelSchedule(mindMap.getFilePath());
-            }
-            String absolutePath = file.getAbsolutePath();
-            fileHandler.scheduleAutoSave(absolutePath);
-
-            fileHandler.addRecentFile(file);
-            mindMap.setFilePath(absolutePath);
-            Stage stage = (Stage) mindMap.getScene().getWindow();
-            stage.setTitle(file.getName().substring(0, file.getName().length() - 3));
-        }
+        FileUtil.saveAs(mindMap);
     }
 
     //—————————————————————————————————————————添加—————————————————————————————————————————
@@ -197,6 +170,7 @@ public class MenuController {
     @FXML
     private void addSubject() {
         mindMap.addSubject();
+        subjectController = mindMap.getSubjectController();
     }
 
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
@@ -217,13 +191,13 @@ public class MenuController {
 
     @FXML
     private void moveLeft() {
-        MindNode selectedModel = subjectController.getSelectedNode();
+        MindNode selectedNode = subjectController.getSelectedNode();
         // 父节点 <- 右边节点
         // 中间的左子节点 <- 左边、根节点
-        if (selectedModel.getPos() == PosConstants.RIGHT) {
-            subjectController.setSelectedNode(selectedModel.getNodeParent());
+        if (selectedNode.getPos() == PosConstants.RIGHT) {
+            subjectController.setSelectedNode(selectedNode.getNodeParent());
         } else {
-            List<MindNode> children = selectedModel.getChildrenL();
+            List<MindNode> children = selectedNode.getChildrenL();
             if (!children.isEmpty()) {
                 subjectController.setSelectedNode(children.get(children.size() / 2));
             }
@@ -232,19 +206,19 @@ public class MenuController {
 
     @FXML
     private void moveUp() {
-        MindNode selectedModel = subjectController.getSelectedNode();
-        if (selectedModel.getPos() == PosConstants.MIDDLE) {
+        MindNode selectedNode = subjectController.getSelectedNode();
+        if (selectedNode.getPos() == PosConstants.MIDDLE) {
             return;
         }
 
-        MindNode parentModel = selectedModel.getNodeParent();
+        MindNode parentModel = selectedNode.getNodeParent();
         List<MindNode> children;
-        if (selectedModel.getPos() == PosConstants.RIGHT) {
+        if (selectedNode.getPos() == PosConstants.RIGHT) {
             children = parentModel.getChildrenR();
         } else {
             children = parentModel.getChildrenL();
         }
-        int index = children.indexOf(selectedModel);
+        int index = children.indexOf(selectedNode);
         if (index != 0) {
             subjectController.setSelectedNode(children.get(index - 1));
         }
@@ -252,20 +226,19 @@ public class MenuController {
 
     @FXML
     private void moveDown() {
-        MindNode selectedModel = subjectController.getSelectedNode();
-
-        if (selectedModel.getPos() == PosConstants.MIDDLE) {
+        MindNode selectedNode = subjectController.getSelectedNode();
+        if (selectedNode.getPos() == PosConstants.MIDDLE) {
             return;
         }
 
-        MindNode parentModel = selectedModel.getNodeParent();
+        MindNode parentModel = selectedNode.getNodeParent();
         List<MindNode> children;
-        if (selectedModel.getPos() == PosConstants.RIGHT) {
+        if (selectedNode.getPos() == PosConstants.RIGHT) {
             children = parentModel.getChildrenR();
         } else {
             children = parentModel.getChildrenL();
         }
-        int index = children.indexOf(selectedModel);
+        int index = children.indexOf(selectedNode);
         if (index != children.size() - 1) {
             subjectController.setSelectedNode(children.get(index + 1));
         }

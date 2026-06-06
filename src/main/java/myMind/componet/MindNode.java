@@ -15,10 +15,11 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import myMind.constants.FileConstants;
 import myMind.constants.MindNodeEvent;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
-import myMind.util.FileHandler;
+import myMind.util.FileUtil;
 import myMind.util.MeasureTextUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
@@ -94,7 +95,7 @@ public class MindNode extends StackPane {
 
     public MindNode(byte pos, String imageName, double imageWidth, double imageHeight, StyleClassedTextArea textArea) {
         this.pos = pos;
-        image = new ImageView(new Image(new File(FileHandler.getDirImage() + imageName).toURI().toString()));
+        image = new ImageView(new Image(new File(FileConstants.DIR_IMAGE + imageName).toURI().toString()));
         image.setSmooth(true);
         image.setFitWidth(imageWidth);
         image.setFitHeight(imageHeight);
@@ -179,7 +180,7 @@ public class MindNode extends StackPane {
         // 使用 addEventFilter 的话，OnMouseClicked 的默认行为会让 MindNode 获得焦点，TextArea 就会失去焦点
         // 添加 e.consume() 的话，能阻止 OnMouseClicked 的默认行为，但是 addButton 就不会触发
         // 使用 setOnMouseClicked 的话，由于 addButton 是一个独立的 Button 组件，它会消费鼠标事件，事件不会冒泡到父节点 MindNode，
-        // 需要在 addButton 的事件处理逻辑中添加 setSelectedModel(model);
+        // 需要在 addButton 的事件处理逻辑中添加 setselectedNode(model);
         contentBox.setOnMouseClicked(e -> {
             onAction.accept(MindNodeEvent.SELECT);
             onAction.accept(MindNodeEvent.PASTE_SIBLING);
@@ -284,7 +285,7 @@ public class MindNode extends StackPane {
                         image.setFitWidth(imageWidth / SizeConstants.SCALE);
                         image.setFitHeight(imageHeight / SizeConstants.SCALE);
                         ratio = imageWidth / imageHeight;
-                        imageName = FileHandler.saveImage(bufferedImage, imageName);
+                        imageName = FileUtil.saveImage(bufferedImage, imageName);
 
                         imageContainer.setVisible(true);
                         imageContainer.setManaged(true);
@@ -329,7 +330,7 @@ public class MindNode extends StackPane {
             image.setImage(null);
             imageContainer.setVisible(false);
             imageContainer.setManaged(false);
-            FileHandler.deleteImage(imageName);
+            FileUtil.deleteImage(imageName);
             imageName = null;
             adjust();
         });
