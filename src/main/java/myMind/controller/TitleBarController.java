@@ -289,7 +289,6 @@ public class TitleBarController {
             stage.setHeight(height);
             maximizeBtn.setText("□");
         } else {
-            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
             // 最大化
             x = stage.getX();
             y = stage.getY();
@@ -302,7 +301,6 @@ public class TitleBarController {
             stage.setHeight(screenBounds.getHeight());
             maximizeBtn.setText("❐");
         }
-
         maximized = !maximized;
     }
 
@@ -327,11 +325,8 @@ public class TitleBarController {
                     new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE));
             ButtonBar.ButtonData buttonData = alert.showAndWait().get().getButtonData();
             switch (buttonData) {
-                case YES -> {
-                    saveAs();
-                    stage.close();
-                }
-                case NO -> stage.close();
+                case YES -> saveAs();
+                case NO -> {}
                 default -> {
                     return;
                 }
@@ -343,5 +338,6 @@ public class TitleBarController {
         } else {
             FileUtil.cancelSchedule(mindMap.getFilePath());
         }
+        stage.close();
     }
 }

@@ -58,11 +58,7 @@ public class MindNode extends StackPane {
 
     private Button addButtonR;
     private Button addButtonL;
-
-    // 拖拽缩放相关变量
-    // todo 常量类
-    private static final double RESIZE_THRESHOLD = 10.0;
-    private static final double BUTTON_THRESHOLD = 15.0;
+    
     private boolean isResizing = false;
     private double startX;
     private double startWidth;
@@ -214,12 +210,12 @@ public class MindNode extends StackPane {
                 double midHeight = getBoundsInLocal().getHeight() / 2;
                 double y = e.getY();
 
-                if (getBoundsInLocal().getWidth() - BUTTON_THRESHOLD < e.getX() &&
-                        midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
+                if (getBoundsInLocal().getWidth() - SizeConstants.BUTTON_THRESHOLD < e.getX() &&
+                        midHeight - SizeConstants.BUTTON_THRESHOLD < y && y < midHeight + SizeConstants.BUTTON_THRESHOLD) {
                     addButtonR.setVisible(true);
                 }
-                if (e.getX() < BUTTON_THRESHOLD &&
-                        midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
+                if (e.getX() < SizeConstants.BUTTON_THRESHOLD &&
+                        midHeight - SizeConstants.BUTTON_THRESHOLD < y && y < midHeight + SizeConstants.BUTTON_THRESHOLD) {
                     addButtonL.setVisible(true);
                 }
             });
@@ -238,8 +234,8 @@ public class MindNode extends StackPane {
         setOnMouseMoved(e -> {
             double midHeight = getBoundsInLocal().getHeight() / 2;
             double y = e.getY();
-            if (getBoundsInLocal().getWidth() - BUTTON_THRESHOLD < e.getX() &&
-                    midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
+            if (getBoundsInLocal().getWidth() - SizeConstants.BUTTON_THRESHOLD < e.getX() &&
+                    midHeight - SizeConstants.BUTTON_THRESHOLD < y && y < midHeight + SizeConstants.BUTTON_THRESHOLD) {
                 addButtonR.setVisible(true);
             }
         });
@@ -252,8 +248,8 @@ public class MindNode extends StackPane {
         setOnMouseMoved(e -> {
             double midHeight = getBoundsInLocal().getHeight() / 2;
             double y = e.getY();
-            if (e.getX() < BUTTON_THRESHOLD &&
-                    midHeight - BUTTON_THRESHOLD < y && y < midHeight + BUTTON_THRESHOLD) {
+            if (e.getX() < SizeConstants.BUTTON_THRESHOLD &&
+                    midHeight - SizeConstants.BUTTON_THRESHOLD < y && y < midHeight + SizeConstants.BUTTON_THRESHOLD) {
                 addButtonL.setVisible(true);
             }
         });
@@ -316,9 +312,9 @@ public class MindNode extends StackPane {
             double imageHeight = image.getBoundsInLocal().getHeight();
 
             // 不能合并两个 x 轴的判断，当在右下角出现了缩放图标后，往上移动，x 轴不变时，会进入 x 轴的分支，导致缩放图标不恢复
-            if (imageWidth - RESIZE_THRESHOLD < e.getX() && imageHeight - RESIZE_THRESHOLD < e.getY()) {
+            if (imageWidth - SizeConstants.RESIZE_THRESHOLD < e.getX() && imageHeight - SizeConstants.RESIZE_THRESHOLD < e.getY()) {
                 imageContainer.setCursor(Cursor.SE_RESIZE);
-            } else if (imageWidth - RESIZE_THRESHOLD < e.getX() && e.getY() < BUTTON_THRESHOLD) {
+            } else if (imageWidth - SizeConstants.RESIZE_THRESHOLD < e.getX() && e.getY() < SizeConstants.BUTTON_THRESHOLD) {
                 imageContainer.setCursor(Cursor.HAND);
                 closeButton.setVisible(true);
             } else {
@@ -340,8 +336,8 @@ public class MindNode extends StackPane {
             startX = e.getSceneX();
             startWidth = image.getFitWidth();
 
-            if (image.getBoundsInLocal().getWidth() - RESIZE_THRESHOLD < e.getX()
-                    && image.getBoundsInLocal().getHeight() - RESIZE_THRESHOLD < e.getY()) {
+            if (image.getBoundsInLocal().getWidth() - SizeConstants.RESIZE_THRESHOLD < e.getX()
+                    && image.getBoundsInLocal().getHeight() - SizeConstants.RESIZE_THRESHOLD < e.getY()) {
                 isResizing = true;
                 image.setCursor(Cursor.SE_RESIZE);
             }

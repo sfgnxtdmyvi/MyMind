@@ -49,6 +49,7 @@ public class Launch extends Application {
             e.printStackTrace();
         }
 
+        // todo 合并成一个Pane，换成其他布局
         // Pane 用来添加消息提示标签，BorderPane 无法手动指定位置
         Pane root = new Pane(borderPane);
         // Pane 不会自动调整子节点大小，需要手动绑定
@@ -56,7 +57,7 @@ public class Launch extends Application {
         borderPane.prefHeightProperty().bind(root.heightProperty());
         MessageUtil.init(root, stage);
 
-        Scene scene = new Scene(root, 1450, 740);
+        Scene scene = new Scene(root);
         scene.getStylesheets().addAll(STYLE_SHEETS);
 
         // todo 窗口圆角

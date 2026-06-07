@@ -30,4 +30,11 @@ public class SizeConstants {
      */
     public static final int TRANSLATE_OFFSET = 300;
 
+    // 拖拽缩放
+    public static final double RESIZE_THRESHOLD = 10.0;
+    public static final double BUTTON_THRESHOLD = 15.0;
+
+    public static double CENTER_X ;
+    public static double CENTER_Y ;
+
 }

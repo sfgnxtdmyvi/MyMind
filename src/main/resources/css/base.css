@@ -1,24 +1,41 @@
 /* workspace */
 .tab-label {
-    -fx-pref-width:150px;
+    -fx-pref-width: 150px;
 }
 
 .workspace {
-    -fx-background-color:white;
+    -fx-background-color: white;
 }
 
+/*标签页*/
 .hide-tabs .tab-header-area {
-    -fx-pref-height:0;
-    -fx-min-height:0;
-    -fx-max-height:0;
-    -fx-opacity:0;
+    visibility: hidden;
+}
+
+.tab-header-area {
+    -fx-pref-height: 26px;
+}
+
+.tab-header-background {
+    -fx-background-color: #f4f4f4;
+}
+
+.tab {
+    -fx-background-color: #e3e3e3;
+}
+
+.tab:selected {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-border-color: #e3e3e3 #e3e3e3 #6792e8 #e3e3e3;
+    -fx-border-width: 0 2 2 0;
 }
 
 /* 消息提示 */
 .message {
-    -fx-background-color:rgba(0, 0, 0, 0.7);
-    -fx-text-fill:white;
-    -fx-font-size:17;
-    -fx-padding:5 10;
-    -fx-background-radius:8;
+    -fx-background-color: rgba(0, 0, 0, 0.7);
+    -fx-text-fill: white;
+    -fx-font-size: 17;
+    -fx-padding: 5 10;
+    -fx-background-radius: 8;
 }

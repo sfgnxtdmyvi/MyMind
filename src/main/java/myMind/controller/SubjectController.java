@@ -24,17 +24,17 @@ public class SubjectController {
     private MindNode rootNode;
     private MindNode selectedNode;
 
-    //———————————————————————————————————————————新增———————————————————————————————————————————
-    public void initRootNode(double centerX, double centerY) {
-        rootNode = new MindNode(PosConstants.MIDDLE, centerX, centerY);
+    public SubjectController() {
+        rootNode = new MindNode(PosConstants.MIDDLE);
         addNode(rootNode);
     }
 
-    public void initRootNode(MindNode node) {
+    public SubjectController(MindNode node) {
         rootNode = node;
         addNode(node);
     }
 
+    //———————————————————————————————————————————新增———————————————————————————————————————————
     public void addChildR() {
         if (selectedNode == null || selectedNode.getPos() == PosConstants.LEFT) {
             return;
