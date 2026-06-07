@@ -1,51 +1,49 @@
 package myMind;
 
 import javafx.application.Application;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.IndexRange;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.Tab;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
 import myMind.componet.StyleWheel;
 import myMind.componet.Subject;
-import myMind.controller.MenuController;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
-import myMind.util.FileUtil;
+import myMind.controller.TitleBarController;
 import myMind.util.MessageUtil;
 
 import java.io.IOException;
 import java.util.List;
 
 public class Launch extends Application {
-    private static MenuController menuController;
+    private static TitleBarController titleBarController;
     private static final StyleWheel styleWheel = StyleWheel.getInstance();
 
     private static final List<String> STYLE_SHEETS = List.of(
-            Launch.class.getResource("/css/style.css").toExternalForm(),
-            Launch.class.getResource("/css/style-wheel.css").toExternalForm()
+            Launch.class.getResource("/css/base.css").toExternalForm(),
+            Launch.class.getResource("/css/node.css").toExternalForm(),
+            Launch.class.getResource("/css/style-wheel.css").toExternalForm(),
+            Launch.class.getResource("/css/title-bar.css").toExternalForm()
     );
 
     public static void createMindMap(Stage stage) {
         MindMap mindMap = new MindMap();
         BorderPane borderPane = new BorderPane();
         try {
-            FXMLLoader loader = new FXMLLoader(Launch.class.getResource("/fxml/menu.fxml"));
-            MenuBar menuBar = loader.load();
-            menuController = loader.getController();
-            menuController.setMindMap(mindMap);
-            borderPane.setTop(menuBar);
+            FXMLLoader loader = new FXMLLoader(Launch.class.getResource("/fxml/title-bar.fxml"));
+            HBox titleBar = loader.load();
+            titleBarController = loader.getController();
+            titleBarController.setMindMap(mindMap);
+            titleBarController.setSubjectController(mindMap.getSubjectController());
+            titleBarController.setStage(stage);
+            borderPane.setTop(titleBar);
             borderPane.setCenter(mindMap);
         } catch (IOException e) {
             e.printStackTrace();
@@ -61,8 +59,15 @@ public class Launch extends Application {
         Scene scene = new Scene(root, 1450, 740);
         scene.getStylesheets().addAll(STYLE_SHEETS);
 
+        // todo 窗口圆角
         stage.setScene(scene);
-        stage.setMaximized(true);
+        stage.initStyle(StageStyle.UNDECORATED);
+        // 取消最大化时的位置
+        stage.setX(6);
+        stage.setY(12);
+        stage.setHeight(740);
+        stage.setWidth(1450);
+        titleBarController.maximize();
         stage.show();
 
         // 防止被 StyleClassedTextArea 阻止事件
@@ -87,7 +92,7 @@ public class Launch extends Application {
             SubjectController subjectController = (SubjectController) newTab.getUserData();
             mindMap.setSubject(((Subject) newTab.getContent()));
             mindMap.setSubjectController(subjectController);
-            menuController.setSubjectController(subjectController);
+            titleBarController.setSubjectController(subjectController);
             StyleWheelArcController.setSubjectController(subjectController);
         });
 
@@ -95,42 +100,6 @@ public class Launch extends Application {
         stage.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 StyleWheelArcController.setSubjectController(mindMap.getSubjectController());
-            }
-        });
-
-        stage.setOnCloseRequest(event -> {
-            if (mindMap.getFilePath() == null) {
-                for (Tab tab : mindMap.getTabs()) {
-
-                    ObservableList<Node> children = ((Subject) tab.getContent()).getNodesLayer().getChildren();
-                    for (Node child : children) {
-                        MindNode node = (MindNode) child;
-                        FileUtil.deleteImage(node.getImageName());
-                    }
-                }
-
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("保存导图");
-                alert.setHeaderText(null);
-                alert.setContentText("是否保存当前导图？");
-                alert.getButtonTypes().setAll(new ButtonType("保存", ButtonBar.ButtonData.YES),
-                        new ButtonType("不保存", ButtonBar.ButtonData.NO),
-                        new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE));
-                ButtonBar.ButtonData buttonData = alert.showAndWait().get().getButtonData();
-                switch (buttonData) {
-                    case YES -> {
-                        menuController.saveAs();
-                        stage.close();
-                    }
-                    case NO -> stage.close();
-                    default -> event.consume();
-                }
-            }
-
-            if (Stage.getWindows().size() <= 1) {
-                FileUtil.cancelSchedule();
-            } else {
-                FileUtil.cancelSchedule(mindMap.getFilePath());
             }
         });
     }

@@ -1,0 +1,65 @@
+.title-bar {
+    -fx-background-color: linear-gradient(to right, #dfe9ec, #f8edd0, #e0eef1);
+    -fx-pref-height: 25px;
+}
+
+/*图标、标题*/
+#topLeft {
+    -fx-padding: 0 10;
+    -fx-alignment: center-left;
+}
+
+#icon {
+    -fx-font-size: 18px;
+}
+
+#title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+/* 菜单 */
+.menu-bar {
+    -fx-background-color: transparent;
+}
+
+.menu, .menu-item {
+    -fx-padding: 8 15 4 15;
+}
+
+.menu:hover,
+    /*显示子菜单时*/
+.menu:showing {
+    -fx-background-color: #d5d4d4;
+}
+
+.menu:hover > .label,
+.menu:showing > .label {
+    -fx-text-fill: #000000;
+}
+
+/*悬浮在上面的同时会获取焦点，鼠标移开后，:hover 消失，但焦点还在*/
+.menu-item:focused {
+    -fx-background-color: #a6a199;
+}
+
+.menu-item:focused > .label {
+    -fx-text-fill: #ffffff;
+}
+
+/*最小化、最大化、关闭*/
+.window-btn {
+    -fx-pref-width: 46px;
+    -fx-background-color: transparent;
+    -fx-font-size: 14px;
+}
+
+.window-btn:hover {
+    -fx-background-color: #d5d4d4;
+}
+
+.close-btn:hover {
+    -fx-background-color: #e81123;
+    -fx-text-fill: white;
+}

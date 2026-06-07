@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<HBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="myMind.controller.TitleBarController"
+      onMouseClicked="#clickBar"
+      styleClass="title-bar">
+
+    <HBox fx:id="topLeft" spacing="8">
+        <!-- 图标 -->
+        <Label fx:id="icon" text="🧠"/>
+        <!-- 标题 -->
+        <Label fx:id="title" text="MyMind"/>
+    </HBox>
+
+    <!-- 菜单 -->
+    <MenuBar>
+        <Menu text="文件">
+            <MenuItem onAction="#newMindMap" text="新建" accelerator="Ctrl+N"/>
+            <MenuItem onAction="#load" text="打开" accelerator="Ctrl+O"/>
+            <Menu fx:id="recentFilesMenu" text="打开最近" onShowing="#loadRecentFiles">
+                <MenuItem text="无最近文件" disable="true"/>
+            </Menu>
+            <SeparatorMenuItem/>
+            <MenuItem onAction="#save" text="保存" accelerator="Ctrl+S"/>
+            <MenuItem onAction="#saveAs" text="另存为" accelerator="Ctrl+Shift+S"/>
+        </Menu>
+
+        <Menu text="节点">
+            <MenuItem onAction="#addChildR" text="添加右子节点" accelerator="Alt+Right"/>
+            <MenuItem onAction="#addChildL" text="添加左子节点" accelerator="Alt+Left"/>
+            <MenuItem onAction="#addSibling" text="添加兄弟节点" accelerator="Alt+Down"/>
+            <SeparatorMenuItem/>
+            <MenuItem onAction="#batchAddChildR" text="批量添加右子节点" accelerator="Ctrl+Alt+Right"/>
+            <MenuItem onAction="#batchAddChildL" text="批量添加左子节点" accelerator="Ctrl+Alt+Left"/>
+            <MenuItem onAction="#batchAddSibling" text="批量添加兄弟节点" accelerator="Ctrl+Alt+Down"/>
+            <SeparatorMenuItem/>
+            <MenuItem onAction="#copy" text="复制" accelerator="Ctrl+Shift+C"/>
+            <MenuItem onAction="#cut" text="剪切" accelerator="Ctrl+Shift+X"/>
+            <SeparatorMenuItem/>
+            <MenuItem onAction="#addSubject" text="新建主题" accelerator="Ctrl+M"/>
+            <MenuItem onAction="#delete" text="删除节点" accelerator="Alt+Delete"/>
+            <SeparatorMenuItem/>
+            <MenuItem onAction="#moveRight" text="右移" accelerator="Shift+Alt+Right"/>
+            <MenuItem onAction="#moveLeft" text="左移" accelerator="Shift+Alt+Left"/>
+            <MenuItem onAction="#moveUp" text="上移" accelerator="Shift+Alt+Up"/>
+            <MenuItem onAction="#moveDown" text="下移" accelerator="Shift+Alt+Down"/>
+        </Menu>
+    </MenuBar>
+
+    <!-- 弹性占位符：占据所有剩余空间，把 topRight 推到右侧 -->
+    <Pane HBox.hgrow="ALWAYS"/>
+    <!-- 最小化、最大化、关闭 -->
+    <Button onAction="#minimize" text="─" styleClass="window-btn, minimize-btn"/>
+    <Button fx:id="maximizeBtn" onAction="#maximize" text="❐" styleClass="window-btn, maximize-btn"/>
+    <Button onAction="#close" text="✕" styleClass="window-btn, close-btn"/>
+</HBox>

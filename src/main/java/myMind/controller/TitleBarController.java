@@ -2,9 +2,18 @@ package myMind.controller;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import lombok.Setter;
 import myMind.Launch;
@@ -19,15 +28,26 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class MenuController {
-
-    @Setter
-    private SubjectController subjectController;
-    @Setter
-    private MindMap mindMap;
-
+@Setter
+public class TitleBarController {
+    private final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
     @FXML
     private Menu recentFilesMenu;
+    @FXML
+    private Button maximizeBtn;
+    @FXML
+    private HBox titleBar;
+
+    private Stage stage;
+    private MindMap mindMap;
+    private SubjectController subjectController;
+
+    private boolean maximized = false;
+    // 最大化时，记录宽高位置，恢复时使用
+    private double width;
+    private double height;
+    private double x;
+    private double y;
 
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
@@ -241,6 +261,87 @@ public class MenuController {
         int index = children.indexOf(selectedNode);
         if (index != children.size() - 1) {
             subjectController.setSelectedNode(children.get(index + 1));
+        }
+    }
+
+    //—————————————————————————————————————————最小化、最大化、关闭—————————————————————————————————————————
+    // todo 调整尺寸
+    // todo 移动窗口
+    @FXML
+    public void clickBar(MouseEvent event) {
+        if (event.getClickCount() == 2) {
+            maximize();
+        }
+    }
+
+    @FXML
+    public void minimize() {
+        stage.setIconified(true);
+    }
+
+    @FXML
+    public void maximize() {
+        if (maximized) {
+            // 还原
+            stage.setX(x);
+            stage.setY(y);
+            stage.setWidth(width);
+            stage.setHeight(height);
+            maximizeBtn.setText("□");
+        } else {
+            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+            // 最大化
+            x = stage.getX();
+            y = stage.getY();
+            width = stage.getWidth();
+            height = stage.getHeight();
+            stage.setX(0);
+            stage.setY(0);
+            // UNDECORATED 模式下，setMaximized()会让窗口覆盖整个屏幕（包括任务栏）
+            stage.setWidth(screenBounds.getWidth());
+            stage.setHeight(screenBounds.getHeight());
+            maximizeBtn.setText("❐");
+        }
+
+        maximized = !maximized;
+    }
+
+    @FXML
+    public void close() {
+        if (mindMap.getFilePath() == null) {
+            for (Tab tab : mindMap.getTabs()) {
+
+                ObservableList<Node> children = ((Subject) tab.getContent()).getNodesLayer().getChildren();
+                for (Node child : children) {
+                    MindNode node = (MindNode) child;
+                    FileUtil.deleteImage(node.getImageName());
+                }
+            }
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("保存导图");
+            alert.setHeaderText(null);
+            alert.setContentText("是否保存当前导图？");
+            alert.getButtonTypes().setAll(new ButtonType("保存", ButtonBar.ButtonData.YES),
+                    new ButtonType("不保存", ButtonBar.ButtonData.NO),
+                    new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE));
+            ButtonBar.ButtonData buttonData = alert.showAndWait().get().getButtonData();
+            switch (buttonData) {
+                case YES -> {
+                    saveAs();
+                    stage.close();
+                }
+                case NO -> stage.close();
+                default -> {
+                    return;
+                }
+            }
+        }
+
+        if (Stage.getWindows().size() <= 1) {
+            FileUtil.cancelSchedule();
+        } else {
+            FileUtil.cancelSchedule(mindMap.getFilePath());
         }
     }
 }
