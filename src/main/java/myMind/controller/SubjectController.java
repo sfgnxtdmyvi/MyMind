@@ -189,7 +189,7 @@ public class SubjectController {
         MindNode cloneNode;
         String imageName = originalNode.getImageName();
         if (imageName != null) {
-            ImageView image = originalNode.getImage();
+            ImageView image = originalNode.getImageView();
             cloneNode = new MindNode(pos, imageName, image.getFitWidth(), image.getFitHeight(), buildTextArea(originalNode.getTextArea()));
             cloneNode.getTextArea().setVisible(originalNode.getTextArea().isVisible());
         } else {

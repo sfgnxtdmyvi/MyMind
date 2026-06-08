@@ -51,14 +51,14 @@ public class MindNode extends StackPane {
 
     private VBox contentBox;
     private String imageName;
-    private ImageView image;
+    private ImageView imageView;
     private StackPane imageContainer;
     private Button closeButton;
     private StyleClassedTextArea textArea;
 
     private Button addButtonR;
     private Button addButtonL;
-    
+
     private boolean isResizing = false;
     private double startX;
     private double startWidth;
@@ -66,7 +66,6 @@ public class MindNode extends StackPane {
 
     public MindNode(byte pos) {
         this.pos = pos;
-        buildImageContainer();
         StyleClassedTextArea textArea = new StyleClassedTextArea();
         textArea.getStyleClass().add("text-area");
         textArea.setMaxWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
@@ -85,38 +84,49 @@ public class MindNode extends StackPane {
 
     public MindNode(byte pos, StyleClassedTextArea textArea) {
         this.pos = pos;
-        buildImageContainer();
         buildNode(textArea);
     }
 
     public MindNode(byte pos, String imageName, double imageWidth, double imageHeight, StyleClassedTextArea textArea) {
         this.pos = pos;
-        image = new ImageView(new Image(new File(FileConstants.DIR_IMAGE + imageName).toURI().toString()));
-        image.setSmooth(true);
-        image.setFitWidth(imageWidth);
-        image.setFitHeight(imageHeight);
+        buildNode(textArea);
+        buildImageContainer();
+        imageView.setImage(new Image(new File(FileConstants.DIR_IMAGE + imageName).toURI().toString()));
+        imageView.setFitWidth(imageWidth);
+        imageView.setFitHeight(imageHeight);
         ratio = imageWidth / imageHeight;
         this.imageName = imageName;
-        buildCloseButton();
+    }
 
-        imageContainer = new StackPane(image, closeButton);
+    private void buildImageContainer() {
+        imageView = new ImageView();
+        imageView.setSmooth(true);
+
+        closeButton = new Button("✖");
+        closeButton.getStyleClass().add("close-button");
+        closeButton.setVisible(false);
+        StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
+
+        // StackPane 负责显示边框
+        // 只有 Region 及其子类才能通过 CSS 设置边框和背景
+        imageContainer = new StackPane(imageView, closeButton);
+        // 在一个会拉伸子节点的布局容器中，如果子节点没有设置最大尺寸限制，它会填满可用空间
         imageContainer.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-        imageContainer.setVisible(true);
-        imageContainer.setManaged(true);
 
-        buildNode(textArea);
+        addImageListener();
+        contentBox.getChildren().add(0, imageContainer);
     }
 
     private void buildNode(StyleClassedTextArea textArea) {
         this.textArea = textArea;
 
-        contentBox = new VBox();
+        contentBox = new VBox(textArea);
         contentBox.setAlignment(Pos.CENTER);
         contentBox.setPadding(new Insets(10, 10, 10, 10));
-        contentBox.getChildren().addAll(imageContainer, textArea);
         ObservableList<Node> children = getChildren();
         children.add(contentBox);
 
+        // 中间节点会添加两个按钮
         if (pos != PosConstants.LEFT) {
             addButtonR(children);
         }
@@ -131,28 +141,6 @@ public class MindNode extends StackPane {
         addListener();
     }
 
-    private void buildImageContainer() {
-        image = new ImageView();
-        image.setSmooth(true);
-        buildCloseButton();
-
-        // StackPane 负责显示边框
-        // 只有 Region 及其子类才能通过 CSS 设置边框和背景
-        imageContainer = new StackPane(image, closeButton);
-        // 在一个会拉伸子节点的布局容器中，如果子节点没有设置最大尺寸限制，它会填满可用空间
-        imageContainer.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-        imageContainer.setVisible(false);
-        //true：组件会参与布局计算
-        //false：组件脱离布局管理
-        imageContainer.setManaged(false);
-    }
-
-    private void buildCloseButton() {
-        closeButton = new Button("✖");
-        closeButton.getStyleClass().add("close-button");
-        closeButton.setVisible(false);
-        StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
-    }
 
     public void addButtonL(ObservableList<Node> children) {
         addButtonL = new Button("✚");
@@ -182,19 +170,59 @@ public class MindNode extends StackPane {
             onAction.accept(MindNodeEvent.PASTE_SIBLING);
         });
 
-        addAddBtnListener();
+        addButtonListen();
 
-        addImageListener();
+        // 粘贴图片
+        setOnKeyReleased(e -> {
+            if (e.isControlDown() && e.getCode() == KeyCode.V) {
+                // javafx 的剪贴板获取不了图片，只能用 awt 的
+                Transferable transferable = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
+                if (transferable != null && transferable.isDataFlavorSupported(DataFlavor.imageFlavor)) {
+                    try {
+                        BufferedImage bufferedImage = (BufferedImage) transferable.getTransferData(DataFlavor.imageFlavor);
+                        Image clipboardImage = SwingFXUtils.toFXImage(bufferedImage, null);
+
+                        if (imageContainer == null) {
+                            buildImageContainer();
+                        }
+                        imageView.setImage(clipboardImage);
+                        double imageWidth = clipboardImage.getWidth();
+                        double imageHeight = clipboardImage.getHeight();
+                        //如果开启了 150% 缩放
+                        //截图时，系统记录的是逻辑像素，比如 100x100，按 150% 缩放渲染出来是 150x150
+                        //但 awt 剪贴板拿到的是物理像素，就是 150x150，再按 150% 缩放渲染出来是 225x225
+                        imageView.setFitWidth(imageWidth / SizeConstants.SCALE);
+                        imageView.setFitHeight(imageHeight / SizeConstants.SCALE);
+                        ratio = imageWidth / imageHeight;
+                        imageName = FileUtil.saveImage(bufferedImage, imageName);
+
+                        adjust();
+                    } catch (UnsupportedFlavorException | IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+
+                e.consume();
+            }
+        });
 
         // 文本变化调整节点大小
         textArea.textProperty()
                 .addListener((obs, oldText, newText) -> adjust());
+
+        textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                // 清除选区，恢复背景色
+                textArea.deselect();
+                adjustSize();
+            }
+        });
     }
 
     /**
      * 按钮监听
      */
-    private void addAddBtnListener() {
+    private void addButtonListen() {
         // 鼠标移入左右中心点时，显示添加按钮
         if (pos == PosConstants.RIGHT) {
             addButtonListenR();
@@ -262,40 +290,6 @@ public class MindNode extends StackPane {
      * 图片监听
      */
     private void addImageListener() {
-        // 粘贴图片
-        setOnKeyReleased(e -> {
-            if (e.isControlDown() && e.getCode() == KeyCode.V) {
-                // javafx 的剪贴板获取不了图片，只能用 awt 的
-                Transferable transferable = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
-                if (transferable != null && transferable.isDataFlavorSupported(DataFlavor.imageFlavor)) {
-                    try {
-                        BufferedImage bufferedImage = (BufferedImage) transferable.getTransferData(DataFlavor.imageFlavor);
-                        Image clipboardImage = SwingFXUtils.toFXImage(bufferedImage, null);
-
-                        //如果开启了 150% 缩放
-                        //截图时，系统记录的是逻辑像素，比如 100x100，按 150% 缩放渲染出来是 150x150
-                        //但 awt 剪贴板拿到的是物理像素，就是 150x150，再按 150% 缩放渲染出来是 225x225
-                        image.setImage(clipboardImage);
-                        double imageWidth = clipboardImage.getWidth();
-                        double imageHeight = clipboardImage.getHeight();
-                        image.setFitWidth(imageWidth / SizeConstants.SCALE);
-                        image.setFitHeight(imageHeight / SizeConstants.SCALE);
-                        ratio = imageWidth / imageHeight;
-                        imageName = FileUtil.saveImage(bufferedImage, imageName);
-
-                        imageContainer.setVisible(true);
-                        imageContainer.setManaged(true);
-
-                        adjust();
-                    } catch (UnsupportedFlavorException | IOException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-
-                e.consume();
-            }
-        });
-
         // 鼠标移入时，显示边框
         imageContainer.setOnMouseEntered(e -> imageContainer.getStyleClass().add("nodeImage"));
 
@@ -308,8 +302,8 @@ public class MindNode extends StackPane {
 
         // 鼠标悬浮在右下角显示缩放图标，在右上角显示关闭图标
         imageContainer.setOnMouseMoved(e -> {
-            double imageWidth = image.getBoundsInLocal().getWidth();
-            double imageHeight = image.getBoundsInLocal().getHeight();
+            double imageWidth = imageView.getBoundsInLocal().getWidth();
+            double imageHeight = imageView.getBoundsInLocal().getHeight();
 
             // 不能合并两个 x 轴的判断，当在右下角出现了缩放图标后，往上移动，x 轴不变时，会进入 x 轴的分支，导致缩放图标不恢复
             if (imageWidth - SizeConstants.RESIZE_THRESHOLD < e.getX() && imageHeight - SizeConstants.RESIZE_THRESHOLD < e.getY()) {
@@ -323,7 +317,7 @@ public class MindNode extends StackPane {
         });
 
         closeButton.setOnAction(e -> {
-            image.setImage(null);
+            imageView.setImage(null);
             imageContainer.setVisible(false);
             imageContainer.setManaged(false);
             FileUtil.deleteImage(imageName);
@@ -334,21 +328,21 @@ public class MindNode extends StackPane {
         // 缩放
         imageContainer.setOnMousePressed(e -> {
             startX = e.getSceneX();
-            startWidth = image.getFitWidth();
+            startWidth = imageView.getFitWidth();
 
-            if (image.getBoundsInLocal().getWidth() - SizeConstants.RESIZE_THRESHOLD < e.getX()
-                    && image.getBoundsInLocal().getHeight() - SizeConstants.RESIZE_THRESHOLD < e.getY()) {
+            if (imageView.getBoundsInLocal().getWidth() - SizeConstants.RESIZE_THRESHOLD < e.getX()
+                    && imageView.getBoundsInLocal().getHeight() - SizeConstants.RESIZE_THRESHOLD < e.getY()) {
                 isResizing = true;
-                image.setCursor(Cursor.SE_RESIZE);
+                imageView.setCursor(Cursor.SE_RESIZE);
             }
         });
 
         imageContainer.setOnMouseDragged(e -> {
             if (isResizing) {
                 double imageWidth = startWidth + e.getSceneX() - startX;
-                image.setFitWidth(imageWidth);
+                imageView.setFitWidth(imageWidth);
                 // 根据宽度的变化量，按宽高比计算高度
-                image.setFitHeight(imageWidth / ratio);
+                imageView.setFitHeight(imageWidth / ratio);
 
                 adjust();
             }
@@ -356,7 +350,7 @@ public class MindNode extends StackPane {
 
         imageContainer.setOnMouseReleased(e -> {
             isResizing = false;
-            image.setCursor(Cursor.DEFAULT);
+            imageView.setCursor(Cursor.DEFAULT);
         });
 
         // 点击有图片没有文字的节点显示 textArea
@@ -374,14 +368,6 @@ public class MindNode extends StackPane {
                 } else {
                     onAction.accept(MindNodeEvent.ADJUST_YL);
                 }
-            }
-        });
-
-        textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) {
-                // 清除选区，恢复背景色
-                textArea.deselect();
-                adjustSize();
             }
         });
     }
@@ -407,7 +393,7 @@ public class MindNode extends StackPane {
      */
     public void adjustSize() {
         String text = textArea.getText();
-        boolean imageVisible = imageContainer.isVisible();
+        boolean imageVisible = imageContainer != null;
         double nodeWidth;
         double nodeHeight;
         double textWidth;
@@ -426,13 +412,13 @@ public class MindNode extends StackPane {
             nodeWidth = Math.max(SizeConstants.MIN_NODE_WIDTH, textWidth + 22) * 1.01;
             if (imageVisible) {
                 // 文本宽度 < 图片宽度时，宽度 = 图片宽度 + border(4px) + padding(20px)
-                nodeWidth = Math.max(nodeWidth, image.getFitWidth() + 24);
+                nodeWidth = Math.max(nodeWidth, imageView.getFitWidth() + 24);
             }
             // textArea 高度 + border(2px) + padding(20px) [+ image 高度 + border(2px)]
             textHeight = MeasureTextUtil.getTextHeight() * 1.023;
             nodeHeight = textHeight + 22;
             if (imageVisible) {
-                nodeHeight += image.getFitHeight() + 2;
+                nodeHeight += imageView.getFitHeight() + 2;
                 if (textEmpty) {
                     textArea.setVisible(false);
                     nodeHeight -= textHeight;

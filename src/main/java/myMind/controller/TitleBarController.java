@@ -3,6 +3,7 @@ package myMind.controller;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
@@ -16,6 +17,8 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -270,10 +273,19 @@ public class TitleBarController {
     }
 
     public void registerGlobalAccelerators(Scene scene) {
-        scene.getAccelerators().put(KeyCombination.keyCombination("Shift+Alt+Right"), this::moveRight);
-        scene.getAccelerators().put(KeyCombination.keyCombination("Shift+Alt+Left"), this::moveLeft);
-        scene.getAccelerators().put(KeyCombination.keyCombination("Shift+Alt+Up"), this::moveUp);
-        scene.getAccelerators().put(KeyCombination.keyCombination("Shift+Alt+Down"), this::moveDown);
+        ObservableMap<KeyCombination, Runnable> accelerators = scene.getAccelerators();
+        accelerators.put(
+                new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+                this::moveRight);
+        accelerators.put(
+                new KeyCodeCombination(KeyCode.LEFT, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+                this::moveLeft);
+        accelerators.put(
+                new KeyCodeCombination(KeyCode.UP, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+                this::moveUp);
+        accelerators.put(
+                new KeyCodeCombination(KeyCode.DOWN, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+                this::moveDown);
     }
 
     //—————————————————————————————————————————最小化、最大化、关闭—————————————————————————————————————————

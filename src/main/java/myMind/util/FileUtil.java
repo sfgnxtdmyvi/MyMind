@@ -290,7 +290,7 @@ public class FileUtil {
         String imageName = node.getImageName();
         if (imageName != null) {
             json.put("imageName", imageName);
-            ImageView image = node.getImage();
+            ImageView image = node.getImageView();
             json.put("imageWidth", image.getFitWidth());
             json.put("imageHeight", image.getFitHeight());
         }
