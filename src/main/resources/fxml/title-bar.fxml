@@ -48,6 +48,12 @@
             <MenuItem onAction="#batchAddChildL" text="批量添加左子节点" accelerator="Ctrl+Alt+Left"/>
             <MenuItem onAction="#batchAddSibling" text="批量添加兄弟节点" accelerator="Ctrl+Alt+Down"/>
         </Menu>
+
+        <Menu text="设置">
+<!--            todo -->
+            <MenuItem onAction="#addSubject" text="快捷键"/>
+            <MenuItem onAction="#addSubject" text="样式"/>
+        </Menu>
     </MenuBar>
 
     <!-- 弹性占位符：占据所有剩余空间，把 topRight 推到右侧 -->

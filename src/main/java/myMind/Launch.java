@@ -2,9 +2,9 @@ package myMind;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.IndexRange;
 import javafx.scene.image.Image;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.BorderPane;
@@ -26,6 +26,11 @@ import java.io.IOException;
 import java.util.List;
 
 public class Launch extends Application {
+    private static Stage stage;
+    private static Pane root;
+    private static Scene scene;
+
+    private static MindMap mindMap;
     private static TitleBarController titleBarController;
     private static ContextMenuController contextMenuController;
     private static ContextMenu contextMenu;
@@ -39,7 +44,8 @@ public class Launch extends Application {
     );
 
     public static void createMindMap(Stage stage) {
-        MindMap mindMap = new MindMap();
+        Launch.stage = stage;
+        mindMap = new MindMap();
         BorderPane borderPane = new BorderPane();
         try {
             FXMLLoader loader = new FXMLLoader(Launch.class.getResource("/fxml/title-bar.fxml"));
@@ -61,13 +67,13 @@ public class Launch extends Application {
 
         // todo 合并成一个Pane，换成其他布局
         // Pane 用来添加消息提示标签，BorderPane 无法手动指定位置
-        Pane root = new Pane(borderPane);
+        root = new Pane(borderPane);
         // Pane 不会自动调整子节点大小，需要手动绑定
         borderPane.prefWidthProperty().bind(root.widthProperty());
         borderPane.prefHeightProperty().bind(root.heightProperty());
         MessageUtil.init(root, stage);
 
-        Scene scene = new Scene(root);
+        scene = new Scene(root);
         scene.getStylesheets().addAll(STYLE_SHEETS);
 
         stage.setScene(scene);
@@ -85,8 +91,13 @@ public class Launch extends Application {
         titleBarController.maximize();
         stage.show();
 
+        addListener();
+    }
+
+    private static void addListener() {
         contextMenuController.registerGlobalAccelerators(scene);
         titleBarController.registerGlobalAccelerators(scene);
+
         // 防止被 StyleClassedTextArea 阻止事件
         root.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> {
             event.consume();
@@ -94,13 +105,13 @@ public class Launch extends Application {
             if (selectedNode == null) {
                 return;
             }
-            System.out.println("event.getSource() = " + event.getSource());
 
-            IndexRange selection = selectedNode.getTextArea().getSelection();
-            if (selection.getLength() != 0) {
+            if (selectedNode.getTextArea().getSelection().getLength() != 0) {
                 // 默认将 content 的左上角放到 (x, y) 处，所以加上偏移，使轮盘居中
                 styleWheel.show(stage, event.getScreenX() - 125, event.getScreenY() - 125);
-            } else {
+            }
+            // 得到当前被点中的实际节点，再向上查找是否属于 MindNode
+            else if (isMindNode(event.getPickResult().getIntersectedNode())) {
                 contextMenu.show(stage, event.getScreenX(), event.getScreenY());
             }
         });
@@ -125,8 +136,18 @@ public class Launch extends Application {
             }
         });
 
-         // 通过任务栏关闭时，也执行关闭逻辑
+        // 通过任务栏关闭时，也执行关闭逻辑
         stage.setOnCloseRequest(event -> titleBarController.close());
+    }
+
+    private static boolean isMindNode(Node node) {
+        while (node != null) {
+            if (node instanceof MindNode) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
     }
 
     @Override

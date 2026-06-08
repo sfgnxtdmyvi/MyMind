@@ -4,8 +4,10 @@
 <?import javafx.scene.shape.Arc?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Text?>
-<Pane fx:id="styleWheel" prefHeight="250" prefWidth="250" xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1" fx:controller="myMind.controller.StyleWheelArcController">
+<Pane xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:id="styleWheel"
+      fx:controller="myMind.controller.StyleWheelArcController">
     <children>
         <Arc type="ROUND" styleClass="arc,red-text"
              startAngle="0" length="60" radiusX="40" radiusY="40" centerX="125" centerY="125"

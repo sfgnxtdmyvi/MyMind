@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.MenuItem?>
+
+<ContextMenu xmlns="http://javafx.com/javafx/17"
+             xmlns:fx="http://javafx.com/fxml/1"
+             fx:controller="myMind.controller.ContextMenuController">
+    <items>
+        <MenuItem onAction="#copy" text="复制"/>
+        <MenuItem onAction="#cut" text="剪切"/>
+        <MenuItem onAction="#delete" text="删除"/>
+    </items>
+
+</ContextMenu>

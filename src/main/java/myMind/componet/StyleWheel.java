@@ -14,7 +14,7 @@ public class StyleWheel extends Popup {
             FXMLLoader loader = new FXMLLoader(StyleWheel.class.getResource(config.getString("styleWheel")));
             Pane styleWheel = loader.load();
             getContent().add(styleWheel);
-            styleWheel.setOnMouseExited(event -> hide());
+            setAutoHide(true);
         } catch (IOException e) {
             e.printStackTrace();
         }

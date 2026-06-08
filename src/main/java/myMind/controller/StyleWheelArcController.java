@@ -9,7 +9,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import lombok.Setter;
-import myMind.componet.MindNode;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import java.util.ArrayList;
@@ -44,45 +43,41 @@ public class StyleWheelArcController {
 
     @FXML
     private void toggleStyle(MouseEvent event) {
-        MindNode selectedNode = subjectController.getSelectedNode();
-        StyleClassedTextArea textArea = selectedNode.getTextArea();
-        IndexRange selection = textArea.getSelection();
+        StyleClassedTextArea textArea = subjectController.getSelectedNode().getTextArea();
 
-        if (selection.getLength() > 0) {
-            Object source = event.getSource();
-            String style;
-            if (source instanceof Arc) {
-                style = (String) ((Arc) source).getUserData();
-            } else {
-                style = (String) ((Circle) source).getUserData();
-            }
-
-            int start = selection.getStart();
-            // getStyleAtPosition(p) is equivalent to getStyleOfChar(p-1)
-            // 用 getStyleAtPosition 获取的是指定位置的前一个位置的样式
-            // List<String> styles = new ArrayList<>(textArea.getStyleAtPosition(start + 1));
-            List<String> styles = new ArrayList<>(textArea.getStyleOfChar(start));
-            // 点击加粗：有加粗则取消，无加粗则加粗
-            // 点击颜色：改成点击的颜色，有加粗则保留，黑色则不用添加
-            boolean containsBold = styles.contains("bold-text");
-            if (style.equals("bold-text")) {
-                if (containsBold) {
-                    styles.remove("bold-text");
-                } else {
-                    styles.add("bold-text");
-                }
-            } else {
-                styles.clear();
-                if (!style.equals("black-text")) {
-                    styles.add(style);
-                }
-                if (containsBold) {
-                    styles.add("bold-text");
-                }
-            }
-
-            textArea.setStyle(start, selection.getEnd(), styles);
+        Object source = event.getSource();
+        String style;
+        if (source instanceof Arc) {
+            style = (String) ((Arc) source).getUserData();
+        } else {
+            style = (String) ((Circle) source).getUserData();
         }
+
+        IndexRange selection = textArea.getSelection();
+        int start = selection.getStart();
+        // getStyleAtPosition(p) is equivalent to getStyleOfChar(p-1)
+        // 用 getStyleAtPosition 获取的是指定位置的前一个位置的样式
+        // List<String> styles = new ArrayList<>(textArea.getStyleAtPosition(start + 1));
+        List<String> styles = new ArrayList<>(textArea.getStyleOfChar(start));
+        // 点击加粗：有加粗则取消，无加粗则加粗
+        // 点击颜色：改成点击的颜色，有加粗则保留，黑色则不用添加
+        boolean containsBold = styles.contains("bold-text");
+        if (style.equals("bold-text")) {
+            if (containsBold) {
+                styles.remove("bold-text");
+            } else {
+                styles.add("bold-text");
+            }
+        } else {
+            styles.clear();
+            if (!style.equals("black-text")) {
+                styles.add(style);
+            }
+            if (containsBold) {
+                styles.add("bold-text");
+            }
+        }
+        textArea.setStyle(start, selection.getEnd(), styles);
     }
 
     //—————————————————————————————————————————轮盘悬浮行为—————————————————————————————————————————
