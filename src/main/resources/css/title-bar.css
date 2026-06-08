@@ -5,12 +5,9 @@
 
 /*图标、标题*/
 #topLeft {
-    -fx-padding: 0 10;
+    -fx-padding: 0 0 0 15;
+    -fx-spacing: 15;
     -fx-alignment: center-left;
-}
-
-#icon {
-    -fx-font-size: 18px;
 }
 
 #title {

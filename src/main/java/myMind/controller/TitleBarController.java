@@ -1,20 +1,27 @@
 package myMind.controller;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import lombok.Getter;
 import lombok.Setter;
 import myMind.Launch;
 import myMind.componet.MindMap;
@@ -30,7 +37,22 @@ import java.util.List;
 
 @Setter
 public class TitleBarController {
-    private final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+    @FXML
+    @Getter
+    private ImageView icon;
+    @FXML
+    private Label title;
+    private StringProperty titleProperty = new SimpleStringProperty();
+
+    public StringProperty titleProperty() {
+        return titleProperty;
+    }
+
+    @FXML
+    public void initialize() {
+        title.textProperty().bind(titleProperty);
+    }
+
     @FXML
     private Menu recentFilesMenu;
     @FXML
@@ -42,6 +64,7 @@ public class TitleBarController {
     private MindMap mindMap;
     private SubjectController subjectController;
 
+    private final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
     private boolean maximized = false;
     // 最大化时，记录宽高位置，恢复时使用
     private double width;
@@ -173,28 +196,13 @@ public class TitleBarController {
 
     //—————————————————————————————————————————复制粘贴—————————————————————————————————————————
     @FXML
-    private void copy() {
-        subjectController.copy();
-    }
-
-    @FXML
-    private void cut() {
-        subjectController.cut();
-    }
-
-    @FXML
-    private void delete() {
-        subjectController.delete();
-    }
-
-    @FXML
     private void addSubject() {
         mindMap.addSubject();
         subjectController = mindMap.getSubjectController();
     }
 
+    // todo 抽取到快捷键管理类
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
-    @FXML
     private void moveRight() {
         MindNode selectedNode = subjectController.getSelectedNode();
         // 左边节点 -> 父节点
@@ -209,7 +217,6 @@ public class TitleBarController {
         }
     }
 
-    @FXML
     private void moveLeft() {
         MindNode selectedNode = subjectController.getSelectedNode();
         // 父节点 <- 右边节点
@@ -224,7 +231,6 @@ public class TitleBarController {
         }
     }
 
-    @FXML
     private void moveUp() {
         MindNode selectedNode = subjectController.getSelectedNode();
         if (selectedNode.getPos() == PosConstants.MIDDLE) {
@@ -244,7 +250,6 @@ public class TitleBarController {
         }
     }
 
-    @FXML
     private void moveDown() {
         MindNode selectedNode = subjectController.getSelectedNode();
         if (selectedNode.getPos() == PosConstants.MIDDLE) {
@@ -262,6 +267,13 @@ public class TitleBarController {
         if (index != children.size() - 1) {
             subjectController.setSelectedNode(children.get(index + 1));
         }
+    }
+
+    public void registerGlobalAccelerators(Scene scene) {
+        scene.getAccelerators().put(KeyCombination.keyCombination("Shift+Alt+Right"), this::moveRight);
+        scene.getAccelerators().put(KeyCombination.keyCombination("Shift+Alt+Left"), this::moveLeft);
+        scene.getAccelerators().put(KeyCombination.keyCombination("Shift+Alt+Up"), this::moveUp);
+        scene.getAccelerators().put(KeyCombination.keyCombination("Shift+Alt+Down"), this::moveDown);
     }
 
     //—————————————————————————————————————————最小化、最大化、关闭—————————————————————————————————————————
@@ -326,7 +338,8 @@ public class TitleBarController {
             ButtonBar.ButtonData buttonData = alert.showAndWait().get().getButtonData();
             switch (buttonData) {
                 case YES -> saveAs();
-                case NO -> {}
+                case NO -> {
+                }
                 default -> {
                     return;
                 }

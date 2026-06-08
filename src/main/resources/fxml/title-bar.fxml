@@ -8,6 +8,7 @@
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.image.ImageView?>
 <HBox xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="myMind.controller.TitleBarController"
@@ -16,9 +17,9 @@
 
     <HBox fx:id="topLeft" spacing="8">
         <!-- 图标 -->
-        <Label fx:id="icon" text="🧠"/>
+        <ImageView fx:id="icon" fitWidth="20" fitHeight="20"/>
         <!-- 标题 -->
-        <Label fx:id="title" text="MyMind"/>
+        <Label fx:id="title"/>
     </HBox>
 
     <!-- 菜单 -->
@@ -34,25 +35,18 @@
             <MenuItem onAction="#saveAs" text="另存为" accelerator="Ctrl+Shift+S"/>
         </Menu>
 
-        <Menu text="节点">
+        <Menu text="编辑">
+            <MenuItem onAction="#addSubject" text="新建主题" accelerator="Ctrl+M"/>
+            <SeparatorMenuItem/>
+
             <MenuItem onAction="#addChildR" text="添加右子节点" accelerator="Alt+Right"/>
             <MenuItem onAction="#addChildL" text="添加左子节点" accelerator="Alt+Left"/>
             <MenuItem onAction="#addSibling" text="添加兄弟节点" accelerator="Alt+Down"/>
             <SeparatorMenuItem/>
+
             <MenuItem onAction="#batchAddChildR" text="批量添加右子节点" accelerator="Ctrl+Alt+Right"/>
             <MenuItem onAction="#batchAddChildL" text="批量添加左子节点" accelerator="Ctrl+Alt+Left"/>
             <MenuItem onAction="#batchAddSibling" text="批量添加兄弟节点" accelerator="Ctrl+Alt+Down"/>
-            <SeparatorMenuItem/>
-            <MenuItem onAction="#copy" text="复制" accelerator="Ctrl+Shift+C"/>
-            <MenuItem onAction="#cut" text="剪切" accelerator="Ctrl+Shift+X"/>
-            <SeparatorMenuItem/>
-            <MenuItem onAction="#addSubject" text="新建主题" accelerator="Ctrl+M"/>
-            <MenuItem onAction="#delete" text="删除节点" accelerator="Alt+Delete"/>
-            <SeparatorMenuItem/>
-            <MenuItem onAction="#moveRight" text="右移" accelerator="Shift+Alt+Right"/>
-            <MenuItem onAction="#moveLeft" text="左移" accelerator="Shift+Alt+Left"/>
-            <MenuItem onAction="#moveUp" text="上移" accelerator="Shift+Alt+Up"/>
-            <MenuItem onAction="#moveDown" text="下移" accelerator="Shift+Alt+Down"/>
         </Menu>
     </MenuBar>
 

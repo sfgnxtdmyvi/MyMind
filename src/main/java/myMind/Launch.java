@@ -3,7 +3,9 @@ package myMind;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.IndexRange;
+import javafx.scene.image.Image;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -14,6 +16,7 @@ import myMind.componet.MindMap;
 import myMind.componet.MindNode;
 import myMind.componet.StyleWheel;
 import myMind.componet.Subject;
+import myMind.controller.ContextMenuController;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import myMind.controller.TitleBarController;
@@ -24,6 +27,8 @@ import java.util.List;
 
 public class Launch extends Application {
     private static TitleBarController titleBarController;
+    private static ContextMenuController contextMenuController;
+    private static ContextMenu contextMenu;
     private static final StyleWheel styleWheel = StyleWheel.getInstance();
 
     private static final List<String> STYLE_SHEETS = List.of(
@@ -45,6 +50,11 @@ public class Launch extends Application {
             titleBarController.setStage(stage);
             borderPane.setTop(titleBar);
             borderPane.setCenter(mindMap);
+
+            loader = new FXMLLoader(Launch.class.getResource("/fxml/context-menu.fxml"));
+            contextMenu = loader.load();
+            contextMenuController = loader.getController();
+            contextMenuController.setSubjectController(mindMap.getSubjectController());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -60,8 +70,12 @@ public class Launch extends Application {
         Scene scene = new Scene(root);
         scene.getStylesheets().addAll(STYLE_SHEETS);
 
-        // todo 窗口圆角
         stage.setScene(scene);
+        Image icon = new Image("icon.png");
+        stage.getIcons().add(icon);
+        titleBarController.getIcon().setImage(icon);
+        titleBarController.titleProperty().bind(stage.titleProperty());
+        stage.setTitle("MyMind");
         stage.initStyle(StageStyle.UNDECORATED);
         // 取消最大化时的位置
         stage.setX(6);
@@ -71,6 +85,8 @@ public class Launch extends Application {
         titleBarController.maximize();
         stage.show();
 
+        contextMenuController.registerGlobalAccelerators(scene);
+        titleBarController.registerGlobalAccelerators(scene);
         // 防止被 StyleClassedTextArea 阻止事件
         root.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> {
             event.consume();
@@ -78,10 +94,14 @@ public class Launch extends Application {
             if (selectedNode == null) {
                 return;
             }
+            System.out.println("event.getSource() = " + event.getSource());
+
             IndexRange selection = selectedNode.getTextArea().getSelection();
             if (selection.getLength() != 0) {
                 // 默认将 content 的左上角放到 (x, y) 处，所以加上偏移，使轮盘居中
                 styleWheel.show(stage, event.getScreenX() - 125, event.getScreenY() - 125);
+            } else {
+                contextMenu.show(stage, event.getScreenX(), event.getScreenY());
             }
         });
 
@@ -94,6 +114,7 @@ public class Launch extends Application {
             mindMap.setSubject(((Subject) newTab.getContent()));
             mindMap.setSubjectController(subjectController);
             titleBarController.setSubjectController(subjectController);
+            contextMenuController.setSubjectController(subjectController);
             StyleWheelArcController.setSubjectController(subjectController);
         });
 
@@ -103,6 +124,9 @@ public class Launch extends Application {
                 StyleWheelArcController.setSubjectController(mindMap.getSubjectController());
             }
         });
+
+         // 通过任务栏关闭时，也执行关闭逻辑
+        stage.setOnCloseRequest(event -> titleBarController.close());
     }
 
     @Override
