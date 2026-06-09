@@ -1,15 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.Tooltip?>
 
 <ContextMenu xmlns="http://javafx.com/javafx/17"
              xmlns:fx="http://javafx.com/fxml/1"
              fx:controller="myMind.controller.ContextMenuController">
     <items>
-        <MenuItem onAction="#copy" text="复制"/>
-        <MenuItem onAction="#cut" text="剪切"/>
-        <MenuItem onAction="#delete" text="删除"/>
+        <MenuItem onAction="#copy" >
+            <graphic>
+                <Label text="复制">
+                    <tooltip>
+                        <Tooltip text="Ctrl+Shift+C"/>
+                    </tooltip>
+                </Label>
+            </graphic>
+        </MenuItem>
+        <MenuItem onAction="#cut">
+            <graphic>
+                <Label text="剪切">
+                    <tooltip>
+                        <Tooltip text="Ctrl+Shift+X"/>
+                    </tooltip>
+                </Label>
+            </graphic>
+        </MenuItem>
+        <SeparatorMenuItem/>
+
+        <MenuItem onAction="#delete">
+            <graphic>
+                <Label text="删除">
+                    <tooltip>
+                        <Tooltip text="Alt+←"/>
+                    </tooltip>
+                </Label>
+            </graphic>
+        </MenuItem>
+        <MenuItem onAction="#deleteRemainChildren">
+            <graphic>
+                <Label text="删除（保留子节点）">
+                    <tooltip>
+                        <Tooltip text="Ctrl+Alt+←"/>
+                    </tooltip>
+                </Label>
+            </graphic>
+        </MenuItem>
+        <MenuItem onAction="#deleteEmpty">
+            <graphic>
+                <Label text="删除空白节点">
+                    <tooltip>
+                        <Tooltip text="Alt+Delete"/>
+                    </tooltip>
+                </Label>
+            </graphic>
+        </MenuItem>
     </items>
 
 </ContextMenu>

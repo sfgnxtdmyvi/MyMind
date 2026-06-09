@@ -43,7 +43,7 @@ public class MindNode extends StackPane {
 
     //节点之间的关系
     private byte pos;
-    private MindNode nodeParent;
+    private MindNode parentNode;
     private final List<MindNode> childrenR = new ArrayList<>();
     private final List<MindNode> childrenL = new ArrayList<>();
 
@@ -438,32 +438,32 @@ public class MindNode extends StackPane {
     //—————————————————————————————————————————增删—————————————————————————————————————————
     public void addChildR(MindNode child) {
         childrenR.add(child);
-        child.setNodeParent(this);
+        child.setParentNode(this);
     }
 
     public void addChildL(MindNode child) {
         childrenL.add(child);
-        child.setNodeParent(this);
+        child.setParentNode(this);
     }
 
     public void addChildRAt(int index, MindNode child) {
         childrenR.add(index, child);
-        child.setNodeParent(this);
+        child.setParentNode(this);
     }
 
     public void addChildLAt(int index, MindNode child) {
         childrenL.add(index, child);
-        child.setNodeParent(this);
+        child.setParentNode(this);
     }
 
     public void removeChildR(MindNode child) {
         childrenR.remove(child);
-        child.setNodeParent(null);
+        child.setParentNode(null);
     }
 
     public void removeChildL(MindNode child) {
         childrenL.remove(child);
-        child.setNodeParent(null);
+        child.setParentNode(null);
     }
 
     //———————————————————————————————————————————宽高计算———————————————————————————————————————————

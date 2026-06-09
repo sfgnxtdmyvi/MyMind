@@ -27,6 +27,16 @@ public class ContextMenuController {
         subjectController.delete();
     }
 
+    @FXML
+    private void deleteRemainChildren() {
+        subjectController.deleteRemainChildren();
+    }
+
+    @FXML
+    private void deleteEmpty() {
+        subjectController.deleteEmpty();
+    }
+
     public void registerGlobalAccelerators(Scene scene) {
         ObservableMap<KeyCombination, Runnable> accelerators = scene.getAccelerators();
         accelerators.put(
@@ -36,7 +46,13 @@ public class ContextMenuController {
                 new KeyCodeCombination(KeyCode.X, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN),
                 this::cut);
         accelerators.put(
-                new KeyCodeCombination(KeyCode.DELETE, KeyCombination.ALT_DOWN),
+                new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN),
                 this::delete);
+        accelerators.put(
+                new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN, KeyCombination.SHORTCUT_DOWN),
+                this::deleteRemainChildren);
+        accelerators.put(
+                new KeyCodeCombination(KeyCode.DELETE, KeyCombination.ALT_DOWN),
+                this::deleteEmpty);
     }
 }

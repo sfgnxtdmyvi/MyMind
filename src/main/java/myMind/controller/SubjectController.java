@@ -75,7 +75,7 @@ public class SubjectController {
 
     public void addSiblingR() {
         // 根节点无法添加兄弟节点
-        MindNode parentNode = selectedNode.getNodeParent();
+        MindNode parentNode = selectedNode.getParentNode();
         if (parentNode == null) {
             return;
         }
@@ -89,7 +89,7 @@ public class SubjectController {
     }
 
     public void addSiblingL() {
-        MindNode parentNode = selectedNode.getNodeParent();
+        MindNode parentNode = selectedNode.getParentNode();
         if (parentNode == null) {
             return;
         }
@@ -281,9 +281,13 @@ public class SubjectController {
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             deleteChildrenFromSubjectR(selectedNode);
             deleteR();
+            adjustChildrenYR();
+            refreshLinesR();
         } else {
             deleteChildrenFromSubjectL(selectedNode);
             deleteL();
+            adjustChildrenYL();
+            refreshLinesL();
         }
     }
 
@@ -302,7 +306,7 @@ public class SubjectController {
             cloneNode.setLayoutX(calculateChildXR(selectedNode));
 
             if (cloneNode.getPos() == PosConstants.LEFT) {
-                cloneNode.setNodeParent(selectedNode);
+                cloneNode.setParentNode(selectedNode);
                 transToR(cloneNode);
             } else {
                 selectedNode.addChildR(cloneNode);
@@ -317,7 +321,7 @@ public class SubjectController {
 
             // selectedNode 与 cloneNode 的 pos 不一致时，需要移动
             if (cloneNode.getPos() == PosConstants.RIGHT) {
-                cloneNode.setNodeParent(selectedNode);
+                cloneNode.setParentNode(selectedNode);
                 transToL(cloneNode);
             } else {
                 selectedNode.addChildL(cloneNode);
@@ -340,14 +344,14 @@ public class SubjectController {
             return;
         }
 
-        MindNode parentNode = selectedNode.getNodeParent();
+        MindNode parentNode = selectedNode.getParentNode();
         setOnAction(cloneNode);
         if (pos == PosConstants.RIGHT) {
             int index = parentNode.getChildrenR().indexOf(selectedNode);
             cloneNode.setLayoutX(calculateChildXR(parentNode));
 
             if (cloneNode.getPos() == PosConstants.LEFT) {
-                cloneNode.setNodeParent(parentNode);
+                cloneNode.setParentNode(parentNode);
                 transToRAt(index, cloneNode);
             } else {
                 parentNode.addChildRAt(index, cloneNode);
@@ -361,7 +365,7 @@ public class SubjectController {
             cloneNode.setLayoutX(parentNode.getLayoutX() - SizeConstants.NODE_GAP_X - cloneNode.getPrefWidth());
 
             if (cloneNode.getPos() == PosConstants.RIGHT) {
-                cloneNode.setNodeParent(parentNode);
+                cloneNode.setParentNode(parentNode);
                 transToLAt(index, cloneNode);
             } else {
                 parentNode.addChildLAt(index, cloneNode);
@@ -380,7 +384,7 @@ public class SubjectController {
      */
     private void transToR(MindNode cloneNode) {
         cloneNode.setPos(PosConstants.RIGHT);
-        cloneNode.getNodeParent().addChildR(cloneNode);
+        cloneNode.getParentNode().addChildR(cloneNode);
         transBtnToR(cloneNode);
 
         Iterator<MindNode> iterator = cloneNode.getChildrenL().iterator();
@@ -393,7 +397,7 @@ public class SubjectController {
 
     private void transToL(MindNode cloneNode) {
         cloneNode.setPos(PosConstants.LEFT);
-        cloneNode.getNodeParent().addChildL(cloneNode);
+        cloneNode.getParentNode().addChildL(cloneNode);
         transBtnToL(cloneNode);
 
         Iterator<MindNode> iterator = cloneNode.getChildrenR().iterator();
@@ -408,9 +412,9 @@ public class SubjectController {
         // 父节点粘到选中节点的上面，子节点继续跟着父节点
         cloneNode.setPos(PosConstants.RIGHT);
         if (index != -1) {
-            cloneNode.getNodeParent().addChildRAt(index, cloneNode);
+            cloneNode.getParentNode().addChildRAt(index, cloneNode);
         } else {
-            cloneNode.getNodeParent().addChildR(cloneNode);
+            cloneNode.getParentNode().addChildR(cloneNode);
         }
         transBtnToR(cloneNode);
 
@@ -425,9 +429,9 @@ public class SubjectController {
     private void transToLAt(int index, MindNode clonenode) {
         clonenode.setPos(PosConstants.LEFT);
         if (index != -1) {
-            clonenode.getNodeParent().addChildLAt(index, clonenode);
+            clonenode.getParentNode().addChildLAt(index, clonenode);
         } else {
-            clonenode.getNodeParent().addChildL(clonenode);
+            clonenode.getParentNode().addChildL(clonenode);
         }
         transBtnToL(clonenode);
 
@@ -488,9 +492,101 @@ public class SubjectController {
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             deleteChildrenR(selectedNode);
             deleteR();
+            adjustChildrenYR();
+            refreshLinesR();
         } else {
             deleteChildrenL(selectedNode);
             deleteL();
+            adjustChildrenYL();
+            refreshLinesL();
+        }
+    }
+
+    /**
+     * 删除节点，子节点成为父节点的子节点
+     */
+    public void deleteRemainChildren() {
+        if (selectedNode == null || selectedNode == rootNode) {
+            return;
+        }
+
+        MindNode parentNode = selectedNode.getParentNode();
+        double selfHeight = selectedNode.getPrefHeight();
+        if (selectedNode.getPos() == PosConstants.RIGHT) {
+            List<MindNode> childrenR = selectedNode.getChildrenR();
+            if (childrenR.isEmpty()) {
+                return;
+            }
+
+            double childrenHeight = selectedNode.getChildrenHeightR();
+            for (MindNode childNode : childrenR) {
+                parentNode.addChildR(childNode);
+            }
+            deleteR();
+
+            adjustChildrenXR(parentNode);
+            if (selfHeight > childrenHeight) {
+                adjustChildrenYR();
+            }
+            refreshLinesR();
+        } else {
+            List<MindNode> childrenL = selectedNode.getChildrenL();
+            if (childrenL.isEmpty()) {
+                return;
+            }
+
+            double childrenHeight = selectedNode.getChildrenHeightL();
+            for (MindNode childNode : childrenL) {
+                parentNode.addChildL(childNode);
+            }
+            deleteL();
+
+            adjustChildrenXL(parentNode);
+            if (selfHeight > childrenHeight) {
+                adjustChildrenYL();
+            }
+            refreshLinesL();
+        }
+    }
+
+    /**
+     * 删除空白节点
+     */
+    public void deleteEmpty() {
+        if (selectedNode == null) {
+            return;
+        }
+
+        // 中间节点要删左右子节点
+        if (selectedNode.getPos() != PosConstants.LEFT) {
+            Iterator<MindNode> iterator = selectedNode.getChildrenR().iterator();
+            while (iterator.hasNext()) {
+                MindNode childNode = iterator.next();
+                if (childNode.getTextArea().getText().isEmpty() && childNode.getImageName() == null) {
+                    iterator.remove();
+                    childNode.setParentNode(null);
+                    subject.remove(childNode);
+                    // 空白节点如果有子节点，一并删除
+                    // 一个节点有两个引用，父节点和 nodesLayer，两个引用都删除，就会被 GC 掉
+                    deleteChildrenFromSubjectR(childNode);
+                }
+            }
+            adjustChildrenYR();
+            refreshLinesR();
+        }
+        if (selectedNode.getPos() != PosConstants.RIGHT) {
+            Iterator<MindNode> iterator = selectedNode.getChildrenL().iterator();
+            while (iterator.hasNext()) {
+                MindNode childNode = iterator.next();
+                if (childNode.getTextArea().getText().isEmpty() && childNode.getImageName() == null) {
+                    iterator.remove();
+                    childNode.setParentNode(null);
+                    subject.remove(childNode);
+                    deleteChildrenFromSubjectL(childNode);
+                }
+            }
+            adjustChildrenYL();
+            refreshLinesL();
         }
     }
 
@@ -498,30 +594,22 @@ public class SubjectController {
      * 删除节点
      */
     private void deleteR() {
-        MindNode parent = selectedNode.getNodeParent();
-
+        MindNode parent = selectedNode.getParentNode();
         // 改变选中节点，记录之前选中的要删除的节点
         MindNode toDelete = selectedNode;
         changeSelectedNode(toDelete, parent, parent.getChildrenR());
 
         parent.removeChildR(toDelete);
         subject.remove(toDelete);
-
-        adjustChildrenYR();
-        refreshLinesR();
     }
 
     private void deleteL() {
-        MindNode parent = selectedNode.getNodeParent();
-
+        MindNode parent = selectedNode.getParentNode();
         MindNode toDelete = selectedNode;
         changeSelectedNode(toDelete, parent, parent.getChildrenL());
 
         parent.removeChildL(toDelete);
         subject.remove(toDelete);
-
-        adjustChildrenYL();
-        refreshLinesL();
     }
 
     /**
@@ -533,7 +621,7 @@ public class SubjectController {
             MindNode childNode = iterator.next();
             subject.remove(childNode);
             iterator.remove();
-            childNode.setNodeParent(null);
+            childNode.setParentNode(null);
 
             deleteChildrenR(childNode);
         }
@@ -545,7 +633,7 @@ public class SubjectController {
             MindNode childNode = iterator.next();
             subject.remove(childNode);
             iterator.remove();
-            childNode.setNodeParent(null);
+            childNode.setParentNode(null);
 
             deleteChildrenL(childNode);
         }
@@ -587,6 +675,9 @@ public class SubjectController {
         refreshLinesL();
     }
 
+    /**
+     * 调整子节点 X 坐标
+     */
     public void adjustChildrenXR(MindNode parentNode) {
         List<MindNode> children = parentNode.getChildrenR();
         if (children.isEmpty()) {

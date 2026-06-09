@@ -157,15 +157,11 @@ public class TitleBarController {
         subjectController.addSibling();
     }
 
-    /**
-     * 1个子节点和5个孙节点
-     */
     @FXML
     private void batchAddChildR() {
         if (subjectController.getSelectedNode().getPos() == PosConstants.LEFT) {
             return;
         }
-        subjectController.addChildR();
         subjectController.addChildR();
         for (int i = 0; i < 4; i++) {
             subjectController.addSiblingR();
@@ -178,21 +174,15 @@ public class TitleBarController {
             return;
         }
         subjectController.addChildL();
-        subjectController.addChildL();
         for (int i = 0; i < 4; i++) {
             subjectController.addSiblingL();
         }
     }
 
-    /**
-     * 1个兄弟节点和5个孙节点
-     */
+
     @FXML
     private void batchAddSibling() {
-        subjectController.addSibling();
-        subjectController.addChildR();
-        subjectController.addChildL();
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
             subjectController.addSibling();
         }
     }
@@ -211,7 +201,7 @@ public class TitleBarController {
         // 左边节点 -> 父节点
         // 根、右边节点 -> 中间的右子节点
         if (selectedNode.getPos() == PosConstants.LEFT) {
-            subjectController.setSelectedNode(selectedNode.getNodeParent());
+            subjectController.setSelectedNode(selectedNode.getParentNode());
         } else {
             List<MindNode> children = selectedNode.getChildrenR();
             if (!children.isEmpty()) {
@@ -225,7 +215,7 @@ public class TitleBarController {
         // 父节点 <- 右边节点
         // 中间的左子节点 <- 左边、根节点
         if (selectedNode.getPos() == PosConstants.RIGHT) {
-            subjectController.setSelectedNode(selectedNode.getNodeParent());
+            subjectController.setSelectedNode(selectedNode.getParentNode());
         } else {
             List<MindNode> children = selectedNode.getChildrenL();
             if (!children.isEmpty()) {
@@ -240,7 +230,7 @@ public class TitleBarController {
             return;
         }
 
-        MindNode parentModel = selectedNode.getNodeParent();
+        MindNode parentModel = selectedNode.getParentNode();
         List<MindNode> children;
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             children = parentModel.getChildrenR();
@@ -259,7 +249,7 @@ public class TitleBarController {
             return;
         }
 
-        MindNode parentModel = selectedNode.getNodeParent();
+        MindNode parentModel = selectedNode.getParentNode();
         List<MindNode> children;
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             children = parentModel.getChildrenR();
