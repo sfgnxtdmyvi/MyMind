@@ -2,7 +2,7 @@ package myMind.util;
 
 import javafx.animation.PauseTransition;
 import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -17,13 +17,11 @@ public class MessageUtil {
     /**
      * 初始化并添加到父容器
      */
-    public static void init(Pane parentPane, Stage stage) {
+    public static void init(AnchorPane parentPane, Stage stage) {
         Label label = new Label();
         label.getStyleClass().add("message");
         label.setVisible(false);
-        label.setManaged(false);
         parentPane.getChildren().add(label);
-
 
         PauseTransition hideTimer = new PauseTransition(Duration.seconds(3));
         hideTimer.setOnFinished(event -> {
@@ -31,6 +29,9 @@ public class MessageUtil {
             label.setManaged(false);
         });
 
+        MessageUtil.label = label;
+        MessageUtil.hideTimer = hideTimer;
+        MessageUtil.parentPaneWidth = parentPane.getWidth();
         stage.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 MessageUtil.label = label;
@@ -52,12 +53,10 @@ public class MessageUtil {
     /**
      * 显示消息
      *
-     * @param message 消息
      */
     public static void showMessage(String message) {
         label.setText(message);
         label.setVisible(true);
-        label.setManaged(true);
 
         // 中间上方
         label.setLayoutX((parentPaneWidth - label.prefWidth(-1)) / 2);

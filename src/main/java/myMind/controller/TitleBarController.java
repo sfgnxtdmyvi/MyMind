@@ -1,5 +1,6 @@
 package myMind.controller;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
@@ -16,6 +17,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -30,8 +32,11 @@ import myMind.Launch;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
 import myMind.componet.Subject;
+import myMind.constants.FileConstants;
 import myMind.constants.PosConstants;
 import myMind.util.FileUtil;
+import myMind.util.MessageUtil;
+import myMind.util.ScheduleUtil;
 
 import java.io.File;
 import java.util.Iterator;
@@ -83,8 +88,40 @@ public class TitleBarController {
 
     @FXML
     private void load() {
-        FileUtil.load(mindMap);
-        selectFirstSubject();
+        File file = FileUtil.openFileChooser(FileConstants.OPEN_TYPE, mindMap);
+        if (file == null) {
+            return;
+        }
+        load(file);
+    }
+
+    private void load(File file) {
+        if (ScheduleUtil.containsScheduled(file.getAbsolutePath())) {
+            // todo 跳转过去
+            MessageUtil.showMessage("导图已打开");
+            return;
+        }
+
+        MindNode rootNode = subjectController.getRootNode();
+        if (mindMap.getFilePath() == null &&
+                rootNode.getChildrenR().isEmpty() &&
+                rootNode.getChildrenL().isEmpty() &&
+                rootNode.getTextArea().getText().isEmpty() &&
+                rootNode.getImageName() == null) {
+            FileUtil.load(file, mindMap);
+            selectFirstSubject();
+        } else {
+            Stage stage = new Stage();
+            Launch.createMindMap(stage);
+            FileUtil.load(file, Launch.getMindMap());
+            Launch.getTitleBarController().selectFirstSubject();
+            // 打开 FileChooser 可能会导致图标设置失败
+            Platform.runLater(() -> {
+                ObservableList<Image> icons = Launch.getStage().getIcons();
+                icons.clear();
+                icons.add(new Image(Launch.class.getResourceAsStream("/icon.png")));
+            });
+        }
     }
 
     @FXML
@@ -105,10 +142,7 @@ public class TitleBarController {
             File file = new File(split[1]);
             if (file.exists()) {
                 MenuItem menuItem = new MenuItem(split[0]);
-                menuItem.setOnAction(event -> {
-                    FileUtil.loadFile(file, mindMap);
-                    selectFirstSubject();
-                });
+                menuItem.setOnAction(event -> load(file));
                 items.add(menuItem);
             } else {
                 iterator.remove();
@@ -120,8 +154,10 @@ public class TitleBarController {
         }
     }
 
-    private void selectFirstSubject() {
-        // 选中第一个主题
+    /**
+     * 选中第一个主题
+     */
+    public void selectFirstSubject() {
         Tab tab = mindMap.getTabs().get(0);
         Subject firstSubject = (Subject) tab.getContent();
         SubjectController subjectController = (SubjectController) tab.getUserData();
@@ -349,9 +385,11 @@ public class TitleBarController {
         }
 
         if (Stage.getWindows().size() <= 1) {
-            FileUtil.cancelSchedule();
+            ScheduleUtil.cancelSchedule();
         } else {
-            FileUtil.cancelSchedule(mindMap.getFilePath());
+            if (mindMap.getFilePath() != null) {
+                ScheduleUtil.cancelSchedule(mindMap.getFilePath());
+            }
         }
         stage.close();
     }

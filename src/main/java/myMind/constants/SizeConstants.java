@@ -7,7 +7,7 @@ public class SizeConstants {
     public static final int MIN_NODE_HEIGHT = 50;
 
     public static final int MIN_TEXTAREA_WIDTH = 1;
-    public static final int MAX_TEXTAREA_WIDTH = 900;
+    public static final int MAX_TEXTAREA_WIDTH = 920;
     public static final int MIN_TEXTAREA_HEIGHT = MIN_NODE_HEIGHT - 22;
     public static final int HALF_MIN_TEXTAREA_HEIGHT = MIN_TEXTAREA_HEIGHT / 2;
 

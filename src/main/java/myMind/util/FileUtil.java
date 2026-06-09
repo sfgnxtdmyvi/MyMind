@@ -28,21 +28,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 public class FileUtil {
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(3);
-    private static final Map<String, ScheduledFuture<?>> fileSaveFutures = new ConcurrentHashMap<>();
-
     @Getter
     private static final LinkedList<String> recentFiles;
 
-    private static File openFileChooser(int type, MindMap mindMap) {
+    public static File openFileChooser(int type, MindMap mindMap) {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File(FileConstants.DIR_FILES));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
@@ -55,16 +46,9 @@ public class FileUtil {
 
     //—————————————————————————————————————————打开—————————————————————————————————————————
 
-    public static void load(MindMap mindMap) {
-        File file = openFileChooser(FileConstants.OPEN_TYPE, mindMap);
-        if (file != null) {
-            FileUtil.loadFile(file, mindMap);
-        }
-    }
-
-    public static void loadFile(File file, MindMap mindMap) {
+    public static void load(File file, MindMap mindMap) {
         if (mindMap.getFilePath() != null) {
-            cancelSchedule(mindMap.getFilePath());
+            ScheduleUtil.cancelSchedule(mindMap.getFilePath());
         }
         mindMap.getTabs().clear();
 
@@ -89,7 +73,7 @@ public class FileUtil {
 
         String absolutePath = file.getAbsolutePath();
         mindMap.setFilePath(absolutePath);
-        scheduleAutoSave(absolutePath, mindMap);
+        ScheduleUtil.scheduleAutoSave(absolutePath, mindMap);
         addRecentFile(file);
     }
 
@@ -194,10 +178,10 @@ public class FileUtil {
             saveFile(file, mindMap);
 
             if (mindMap.getFilePath() != null) {
-                cancelSchedule(mindMap.getFilePath());
+                ScheduleUtil.cancelSchedule(mindMap.getFilePath());
             }
             String absolutePath = file.getAbsolutePath();
-            scheduleAutoSave(absolutePath, mindMap);
+            ScheduleUtil.scheduleAutoSave(absolutePath, mindMap);
 
             addRecentFile(file);
             mindMap.setFilePath(absolutePath);
@@ -334,37 +318,6 @@ public class FileUtil {
         }
 
         return styles;
-    }
-
-    //—————————————————————————————————————————定时保存—————————————————————————————————————————
-
-    public static void scheduleAutoSave(String filePath, MindMap mindMap) {
-        if (fileSaveFutures.containsKey(filePath)) {
-            return;
-        }
-
-        ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() ->
-                saveFileScheduled(new File(filePath), mindMap), 1, 1, TimeUnit.SECONDS);
-        fileSaveFutures.put(filePath, future);
-    }
-
-    public static void cancelSchedule(String filePath) {
-        ScheduledFuture<?> future = fileSaveFutures.remove(filePath);
-        if (future != null) {
-            future.cancel(false);
-        }
-    }
-
-    // ScheduledExecutorService 创建的是非守护线程，会阻止 JVM 自然退出，需要关闭
-    public static void cancelSchedule() {
-        scheduler.shutdown();
-        try {
-            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
-                scheduler.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            scheduler.shutdownNow();
-        }
     }
 
     //—————————————————————————————————————————最近打开—————————————————————————————————————————

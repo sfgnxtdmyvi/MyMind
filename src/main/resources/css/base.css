@@ -1,19 +1,14 @@
-/* workspace */
-.tab-label {
-    -fx-pref-width: 150px;
-}
-
 .workspace {
     -fx-background-color: white;
 }
 
-/*标签页*/
-.hide-tabs .tab-header-area {
-    visibility: hidden;
-}
-
 .tab-header-area {
     -fx-pref-height: 26px;
+}
+
+/*隐藏标签页*/
+.hide-tabs .tab-header-area {
+    visibility:hidden;
 }
 
 .tab-header-background {
@@ -21,14 +16,28 @@
 }
 
 .tab {
+    -fx-background-radius: 8 8 0 0;
+    /*背景区域缩进，让背后的颜色透出来，从而在视觉上形成间隙*/
+    -fx-background-insets: 0 5;
     -fx-background-color: #e3e3e3;
 }
 
 .tab:selected {
+    -fx-pref-height: 25px;
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
-    -fx-border-color: #e3e3e3 #e3e3e3 #6792e8 #e3e3e3;
-    -fx-border-width: 0 2 2 0;
+    -fx-border-color: #82dafd;
+    -fx-border-width: 0 0 3 0;
+    -fx-border-insets: 0 12;
+    -fx-border-radius: 2px;
+}
+
+.tab-label {
+    -fx-pref-width: 150px;
+}
+
+.tab:selected .tab-label {
+    -fx-pref-width: 135px;
 }
 
 /* 消息提示 */

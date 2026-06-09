@@ -7,11 +7,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.image.Image;
 import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import lombok.Getter;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
 import myMind.componet.StyleWheel;
@@ -26,12 +26,17 @@ import java.io.IOException;
 import java.util.List;
 
 public class Launch extends Application {
+    @Getter
     private static Stage stage;
-    private static Pane root;
     private static Scene scene;
+    private static AnchorPane root;
+    private static HBox titleBar;
 
-    private static MindMap mindMap;
+    @Getter
     private static TitleBarController titleBarController;
+    @Getter
+    private static MindMap mindMap;
+
     private static ContextMenuController contextMenuController;
     private static ContextMenu contextMenu;
     private static final StyleWheel styleWheel = StyleWheel.getInstance();
@@ -45,39 +50,25 @@ public class Launch extends Application {
 
     public static void createMindMap(Stage stage) {
         Launch.stage = stage;
-        mindMap = new MindMap();
-        BorderPane borderPane = new BorderPane();
         try {
             FXMLLoader loader = new FXMLLoader(Launch.class.getResource("/fxml/title-bar.fxml"));
-            HBox titleBar = loader.load();
+            titleBar = loader.load();
             titleBarController = loader.getController();
-            titleBarController.setMindMap(mindMap);
-            titleBarController.setSubjectController(mindMap.getSubjectController());
             titleBarController.setStage(stage);
-            borderPane.setTop(titleBar);
-            borderPane.setCenter(mindMap);
 
             loader = new FXMLLoader(Launch.class.getResource("/fxml/context-menu.fxml"));
             contextMenu = loader.load();
             contextMenuController = loader.getController();
-            contextMenuController.setSubjectController(mindMap.getSubjectController());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // todo 合并成一个Pane，换成其他布局
-        // Pane 用来添加消息提示标签，BorderPane 无法手动指定位置
-        root = new Pane(borderPane);
-        // Pane 不会自动调整子节点大小，需要手动绑定
-        borderPane.prefWidthProperty().bind(root.widthProperty());
-        borderPane.prefHeightProperty().bind(root.heightProperty());
-        MessageUtil.init(root, stage);
-
+        root = new AnchorPane(titleBar);
         scene = new Scene(root);
         scene.getStylesheets().addAll(STYLE_SHEETS);
 
         stage.setScene(scene);
-        Image icon = new Image("icon.png");
+        Image icon = new Image(Launch.class.getResourceAsStream("/icon.png"));
         stage.getIcons().add(icon);
         titleBarController.getIcon().setImage(icon);
         titleBarController.titleProperty().bind(stage.titleProperty());
@@ -90,6 +81,20 @@ public class Launch extends Application {
         stage.setWidth(1450);
         titleBarController.maximize();
         stage.show();
+
+        AnchorPane.setLeftAnchor(titleBar, 0.0);
+        AnchorPane.setRightAnchor(titleBar, 0.0);
+        mindMap = new MindMap();
+        root.getChildren().add(mindMap);
+        AnchorPane.setTopAnchor(mindMap, titleBar.getHeight());
+        AnchorPane.setBottomAnchor(mindMap, 0.0);
+        AnchorPane.setLeftAnchor(mindMap, 0.0);
+        AnchorPane.setRightAnchor(mindMap, 0.0);
+        MessageUtil.init(root, stage);
+
+        titleBarController.setMindMap(mindMap);
+        titleBarController.setSubjectController(mindMap.getSubjectController());
+        contextMenuController.setSubjectController(mindMap.getSubjectController());
 
         addListener();
     }

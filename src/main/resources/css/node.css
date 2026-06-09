@@ -31,7 +31,7 @@
     -fx-min-height: 18px;
     -fx-max-width: 18px;
     -fx-max-height: 18px;
-    -fx-background-radius: 9px;
+    -fx-background-radius: 9;
 
     -fx-padding: 0;
     -fx-alignment: center;
