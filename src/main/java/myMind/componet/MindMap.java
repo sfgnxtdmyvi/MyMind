@@ -83,32 +83,63 @@ public class MindMap extends TabPane {
 
         addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             KeyCode code = event.getCode();
+            // textArea 触发事件时忽略
+            if (event.getTarget() != this || (code != KeyCode.HOME &&
+                    code != KeyCode.END &&
+                    code != KeyCode.PAGE_UP &&
+                    code != KeyCode.PAGE_DOWN &&
+                    code != KeyCode.SPACE &&
+                    code != KeyCode.UP &&
+                    code != KeyCode.DOWN &&
+                    code != KeyCode.LEFT &&
+                    code != KeyCode.RIGHT)) {
+                return;
+            }
+
+            event.consume();
             if (code == KeyCode.HOME) {
-                subject.setTranslateY(subject.getTranslateY() - subject.getBoundsInParent().getMinY() + SizeConstants.TRANSLATE_OFFSET);
-                event.consume();
+                subject.setTranslateY(subject.getTranslateY() - subject.getBoundsInParent().getMinY() + SizeConstants.TRANSLATE_CONSTRAIN);
                 return;
             }
             if (code == KeyCode.END) {
-                double deltaY = getLayoutBounds().getHeight() - subject.getBoundsInParent().getMaxY() - SizeConstants.TRANSLATE_OFFSET;
+                double deltaY = getLayoutBounds().getHeight() - subject.getBoundsInParent().getMaxY() - SizeConstants.TRANSLATE_CONSTRAIN;
                 subject.setTranslateY(subject.getTranslateY() + deltaY);
-                event.consume();
+                return;
+            }
+            if (code == KeyCode.PAGE_UP) {
+                subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET_PLUS);
+                subject.constrainTranslationY();
+                return;
+            }
+            if (code == KeyCode.PAGE_DOWN || code == KeyCode.SPACE) {
+                subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET_PLUS);
+                subject.constrainTranslationY();
+                return;
+            }
+            if (code == KeyCode.UP) {
+                subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET);
+                subject.constrainTranslationY();
+                return;
+            }
+            if (code == KeyCode.DOWN) {
+                subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET);
+                subject.constrainTranslationY();
+                return;
+            }
+            if (code == KeyCode.LEFT) {
+                subject.setTranslateX(subject.getTranslateX() + SizeConstants.TRANSLATE_OFFSET);
+                subject.constrainTranslationX();
+                return;
+            }
+            if (code == KeyCode.RIGHT) {
+                subject.setTranslateX(subject.getTranslateX() - SizeConstants.TRANSLATE_OFFSET);
+                subject.constrainTranslationX();
             }
         });
 
         setOnKeyPressed(e -> {
             KeyCode code = e.getCode();
             boolean shortcutDown = e.isShortcutDown();
-
-            if (code == KeyCode.PAGE_UP) {
-                subject.setTranslateY(subject.getTranslateY() + 500);
-                subject.constrainTranslationY();
-                return;
-            }
-            if (code == KeyCode.PAGE_DOWN || code == KeyCode.SPACE) {
-                subject.setTranslateY(subject.getTranslateY() - 500);
-                subject.constrainTranslationY();
-                return;
-            }
 
             // 回到中心
             if (shortcutDown && code == KeyCode.G) {
@@ -121,9 +152,9 @@ public class MindMap extends TabPane {
                 if (code == KeyCode.DIGIT0) {
                     subject.changeScale(1.0);
                 } else if (code == KeyCode.MINUS) {
-                    subject.changeScale(getScaleX() - 0.1);
+                    subject.changeScale(subject.getScaleX() - 0.1);
                 } else if (code == KeyCode.EQUALS) {
-                    subject.changeScale(getScaleX() + 0.1);
+                    subject.changeScale(subject.getScaleX() + 0.1);
                 }
             }
         });
