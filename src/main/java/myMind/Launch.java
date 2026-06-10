@@ -10,6 +10,7 @@ import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import lombok.Getter;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
@@ -73,7 +74,7 @@ public class Launch extends Application {
         titleBarController.getIcon().setImage(icon);
         titleBarController.titleProperty().bind(stage.titleProperty());
         stage.setTitle("MyMind");
-//        stage.initStyle(StageStyle.UNDECORATED);
+        stage.initStyle(StageStyle.UNDECORATED);
         // 取消最大化时的位置
         stage.setX(6);
         stage.setY(12);
@@ -158,6 +159,16 @@ public class Launch extends Application {
     @Override
     public void start(Stage primaryStage) {
         createMindMap(primaryStage);
+
+//
+//        DialogPane dialogPane = new DialogPane();
+//        dialogPane.setContentText("HHHHH");
+//        dialogPane.
+//
+//        primaryStage.setScene(new Scene(dialogPane));
+//        primaryStage.setWidth(900);
+//        primaryStage.setHeight(700);
+//        primaryStage.show();
     }
 
     public static void main(String[] args) {

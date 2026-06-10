@@ -195,32 +195,17 @@ public class TitleBarController {
 
     @FXML
     private void batchAddChildR() {
-        if (subjectController.getSelectedNode().getPos() == PosConstants.LEFT) {
-            return;
-        }
-        subjectController.addChildR();
-        for (int i = 0; i < 4; i++) {
-            subjectController.addSiblingR();
-        }
+        subjectController.batchAddChildR();
     }
 
     @FXML
     private void batchAddChildL() {
-        if (subjectController.getSelectedNode().getPos() == PosConstants.RIGHT) {
-            return;
-        }
-        subjectController.addChildL();
-        for (int i = 0; i < 4; i++) {
-            subjectController.addSiblingL();
-        }
+        subjectController.batchAddChildL();
     }
-
 
     @FXML
     private void batchAddSibling() {
-        for (int i = 0; i < 5; i++) {
-            subjectController.addSibling();
-        }
+        subjectController.batchAddSibling();
     }
 
     //—————————————————————————————————————————复制粘贴—————————————————————————————————————————

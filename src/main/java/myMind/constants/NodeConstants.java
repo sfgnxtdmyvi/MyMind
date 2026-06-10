@@ -8,7 +8,7 @@ public class NodeConstants {
     public static final double MIN_NODE_HEIGHT = 53;
 
     public static final double MIN_TEXTAREA_WIDTH = 1;
-    public static final double MAX_TEXTAREA_WIDTH = 924;
+    public static final double MAX_TEXTAREA_WIDTH = 1000;
     public static final double MIN_TEXTAREA_HEIGHT = MIN_NODE_HEIGHT - 22;
     public static final double HALF_MIN_TEXTAREA_HEIGHT = MIN_TEXTAREA_HEIGHT / 2;
 

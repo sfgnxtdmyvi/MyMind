@@ -99,7 +99,7 @@ public class FileUtil {
 
             MindNode node = buildNode(childrenJson, PosConstants.RIGHT);
             parentNode.addChildR(node);
-            subjectController.addNode(node);
+            subjectController.addNodeAndSelect(node);
 
             loadChildR(childrenJson.getJSONObject("childrenR"), node, subjectController);
         }
@@ -115,7 +115,7 @@ public class FileUtil {
 
             MindNode node = buildNode(childrenJson, PosConstants.LEFT);
             parentNode.addChildL(node);
-            subjectController.addNode(node);
+            subjectController.addNodeAndSelect(node);
 
             loadChildL(childrenJson.getJSONObject("childrenL"), node, subjectController);
         }
