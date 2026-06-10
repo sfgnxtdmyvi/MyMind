@@ -9,8 +9,8 @@ import javafx.scene.shape.QuadCurve;
 import lombok.Data;
 import myMind.componet.MindNode;
 import myMind.componet.Subject;
+import myMind.constants.NodeConstants;
 import myMind.constants.PosConstants;
-import myMind.constants.SizeConstants;
 import myMind.util.CloneNodeUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
@@ -26,11 +26,14 @@ public class SubjectController {
 
     public SubjectController() {
         rootNode = new MindNode(PosConstants.MIDDLE);
+        // todo 根节点样式
+//        rootNode.getStyleClass().add("root-node");
         addNode(rootNode);
     }
 
     public SubjectController(MindNode node) {
         rootNode = node;
+//        rootNode.getStyleClass().add("root-node");
         addNode(node);
     }
 
@@ -95,7 +98,7 @@ public class SubjectController {
         }
 
         // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-        MindNode siblingNode = new MindNode(PosConstants.LEFT, parentNode.getLayoutX() - SizeConstants.ADD_LEFT_NODE_GAP_X, 0);
+        MindNode siblingNode = new MindNode(PosConstants.LEFT, parentNode.getLayoutX() - NodeConstants.ADD_LEFT_NODE_GAP_X, 0);
         parentNode.addChildLAt(parentNode.getChildrenL().indexOf(selectedNode) + 1, siblingNode);
         addNode(siblingNode);
 
@@ -170,12 +173,12 @@ public class SubjectController {
 
     private double calculateChildXR(MindNode parentNode) {
         // 父节点 X 轴 +父节点宽度 + 节点间隔
-        return parentNode.getLayoutX() + parentNode.getPrefWidth() + SizeConstants.NODE_GAP_X;
+        return parentNode.getLayoutX() + parentNode.getPrefWidth() + NodeConstants.GAP_X;
     }
 
     private double calculateChildXL(MindNode parentNode) {
         // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-        return parentNode.getLayoutX() - SizeConstants.ADD_LEFT_NODE_GAP_X;
+        return parentNode.getLayoutX() - NodeConstants.ADD_LEFT_NODE_GAP_X;
     }
 
     //———————————————————————————————————————————复制粘贴———————————————————————————————————————————
@@ -233,7 +236,7 @@ public class SubjectController {
 
         int length = originalTextArea.getLength();
         if (length == 0) {
-            textArea.setMaxWidth(SizeConstants.MIN_TEXTAREA_WIDTH);
+            textArea.setMaxWidth(NodeConstants.MIN_TEXTAREA_WIDTH);
             return textArea;
         }
 
@@ -317,7 +320,7 @@ public class SubjectController {
             adjustR(cloneNode);
         } else {
             // calculateChildXL 算的是新增空节点的 x 坐标
-            cloneNode.setLayoutX(selectedNode.getLayoutX() - SizeConstants.NODE_GAP_X - cloneNode.getPrefWidth());
+            cloneNode.setLayoutX(selectedNode.getLayoutX() - NodeConstants.GAP_X - cloneNode.getPrefWidth());
 
             // selectedNode 与 cloneNode 的 pos 不一致时，需要移动
             if (cloneNode.getPos() == PosConstants.RIGHT) {
@@ -362,7 +365,7 @@ public class SubjectController {
             adjustR(cloneNode);
         } else {
             int index = parentNode.getChildrenL().indexOf(selectedNode);
-            cloneNode.setLayoutX(parentNode.getLayoutX() - SizeConstants.NODE_GAP_X - cloneNode.getPrefWidth());
+            cloneNode.setLayoutX(parentNode.getLayoutX() - NodeConstants.GAP_X - cloneNode.getPrefWidth());
 
             if (cloneNode.getPos() == PosConstants.RIGHT) {
                 cloneNode.setParentNode(parentNode);
@@ -685,7 +688,7 @@ public class SubjectController {
         }
 
         // 父节点的 X 坐标 + 父节点的宽度 + 节点间隔
-        double childX = parentNode.getLayoutX() + parentNode.getPrefWidth() + SizeConstants.NODE_GAP_X;
+        double childX = parentNode.getLayoutX() + parentNode.getPrefWidth() + NodeConstants.GAP_X;
         for (MindNode child : children) {
             child.setLayoutX(childX);
             adjustChildrenXR(child);
@@ -699,7 +702,7 @@ public class SubjectController {
         }
 
         // 父节点的 X 坐标 - 节点间隔 - 子节点的宽度
-        double childX = parentNode.getLayoutX() - SizeConstants.NODE_GAP_X;
+        double childX = parentNode.getLayoutX() - NodeConstants.GAP_X;
         for (MindNode child : children) {
             child.setLayoutX(childX - child.getPrefWidth());
             adjustChildrenXL(child);
@@ -741,7 +744,7 @@ public class SubjectController {
             if (childrenOfChild.isEmpty()) {
                 childNode.setLayoutY(childY);
                 // 当前Y + 当前节点高度 + 间距
-                childY += selfHeight + SizeConstants.NODE_GAP_Y;
+                childY += selfHeight + NodeConstants.GAP_Y;
             } else {
                 // 当前节点的高度 < 子节点的总高度
                 if (selfHeight < childNode.getChildrenHeightR()) {
@@ -749,11 +752,11 @@ public class SubjectController {
                     adjustChildrenYR(childNode, childY);
                     childNode.setLayoutY((childNode.getStartYR() + childNode.getEndYR() - selfHeight) / 2.0);
                     // 最后一个子节点的底部 + 间距
-                    childY = childNode.getEndYR() + SizeConstants.NODE_GAP_Y;
+                    childY = childNode.getEndYR() + NodeConstants.GAP_Y;
                 } else {
                     childNode.setLayoutY(childY);
                     // 当前Y + 当前节点高度 + 间距
-                    childY += selfHeight + SizeConstants.NODE_GAP_Y;
+                    childY += selfHeight + NodeConstants.GAP_Y;
                     adjustChildrenYR(childNode, null);
                 }
             }
@@ -781,15 +784,15 @@ public class SubjectController {
             double selfHeight = childNode.getPrefHeight();
             if (childrenOfChild.isEmpty()) {
                 childNode.setLayoutY(childY);
-                childY += selfHeight + SizeConstants.NODE_GAP_Y;
+                childY += selfHeight + NodeConstants.GAP_Y;
             } else {
                 if (selfHeight < childNode.getChildrenHeightL()) {
                     adjustChildrenYL(childNode, childY);
                     childNode.setLayoutY((childNode.getStartYL() + childNode.getEndYL() - selfHeight) / 2.0);
-                    childY = childNode.getEndYL() + SizeConstants.NODE_GAP_Y;
+                    childY = childNode.getEndYL() + NodeConstants.GAP_Y;
                 } else {
                     childNode.setLayoutY(childY);
-                    childY += selfHeight + SizeConstants.NODE_GAP_Y;
+                    childY += selfHeight + NodeConstants.GAP_Y;
                     adjustChildrenYL(childNode, null);
                 }
             }

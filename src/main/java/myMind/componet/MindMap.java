@@ -12,6 +12,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import lombok.Data;
+import myMind.constants.NodeConstants;
 import myMind.constants.SizeConstants;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
@@ -143,11 +144,11 @@ public class MindMap extends TabPane {
             public void changed(ObservableValue<? extends Bounds> observable, Bounds oldBounds, Bounds newBounds) {
                 if (newBounds.getHeight() > 0) {
                     MindNode rootNode = subjectController.getRootNode();
-                    rootNode.setLayoutX((newBounds.getWidth() - SizeConstants.MIN_NODE_WIDTH) / 2);
-                    rootNode.setLayoutY((newBounds.getHeight() - SizeConstants.MIN_NODE_HEIGHT) / 2);
+                    rootNode.setLayoutX((newBounds.getWidth() - NodeConstants.MIN_NODE_WIDTH) / 2);
+                    rootNode.setLayoutY((newBounds.getHeight() - NodeConstants.MIN_NODE_HEIGHT) / 2);
                     subject.layoutBoundsProperty().removeListener(this);
-                    SizeConstants.CENTER_X = newBounds.getWidth() / 2;
-                    SizeConstants.CENTER_Y = newBounds.getHeight() / 2;
+                    NodeConstants.CENTER_X = newBounds.getWidth() / 2;
+                    NodeConstants.CENTER_Y = newBounds.getHeight() / 2;
                 }
             }
         });
@@ -161,8 +162,8 @@ public class MindMap extends TabPane {
         String subjectName = "主题-" + (getTabs().size() + 1);
         Tab tab = addTab(subjectName);
 
-        node.setLayoutX(SizeConstants.CENTER_X - node.getPrefWidth() / 2);
-        node.setLayoutY(SizeConstants.CENTER_Y - node.getPrefHeight() / 2);
+        node.setLayoutX(NodeConstants.CENTER_X - node.getPrefWidth() / 2);
+        node.setLayoutY(NodeConstants.CENTER_Y - node.getPrefHeight() / 2);
 
         StyleClassedTextArea textArea = node.getTextArea();
         if (!textArea.getText().isEmpty()) {

@@ -70,7 +70,6 @@ public class FileUtil {
             subjectController.adjustChildrenSize();
             subjectController.adjustXY();
         }
-
         String absolutePath = file.getAbsolutePath();
         mindMap.setFilePath(absolutePath);
         ScheduleUtil.scheduleAutoSave(absolutePath, mindMap);

@@ -10,7 +10,6 @@ import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import lombok.Getter;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
@@ -43,6 +42,7 @@ public class Launch extends Application {
 
     private static final List<String> STYLE_SHEETS = List.of(
             Launch.class.getResource("/css/base.css").toExternalForm(),
+            Launch.class.getResource("/css/menu.css").toExternalForm(),
             Launch.class.getResource("/css/node.css").toExternalForm(),
             Launch.class.getResource("/css/style-wheel.css").toExternalForm(),
             Launch.class.getResource("/css/title-bar.css").toExternalForm()
@@ -73,7 +73,7 @@ public class Launch extends Application {
         titleBarController.getIcon().setImage(icon);
         titleBarController.titleProperty().bind(stage.titleProperty());
         stage.setTitle("MyMind");
-        stage.initStyle(StageStyle.UNDECORATED);
+//        stage.initStyle(StageStyle.UNDECORATED);
         // 取消最大化时的位置
         stage.setX(6);
         stage.setY(12);

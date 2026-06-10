@@ -1,9 +1,9 @@
 .node {
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-border-color: #c2c2c2;
-    -fx-border-width: 1;
-    -fx-background-color: white;
+    -fx-background-radius:8;
+    -fx-border-radius:8;
+    -fx-border-color:#c2c2c2;
+    -fx-border-width:1;
+    -fx-background-color:white;
 }
 
 .nodeImage {
@@ -21,8 +21,13 @@
     -fx-font-size: 20px;
 }
 
+/*.root-node .text-area {*/
+/*    -fx-font-weight:bold;*/
+/*    -fx-font-size:22px;*/
+/*}*/
+
 /*——————————————————————————————————按钮——————————————————————————————————*/
-.close-button, .action-button {
+.close-button, .add-button {
     -fx-font-weight: bold;
     -fx-font-size: 14px;
     -fx-text-fill: white;
@@ -40,19 +45,30 @@
 
 .close-button {
     -fx-background-color: #7ed1d1;
-    -fx-translate-x: 8;
-    -fx-translate-y: -8;
-
+    -fx-translate-x: 9.8;
+    -fx-translate-y: -9.8;
 }
 
 .close-button:hover {
     -fx-background-color: #6caaaa;
 }
 
-.action-button {
+.add-button {
     -fx-background-color: #80d186;
 }
 
-.action-button:hover {
+.close-button .text, .add-button .text {
+    -fx-translate-x: 0.5;
+}
+
+.add-button:hover {
     -fx-background-color: #6aae6d;
+}
+
+.add-button-r {
+    -fx-translate-x: 9.8;
+}
+
+.add-button-l {
+    -fx-translate-x: -9.8;
 }

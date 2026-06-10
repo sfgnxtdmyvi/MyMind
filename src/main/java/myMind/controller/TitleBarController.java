@@ -354,6 +354,7 @@ public class TitleBarController {
         maximized = !maximized;
     }
 
+    // todo bug
     @FXML
     public void close() {
         if (mindMap.getFilePath() == null) {

@@ -1,40 +1,8 @@
 package myMind.constants;
 
-import java.awt.GraphicsEnvironment;
-
 public class SizeConstants {
-    public static final int MIN_NODE_WIDTH = 125;
-    public static final int MIN_NODE_HEIGHT = 50;
-
-    public static final int MIN_TEXTAREA_WIDTH = 1;
-    public static final int MAX_TEXTAREA_WIDTH = 920;
-    public static final int MIN_TEXTAREA_HEIGHT = MIN_NODE_HEIGHT - 22;
-    public static final int HALF_MIN_TEXTAREA_HEIGHT = MIN_TEXTAREA_HEIGHT / 2;
-
-    public static final double SCALE = GraphicsEnvironment.getLocalGraphicsEnvironment()
-            .getDefaultScreenDevice()
-            .getDefaultConfiguration()
-            .getDefaultTransform()
-            .getScaleX();
-
-    public static final int NODE_GAP_X = MIN_NODE_WIDTH / 4;
-    public static final int NODE_GAP_Y = MIN_NODE_WIDTH / 5;
-    public static final int ADD_LEFT_NODE_GAP_X = NODE_GAP_X + MIN_NODE_WIDTH;
-
-    public static final int FONT_SIZE = 20;
-
     public static final int MAX_RECENT_FILES = 10;
 
-    /**
-     * 限制画布的移动范围
-     */
+    // 限制画布的移动范围
     public static final int TRANSLATE_OFFSET = 300;
-
-    // 拖拽缩放
-    public static final double RESIZE_THRESHOLD = 10.0;
-    public static final double BUTTON_THRESHOLD = 15.0;
-
-    public static double CENTER_X ;
-    public static double CENTER_Y ;
-
 }
