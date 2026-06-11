@@ -179,6 +179,11 @@ public class TitleBarController {
 
     //—————————————————————————————————————————添加—————————————————————————————————————————
     @FXML
+    private void insertChild() {
+        subjectController.insertChild();
+    }
+
+    @FXML
     private void addChildR() {
         subjectController.addChildR();
     }
@@ -343,15 +348,6 @@ public class TitleBarController {
     @FXML
     public void close() {
         if (mindMap.getFilePath() == null) {
-            for (Tab tab : mindMap.getTabs()) {
-
-                ObservableList<Node> children = ((Subject) tab.getContent()).getNodesLayer().getChildren();
-                for (Node child : children) {
-                    MindNode node = (MindNode) child;
-                    FileUtil.deleteImage(node.getImageName());
-                }
-            }
-
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("保存导图");
             alert.setHeaderText(null);
@@ -363,6 +359,13 @@ public class TitleBarController {
             switch (buttonData) {
                 case YES -> saveAs();
                 case NO -> {
+                    for (Tab tab : mindMap.getTabs()) {
+                        ObservableList<Node> children = ((Subject) tab.getContent()).getNodesLayer().getChildren();
+                        for (Node child : children) {
+                            MindNode node = (MindNode) child;
+                            FileUtil.deleteImage(node.getImageName());
+                        }
+                    }
                 }
                 default -> {
                     return;

@@ -97,43 +97,41 @@ public class MindMap extends TabPane {
             }
 
             event.consume();
-            if (code == KeyCode.HOME) {
-                subject.setTranslateY(subject.getTranslateY() - subject.getBoundsInParent().getMinY() + SizeConstants.TRANSLATE_CONSTRAIN);
-                return;
-            }
-            if (code == KeyCode.END) {
-                double deltaY = getLayoutBounds().getHeight() - subject.getBoundsInParent().getMaxY() - SizeConstants.TRANSLATE_CONSTRAIN;
-                subject.setTranslateY(subject.getTranslateY() + deltaY);
-                return;
-            }
-            if (code == KeyCode.PAGE_UP) {
-                subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET_PLUS);
-                subject.constrainTranslationY();
-                return;
-            }
-            if (code == KeyCode.PAGE_DOWN || code == KeyCode.SPACE) {
-                subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET_PLUS);
-                subject.constrainTranslationY();
-                return;
-            }
-            if (code == KeyCode.UP) {
-                subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET);
-                subject.constrainTranslationY();
-                return;
-            }
-            if (code == KeyCode.DOWN) {
-                subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET);
-                subject.constrainTranslationY();
-                return;
-            }
-            if (code == KeyCode.LEFT) {
-                subject.setTranslateX(subject.getTranslateX() + SizeConstants.TRANSLATE_OFFSET);
-                subject.constrainTranslationX();
-                return;
-            }
-            if (code == KeyCode.RIGHT) {
-                subject.setTranslateX(subject.getTranslateX() - SizeConstants.TRANSLATE_OFFSET);
-                subject.constrainTranslationX();
+            switch (code) {
+                case HOME -> {
+                    double translateConstrain = subject.getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / subject.getScaleX() : SizeConstants.TRANSLATE_CONSTRAIN;
+                    subject.setTranslateY(subject.getTranslateY() + translateConstrain - subject.getBoundsInParent().getMinY());
+                }
+                case END -> {
+                    double translateConstrain = subject.getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / subject.getScaleX() : SizeConstants.TRANSLATE_CONSTRAIN;
+                    // subject.getParent() 是 TabPaneSkin$TabContentRegion 所以不能直接用 getLayoutBounds().getHeight()
+                    double deltaY = subject.getParent().getLayoutBounds().getHeight() - translateConstrain - subject.getBoundsInParent().getMaxY();
+                    subject.setTranslateY(subject.getTranslateY() + deltaY);
+                }
+                case PAGE_UP -> {
+                    subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET_PLUS);
+                    subject.constrainTranslationY();
+                }
+                case PAGE_DOWN, SPACE -> {
+                    subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET_PLUS);
+                    subject.constrainTranslationY();
+                }
+                case UP -> {
+                    subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET);
+                    subject.constrainTranslationY();
+                }
+                case DOWN -> {
+                    subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET);
+                    subject.constrainTranslationY();
+                }
+                case LEFT -> {
+                    subject.setTranslateX(subject.getTranslateX() + SizeConstants.TRANSLATE_OFFSET);
+                    subject.constrainTranslationX();
+                }
+                case RIGHT -> {
+                    subject.setTranslateX(subject.getTranslateX() - SizeConstants.TRANSLATE_OFFSET);
+                    subject.constrainTranslationX();
+                }
             }
         });
 

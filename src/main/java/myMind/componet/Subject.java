@@ -85,20 +85,36 @@ public class Subject extends StackPane {
         // 变小后，四周的间隔要变大
         // 0 200         800 1000
         // 0     400 600     1000
-        double translateOffset = getScaleX() < 1 ? SizeConstants.TRANSLATE_OFFSET / getScaleX() : SizeConstants.TRANSLATE_OFFSET;
-        if (translateOffset < subjectBounds.getMinX()) {
-            dx = translateOffset - subjectBounds.getMinX();
-        } else if (subjectBounds.getMaxX() < parentWidth - translateOffset) {
-            dx = parentWidth - translateOffset - subjectBounds.getMaxX();
+        double translateConstrain = getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / getScaleX() : SizeConstants.TRANSLATE_CONSTRAIN;
+        if (translateConstrain < subjectBounds.getMinX()) {
+            dx = translateConstrain - subjectBounds.getMinX();
+        } else if (subjectBounds.getMaxX() < parentWidth - translateConstrain) {
+            dx = parentWidth - translateConstrain - subjectBounds.getMaxX();
         }
-        if (translateOffset < subjectBounds.getMinY()) {
-            dy = translateOffset - subjectBounds.getMinY();
-        } else if (subjectBounds.getMaxY() < parentHeight - translateOffset) {
-            dy = parentHeight - translateOffset - subjectBounds.getMaxY();
+        if (translateConstrain < subjectBounds.getMinY()) {
+            dy = translateConstrain - subjectBounds.getMinY();
+        } else if (subjectBounds.getMaxY() < parentHeight - translateConstrain) {
+            dy = parentHeight - translateConstrain - subjectBounds.getMaxY();
         }
 
         setTranslateX(getTranslateX() + dx);
         setTranslateY(getTranslateY() + dy);
+    }
+
+    public void constrainTranslationX() {
+        double dx = 0;
+        Bounds parentBounds = getParent().getLayoutBounds();
+        double parentWidth = parentBounds.getWidth();
+        Bounds subjectBounds = getBoundsInParent();
+
+        double translateConstrain = getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / getScaleX() :SizeConstants.TRANSLATE_CONSTRAIN;
+        if (translateConstrain < subjectBounds.getMinX()) {
+            dx = translateConstrain - subjectBounds.getMinX();
+        } else if (subjectBounds.getMaxX() < parentWidth - translateConstrain) {
+            dx = parentWidth - translateConstrain - subjectBounds.getMaxX();
+        }
+
+        setTranslateX(getTranslateX() + dx);
     }
 
     public void constrainTranslationY() {
@@ -107,7 +123,7 @@ public class Subject extends StackPane {
         double parentHeight = parentBounds.getHeight();
         Bounds subjectBounds = getBoundsInParent();
 
-        double translateOffset = SizeConstants.TRANSLATE_OFFSET / getScaleX();
+        double translateOffset = SizeConstants.TRANSLATE_CONSTRAIN / getScaleX();
         if (translateOffset < subjectBounds.getMinY()) {
             dy = translateOffset - subjectBounds.getMinY();
         } else if (subjectBounds.getMaxY() < parentHeight - translateOffset) {

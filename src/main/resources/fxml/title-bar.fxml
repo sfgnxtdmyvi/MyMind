@@ -40,6 +40,7 @@
             <MenuItem onAction="#addSubject" text="新建主题" accelerator="Ctrl+M"/>
             <SeparatorMenuItem/>
 
+            <MenuItem onAction="#insertChild" text="插入节点" accelerator="Alt+I"/>
             <MenuItem onAction="#addChildR" text="添加右子节点" accelerator="Alt+Right"/>
             <MenuItem onAction="#addChildL" text="添加左子节点" accelerator="Alt+Left"/>
             <MenuItem onAction="#addSibling" text="添加兄弟节点" accelerator="Alt+Down"/>

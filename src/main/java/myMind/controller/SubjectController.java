@@ -38,6 +38,46 @@ public class SubjectController {
     }
 
     //———————————————————————————————————————————新增———————————————————————————————————————————
+
+    /**
+     * 在当前节点和它的子节点之间添加一个节点，
+     * 原本的子节点成为新节点的子节点
+     */
+    public void insertChild() {
+        if (selectedNode == null) {
+            return;
+        }
+
+        if (selectedNode.getPos() == PosConstants.LEFT) {
+            MindNode childNode = new MindNode(PosConstants.LEFT, calculateChildXL(selectedNode), calculateChildY(selectedNode));
+            // 原本的子节点成为新节点的子节点
+            Iterator<MindNode> iterator = selectedNode.getChildrenL().iterator();
+            while (iterator.hasNext()) {
+                MindNode node = iterator.next();
+                iterator.remove();
+                childNode.addChildL(node);
+            }
+            selectedNode.addChildL(childNode);
+            addNodeAndSelect(childNode);
+
+            adjustChildrenXL(selectedNode);
+            refreshLinesL();
+        } else {
+            MindNode childNode = new MindNode(PosConstants.RIGHT, calculateChildXR(selectedNode), calculateChildY(selectedNode));
+            Iterator<MindNode> iterator = selectedNode.getChildrenR().iterator();
+            while (iterator.hasNext()) {
+                MindNode node = iterator.next();
+                iterator.remove();
+                childNode.addChildR(node);
+            }
+            selectedNode.addChildR(childNode);
+            addNodeAndSelect(childNode);
+
+            adjustChildrenXR(selectedNode);
+            refreshLinesR();
+        }
+    }
+
     public void addChildR() {
         if (selectedNode == null || selectedNode.getPos() == PosConstants.LEFT) {
             return;
@@ -260,6 +300,10 @@ public class SubjectController {
     private double calculateChildXL(MindNode parentNode) {
         // 父节点 X 轴 - 节点间隔 - 节点最小宽度
         return parentNode.getLayoutX() - NodeConstants.ADD_LEFT_NODE_GAP_X;
+    }
+
+    private double calculateChildY(MindNode parentNode) {
+        return parentNode.getLayoutY() + (parentNode.getPrefHeight() - NodeConstants.MIN_NODE_HEIGHT) / 2.0;
     }
 
     //———————————————————————————————————————————复制粘贴———————————————————————————————————————————
