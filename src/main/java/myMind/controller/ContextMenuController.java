@@ -1,11 +1,6 @@
 package myMind.controller;
 
-import javafx.collections.ObservableMap;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import lombok.Setter;
 
 public class ContextMenuController {
@@ -13,46 +8,27 @@ public class ContextMenuController {
     private SubjectController subjectController;
 
     @FXML
-    private void copy() {
+    public void copy() {
         subjectController.copy();
     }
 
     @FXML
-    private void cut() {
+    public void cut() {
         subjectController.cut();
     }
 
     @FXML
-    private void delete() {
+    public void delete() {
         subjectController.delete();
     }
 
     @FXML
-    private void deleteRemainChildren() {
+    public void deleteRemainChildren() {
         subjectController.deleteRemainChildren();
     }
 
     @FXML
-    private void deleteEmpty() {
+    public void deleteEmpty() {
         subjectController.deleteEmpty();
-    }
-
-    public void registerGlobalAccelerators(Scene scene) {
-        ObservableMap<KeyCombination, Runnable> accelerators = scene.getAccelerators();
-        accelerators.put(
-                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN),
-                this::copy);
-        accelerators.put(
-                new KeyCodeCombination(KeyCode.X, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN),
-                this::cut);
-        accelerators.put(
-                new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN),
-                this::delete);
-        accelerators.put(
-                new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN, KeyCombination.SHORTCUT_DOWN),
-                this::deleteRemainChildren);
-        accelerators.put(
-                new KeyCodeCombination(KeyCode.DELETE, KeyCombination.ALT_DOWN),
-                this::deleteEmpty);
     }
 }

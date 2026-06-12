@@ -1,6 +1,6 @@
 package myMind.constants;
 
-public enum MindNodeEvent {
+public enum NodeEvent {
     SELECT,
 
     PASTE_SIBLING,

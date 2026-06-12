@@ -4,11 +4,9 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -19,9 +17,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Screen;
@@ -220,9 +215,8 @@ public class TitleBarController {
         subjectController = mindMap.getSubjectController();
     }
 
-    // todo 抽取到快捷键管理类
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
-    private void moveRight() {
+    public void moveRight() {
         MindNode selectedNode = subjectController.getSelectedNode();
         // 左边节点 -> 父节点
         // 根、右边节点 -> 中间的右子节点
@@ -236,7 +230,7 @@ public class TitleBarController {
         }
     }
 
-    private void moveLeft() {
+    public void moveLeft() {
         MindNode selectedNode = subjectController.getSelectedNode();
         // 父节点 <- 右边节点
         // 中间的左子节点 <- 左边、根节点
@@ -250,7 +244,7 @@ public class TitleBarController {
         }
     }
 
-    private void moveUp() {
+    public void moveUp() {
         MindNode selectedNode = subjectController.getSelectedNode();
         if (selectedNode.getPos() == PosConstants.MIDDLE) {
             return;
@@ -269,7 +263,7 @@ public class TitleBarController {
         }
     }
 
-    private void moveDown() {
+    public void moveDown() {
         MindNode selectedNode = subjectController.getSelectedNode();
         if (selectedNode.getPos() == PosConstants.MIDDLE) {
             return;
@@ -286,22 +280,6 @@ public class TitleBarController {
         if (index != children.size() - 1) {
             subjectController.setSelectedNode(children.get(index + 1));
         }
-    }
-
-    public void registerGlobalAccelerators(Scene scene) {
-        ObservableMap<KeyCombination, Runnable> accelerators = scene.getAccelerators();
-        accelerators.put(
-                new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
-                this::moveRight);
-        accelerators.put(
-                new KeyCodeCombination(KeyCode.LEFT, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
-                this::moveLeft);
-        accelerators.put(
-                new KeyCodeCombination(KeyCode.UP, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
-                this::moveUp);
-        accelerators.put(
-                new KeyCodeCombination(KeyCode.DOWN, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
-                this::moveDown);
     }
 
     //—————————————————————————————————————————最小化、最大化、关闭—————————————————————————————————————————

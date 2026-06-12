@@ -17,6 +17,7 @@ import myMind.componet.MindNode;
 import myMind.componet.StyleWheel;
 import myMind.componet.Subject;
 import myMind.controller.ContextMenuController;
+import myMind.manager.ShortcutManager;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import myMind.controller.TitleBarController;
@@ -101,8 +102,7 @@ public class Launch extends Application {
     }
 
     private static void addListener() {
-        contextMenuController.registerGlobalAccelerators(scene);
-        titleBarController.registerGlobalAccelerators(scene);
+        stage.setUserData(new ShortcutManager(scene, contextMenuController, titleBarController));
 
         // 防止被 StyleClassedTextArea 阻止事件
         root.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> {

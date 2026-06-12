@@ -15,10 +15,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import myMind.constants.FileConstants;
-import myMind.constants.MindNodeEvent;
 import myMind.constants.NodeConstants;
+import myMind.constants.NodeEvent;
 import myMind.constants.PosConstants;
+import myMind.manager.ConfigManager;
 import myMind.util.FileUtil;
 import myMind.util.MeasureTextUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -47,7 +47,7 @@ public class MindNode extends StackPane {
     private final List<MindNode> childrenR = new ArrayList<>();
     private final List<MindNode> childrenL = new ArrayList<>();
 
-    private Consumer<MindNodeEvent> onAction;
+    private Consumer<NodeEvent> onAction;
 
     private VBox contentBox;
     private String imageName;
@@ -91,7 +91,7 @@ public class MindNode extends StackPane {
         this.pos = pos;
         buildNode(textArea);
         buildImageContainer();
-        imageView.setImage(new Image(new File(FileConstants.DIR_IMAGE + imageName).toURI().toString()));
+        imageView.setImage(new Image(new File(ConfigManager.DIR_IMAGE + imageName).toURI().toString()));
         imageView.setFitWidth(imageWidth);
         imageView.setFitHeight(imageHeight);
         ratio = imageWidth / imageHeight;
@@ -163,8 +163,8 @@ public class MindNode extends StackPane {
         // 使用 setOnMouseClicked 的话，由于 addButton 是一个独立的 Button 组件，它会消费鼠标事件，事件不会冒泡到父节点 MindNode，
         // 需要在 addButton 的事件处理逻辑中添加 setselectedNode(model);
         contentBox.setOnMouseClicked(e -> {
-            onAction.accept(MindNodeEvent.SELECT);
-            onAction.accept(MindNodeEvent.PASTE_SIBLING);
+            onAction.accept(NodeEvent.SELECT);
+            onAction.accept(NodeEvent.PASTE_SIBLING);
         });
 
         addButtonListen();
@@ -250,8 +250,8 @@ public class MindNode extends StackPane {
                 addButtonL.setVisible(false);
             });
 
-            addButtonR.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_R));
-            addButtonL.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_L));
+            addButtonR.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_R));
+            addButtonL.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_L));
         }
     }
 
@@ -266,7 +266,7 @@ public class MindNode extends StackPane {
         });
         setOnMouseExited(e -> addButtonR.setVisible(false));
 
-        addButtonR.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_R));
+        addButtonR.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_R));
     }
 
     public void addButtonListenL() {
@@ -280,7 +280,7 @@ public class MindNode extends StackPane {
         });
         setOnMouseExited(e -> addButtonL.setVisible(false));
 
-        addButtonL.setOnAction(e -> onAction.accept(MindNodeEvent.ADD_BUTTON_L));
+        addButtonL.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_L));
     }
 
     /**
@@ -361,9 +361,9 @@ public class MindNode extends StackPane {
                 setLayoutY(getLayoutY() - NodeConstants.HALF_MIN_TEXTAREA_HEIGHT);
 
                 if (pos == PosConstants.RIGHT) {
-                    onAction.accept(MindNodeEvent.ADJUST_YR);
+                    onAction.accept(NodeEvent.ADJUST_YR);
                 } else {
-                    onAction.accept(MindNodeEvent.ADJUST_YL);
+                    onAction.accept(NodeEvent.ADJUST_YL);
                 }
             }
         });
@@ -379,9 +379,9 @@ public class MindNode extends StackPane {
         // 调整位置
         if (pos == PosConstants.LEFT) {
             setLayoutX(getLayoutX() - (getPrefWidth() - oldWidth));
-            onAction.accept(MindNodeEvent.ADJUST_L);
+            onAction.accept(NodeEvent.ADJUST_L);
         } else {
-            onAction.accept(MindNodeEvent.ADJUST_R);
+            onAction.accept(NodeEvent.ADJUST_R);
         }
     }
 
