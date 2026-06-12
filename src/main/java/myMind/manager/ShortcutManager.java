@@ -1,6 +1,5 @@
 package myMind.manager;
 
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -11,95 +10,113 @@ import myMind.controller.TitleBarController;
 import myMind.util.MessageUtil;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ShortcutManager {
-    private final Map<KeyCombination, ShortcutBinding> keyMap = new HashMap<>();
-    private final Scene scene;
+    private Map<KeyCombination, ShortcutBinding> keyMap;
 
     public ShortcutManager(Scene scene, ContextMenuController contextMenuController, TitleBarController titleBarController) {
-        this.scene = scene;
+        keyMap = new HashMap<>();
+        keyMap.put(new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN),
+                new ShortcutBinding(contextMenuController::copy, "复制"));
+        keyMap.put(new KeyCodeCombination(KeyCode.X, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN),
+                new ShortcutBinding(contextMenuController::cut, "剪切"));
+        keyMap.put(new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN),
+                new ShortcutBinding(contextMenuController::delete, "删除"));
+        keyMap.put(new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN, KeyCombination.SHORTCUT_DOWN),
+                new ShortcutBinding(contextMenuController::deleteRemainChildren, "删除（保留子节点）"));
+        keyMap.put(new KeyCodeCombination(KeyCode.DELETE, KeyCombination.ALT_DOWN),
+                new ShortcutBinding(contextMenuController::deleteEmpty, "删除空白节点"));
+
+        keyMap.put(new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+                new ShortcutBinding(titleBarController::moveRight, "右移"));
+        keyMap.put(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+                new ShortcutBinding(titleBarController::moveLeft, "左移"));
+        keyMap.put(new KeyCodeCombination(KeyCode.UP, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+                new ShortcutBinding(titleBarController::moveUp, "上移"));
+        keyMap.put(new KeyCodeCombination(KeyCode.DOWN, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+                new ShortcutBinding(titleBarController::moveDown, "下移"));
+        load();
+
         // getAccelerators 在目标节点处理完之后，且不消费事件时才触发
-        EventHandler<KeyEvent> keyEventHandler = this::handleKeyEvent;
-        scene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
-
-        register(new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN),
-                contextMenuController::copy, "复制");
-        register(new KeyCodeCombination(KeyCode.X, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN),
-                contextMenuController::cut, "剪切");
-        register(new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN),
-                contextMenuController::delete, "删除");
-        register(new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN, KeyCombination.SHORTCUT_DOWN),
-                contextMenuController::deleteRemainChildren, "删除（保留子节点）");
-        register(new KeyCodeCombination(KeyCode.DELETE, KeyCombination.ALT_DOWN),
-                contextMenuController::deleteEmpty, "删除空白节点");
-
-        register(new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
-                titleBarController::moveRight, "右移");
-        register(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
-                titleBarController::moveLeft, "左移");
-        register(new KeyCodeCombination(KeyCode.UP, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
-                titleBarController::moveUp, "上移");
-        register(new KeyCodeCombination(KeyCode.DOWN, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
-                titleBarController::moveDown, "下移");
-//        load();
-    }
-
-    public void register(KeyCombination keyCombination, Runnable action, String description) {
-        keyMap.put(keyCombination, new ShortcutBinding(action, description));
-    }
-
-    private void handleKeyEvent(KeyEvent event) {
-        for (KeyCombination keyCombination : keyMap.keySet()) {
-            if (keyCombination.match(event)) {
-                event.consume();
-                keyMap.get(keyCombination).getAction().run();
-                break;
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            for (KeyCombination keyCombination : keyMap.keySet()) {
+                if (keyCombination.match(event)) {
+                    event.consume();
+                    keyMap.get(keyCombination).getAction().run();
+                    break;
+                }
             }
-        }
+        });
     }
 
     public void disable(KeyCombination keyCombination) {
         keyMap.get(keyCombination).setEnabled(false);
     }
 
-    public void updateShortcut(KeyCombination oldCombination, KeyCombination newCombination) {
+    // todo 持久化
+    //—————————————————————————————————————————持久化—————————————————————————————————————————
+
+    public void update(KeyCombination oldCombination, KeyCombination newCombination) {
         if (keyMap.containsKey(newCombination)) {
             MessageUtil.showMessage("快捷键已存在");
         } else {
+            List<String> shortcutList = new ArrayList<>();
             File file = new File(ConfigManager.SHORTCUTS);
+            // 如果存在，则替换，否则添加
             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                 String line;
+                String newCombinationStr = combinationToString(newCombination);
+                boolean updated = false;
                 while ((line = br.readLine()) != null) {
                     String[] split = line.split("=");
-//                    combinationToString(oldCombination), combinationToString(newCombination)
+                    if (split[1].equals(newCombinationStr)) {
+                        shortcutList.add(split[0] + "=" + newCombinationStr);
+                        updated = true;
+                    } else {
+                        shortcutList.add(line);
+                    }
+                }
+                if (!updated) {
+                    shortcutList.add(combinationToString(oldCombination) + "=" + newCombinationStr);
+                }
+                keyMap.put(newCombination, keyMap.remove(oldCombination));
+            } catch (IOException e) {
+                MessageUtil.showMessage("修改失败：" + e.getMessage());
+            }
+
+            try (BufferedWriter br = new BufferedWriter(new FileWriter(file))) {
+                for (String s : shortcutList) {
+                    br.write(s);
+                    br.newLine();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                MessageUtil.showMessage("修改失败：" + e.getMessage());
             }
-            keyMap.put(newCombination, keyMap.remove(oldCombination));
         }
     }
 
-    //—————————————————————————————————————————持久化—————————————————————————————————————————
     public void load() {
-        File file = new File(ConfigManager.SHORTCUTS);
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(ConfigManager.SHORTCUTS))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] split = line.split("=");
                 keyMap.put(parseKeyCombination(split[1]), keyMap.remove(parseKeyCombination(split[0])));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            MessageUtil.showMessage("加载自定义快捷键失败：" + e.getMessage());
         }
     }
 
-    public static String combinationToString(KeyCombination kc) {
+    public String combinationToString(KeyCombination kc) {
         if (kc instanceof KeyCodeCombination kcc) {
             StringBuilder sb = new StringBuilder();
             if (kcc.getShift() == KeyCombination.ModifierValue.DOWN) sb.append("Shift+");
@@ -113,7 +130,7 @@ public class ShortcutManager {
         return kc.getDisplayText();
     }
 
-    public static KeyCodeCombination parseKeyCombination(String str) {
+    public KeyCodeCombination parseKeyCombination(String str) {
         if (str == null || str.isEmpty()) return null;
         String[] parts = str.toUpperCase().split("\\+");
         boolean shift = false, ctrl = false, alt = false, meta = false, shortcut = false;

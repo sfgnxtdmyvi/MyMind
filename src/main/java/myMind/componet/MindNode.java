@@ -545,4 +545,9 @@ public class MindNode extends StackPane {
         }
     }
 
+    public boolean isEmpty() {
+        return childrenR.isEmpty() && childrenL.isEmpty() &&
+                textArea.getText().isEmpty() && imageName == null;
+    }
+
 }

@@ -98,11 +98,7 @@ public class TitleBarController {
         }
 
         MindNode rootNode = subjectController.getRootNode();
-        if (mindMap.getFilePath() == null &&
-                rootNode.getChildrenR().isEmpty() &&
-                rootNode.getChildrenL().isEmpty() &&
-                rootNode.getTextArea().getText().isEmpty() &&
-                rootNode.getImageName() == null) {
+        if (mindMap.getFilePath() == null && rootNode.isEmpty()) {
             FileUtil.load(file, mindMap);
             selectFirstSubject();
         } else {
@@ -170,6 +166,11 @@ public class TitleBarController {
     @FXML
     public void saveAs() {
         FileUtil.saveAs(mindMap);
+    }
+
+    @FXML
+    public void deleteUnusefulImage() {
+        FileUtil.deleteUnusefulImage();
     }
 
     //—————————————————————————————————————————添加—————————————————————————————————————————
@@ -325,7 +326,18 @@ public class TitleBarController {
     // todo bug
     @FXML
     public void close() {
-        if (mindMap.getFilePath() == null) {
+        boolean empty = true;
+        for (Tab tab : mindMap.getTabs()) {
+            SubjectController subjectController = (SubjectController) tab.getUserData();
+            // 只要一个不为空就为 false
+            if (!subjectController.getRootNode().isEmpty()) {
+                empty = false;
+                break;
+            }
+        }
+
+        // 未保存且不为空
+        if (mindMap.getFilePath() == null && !empty) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("保存导图");
             alert.setHeaderText(null);
@@ -360,4 +372,5 @@ public class TitleBarController {
         }
         stage.close();
     }
+
 }

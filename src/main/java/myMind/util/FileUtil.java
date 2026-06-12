@@ -27,8 +27,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class FileUtil {
     @Getter
@@ -377,6 +379,77 @@ public class FileUtil {
         File file = new File(ConfigManager.DIR_IMAGE + imageName);
         if (file.exists()) {
             file.delete();
+        }
+    }
+
+    /**
+     * 删除没有任何导图被使用的图片
+     */
+    public static void deleteUnusefulImage() {
+        // 所有导图的图片
+        Set<String> fileNameSet = new HashSet<>();
+        addImage(new File(ConfigManager.DIR_FILES), fileNameSet);
+
+        int count = 0;
+        File dirImage = new File(ConfigManager.DIR_IMAGE);
+        for (File file : dirImage.listFiles()) {
+            if (!fileNameSet.contains(file.getName())) {
+                file.delete();
+                count++;
+            }
+        }
+        if(count > 0) {
+            MessageUtil.showMessage("删除了 " + count + " 张图片");
+        }else {
+            MessageUtil.showMessage("没有多余的图片");
+        }
+    }
+
+    private static void addImage(File file, Set<String> fileNameSet) {
+        for (File f : file.listFiles()) {
+            if (f.isDirectory()) {
+                addImage(f, fileNameSet);
+            } else {
+                // 把一个导图的所有图片添加到 fileNameSet 中
+                JSONObject json = readFile(f);
+                for (int i = 0; i < json.size(); i++) {
+                    JSONObject rootNode = json.getJSONObject(Integer.toString(i));
+                    String imageName = rootNode.getString("imageName");
+                    if (imageName != null) {
+                        fileNameSet.add(imageName);
+                    }
+                    addImageR(rootNode.getJSONObject("childrenR"), fileNameSet);
+                    addImageL(rootNode.getJSONObject("childrenL"), fileNameSet);
+                }
+            }
+        }
+    }
+
+    private static void addImageR(JSONObject childrenR, Set<String> fileNameSet) {
+        if (childrenR == null) {
+            return;
+        }
+        for (int i = 0; i < childrenR.size(); i++) {
+            JSONObject node = childrenR.getJSONObject(Integer.toString(i));
+            String imageName = node.getString("imageName");
+            if (imageName != null) {
+                fileNameSet.add(imageName);
+            }
+            addImageR(node.getJSONObject("childrenR"), fileNameSet);
+        }
+    }
+
+    private static void addImageL(JSONObject childrenL, Set<String> fileNameSet) {
+        if (childrenL == null) {
+            return;
+        }
+        for (int i = 0; i < childrenL.size(); i++) {
+            JSONObject node = childrenL.getJSONObject(Integer.toString(i));
+            String imageName = node.getString("imageName");
+            if (imageName != null) {
+                fileNameSet.add(imageName);
+            }
+            addImageL(node.getJSONObject("childrenL"), fileNameSet);
         }
     }
 

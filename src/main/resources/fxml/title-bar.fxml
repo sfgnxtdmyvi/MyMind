@@ -16,10 +16,9 @@
       onMouseClicked="#clickBar"
       styleClass="title-bar">
 
+    <!-- 图标、标题 -->
     <HBox fx:id="topLeft" spacing="8">
-        <!-- 图标 -->
         <ImageView fx:id="icon" fitWidth="20" fitHeight="20"/>
-        <!-- 标题 -->
         <Label fx:id="title"/>
     </HBox>
 
@@ -32,8 +31,12 @@
                 <MenuItem text="无最近文件" disable="true"/>
             </Menu>
             <SeparatorMenuItem/>
+
             <MenuItem onAction="#save" text="保存" accelerator="Ctrl+S"/>
             <MenuItem onAction="#saveAs" text="另存为" accelerator="Ctrl+Shift+S"/>
+            <SeparatorMenuItem/>
+
+            <MenuItem onAction="#deleteUnusefulImage" text="清除无用图片"/>
         </Menu>
 
         <Menu text="编辑">
@@ -52,13 +55,14 @@
         </Menu>
 
         <Menu text="设置">
-<!--            todo -->
+            <!--            todo -->
             <MenuItem onAction="#addSubject" text="快捷键"/>
             <MenuItem onAction="#addSubject" text="样式"/>
         </Menu>
     </MenuBar>
 
     <!-- 弹性占位符：占据所有剩余空间，把 topRight 推到右侧 -->
+    <!-- 不能直接把 HBox.hgrow="ALWAYS" 加在 MenuBar 上，否则无法触发双击最大化 -->
     <Pane HBox.hgrow="ALWAYS"/>
     <!-- 最小化、最大化、关闭 -->
     <Button onAction="#minimize" text="─" styleClass="window-btn, minimize-btn"/>
