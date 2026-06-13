@@ -15,6 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -52,18 +53,13 @@ public class TitleBarController {
     }
 
     @FXML
-    public void initialize() {
-        title.textProperty().bind(titleProperty);
-    }
-
-    @FXML
     private Menu recentFilesMenu;
     @FXML
     private Button maximizeBtn;
     @FXML
     private HBox titleBar;
 
-    private Stage stage;
+    private Stage mapStage;
     private MindMap mindMap;
     private SubjectController subjectController;
 
@@ -74,6 +70,21 @@ public class TitleBarController {
     private double height;
     private double x;
     private double y;
+
+    @FXML
+    public void initialize() {
+        Tooltip.install(icon, new Tooltip("打开笔记"));
+        title.textProperty().bind(titleProperty);
+    }
+
+    @FXML
+    public void toNote() {
+        if (mindMap.isEmpty()) {
+            mapStage.hide();
+        }
+        Launch.getNoteStage().show();
+        Launch.getNoteStage().toFront();
+    }
 
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
@@ -108,7 +119,7 @@ public class TitleBarController {
             Launch.getTitleBarController().selectFirstSubject();
             // 打开 FileChooser 可能会导致图标设置失败
             Platform.runLater(() -> {
-                ObservableList<Image> icons = Launch.getStage().getIcons();
+                ObservableList<Image> icons = Launch.getMapStage().getIcons();
                 icons.clear();
                 icons.add(new Image(Launch.class.getResourceAsStream("/icon.png")));
             });
@@ -295,29 +306,29 @@ public class TitleBarController {
 
     @FXML
     public void minimize() {
-        stage.setIconified(true);
+        mapStage.setIconified(true);
     }
 
     @FXML
     public void maximize() {
         if (maximized) {
             // 还原
-            stage.setX(x);
-            stage.setY(y);
-            stage.setWidth(width);
-            stage.setHeight(height);
+            mapStage.setX(x);
+            mapStage.setY(y);
+            mapStage.setWidth(width);
+            mapStage.setHeight(height);
             maximizeBtn.setText("□");
         } else {
             // 最大化
-            x = stage.getX();
-            y = stage.getY();
-            width = stage.getWidth();
-            height = stage.getHeight();
-            stage.setX(0);
-            stage.setY(0);
+            x = mapStage.getX();
+            y = mapStage.getY();
+            width = mapStage.getWidth();
+            height = mapStage.getHeight();
+            mapStage.setX(0);
+            mapStage.setY(0);
             // UNDECORATED 模式下，setMaximized()会让窗口覆盖整个屏幕（包括任务栏）
-            stage.setWidth(screenBounds.getWidth());
-            stage.setHeight(screenBounds.getHeight());
+            mapStage.setWidth(screenBounds.getWidth());
+            mapStage.setHeight(screenBounds.getHeight());
             maximizeBtn.setText("❐");
         }
         maximized = !maximized;
@@ -326,18 +337,8 @@ public class TitleBarController {
     // todo bug
     @FXML
     public void close() {
-        boolean empty = true;
-        for (Tab tab : mindMap.getTabs()) {
-            SubjectController subjectController = (SubjectController) tab.getUserData();
-            // 只要一个不为空就为 false
-            if (!subjectController.getRootNode().isEmpty()) {
-                empty = false;
-                break;
-            }
-        }
-
         // 未保存且不为空
-        if (mindMap.getFilePath() == null && !empty) {
+        if (mindMap.getFilePath() == null && !mindMap.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("保存导图");
             alert.setHeaderText(null);
@@ -370,7 +371,7 @@ public class TitleBarController {
                 ScheduleUtil.cancelSchedule(mindMap.getFilePath());
             }
         }
-        stage.close();
+        mapStage.close();
     }
 
 }

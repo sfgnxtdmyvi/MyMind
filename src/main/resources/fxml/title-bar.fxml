@@ -18,7 +18,7 @@
 
     <!-- 图标、标题 -->
     <HBox fx:id="topLeft" spacing="8">
-        <ImageView fx:id="icon" fitWidth="20" fitHeight="20"/>
+        <ImageView fx:id="icon" onMouseClicked="#toNote" fitWidth="20" fitHeight="20"/>
         <Label fx:id="title"/>
     </HBox>
 
@@ -27,7 +27,7 @@
         <Menu text="文件">
             <MenuItem onAction="#newMindMap" text="新建" accelerator="Ctrl+N"/>
             <MenuItem onAction="#load" text="打开" accelerator="Ctrl+O"/>
-            <Menu fx:id="recentFilesMenu" text="打开最近" onShowing="#loadRecentFiles">
+            <Menu fx:id="recentFilesMenu" onShowing="#loadRecentFiles" text="打开最近">
                 <MenuItem text="无最近文件" disable="true"/>
             </Menu>
             <SeparatorMenuItem/>

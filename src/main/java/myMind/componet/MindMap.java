@@ -220,4 +220,17 @@ public class MindMap extends TabPane {
         });
         return tab;
     }
+
+    public boolean isEmpty() {
+        boolean empty = true;
+        for (Tab tab : getTabs()) {
+            SubjectController subjectController = (SubjectController) tab.getUserData();
+            // 只要一个不为空就为 false
+            if (!subjectController.getRootNode().isEmpty()) {
+                empty = false;
+                break;
+            }
+        }
+        return empty;
+    }
 }

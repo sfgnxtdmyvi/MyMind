@@ -8,6 +8,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.image.Image;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -17,10 +18,10 @@ import myMind.componet.MindNode;
 import myMind.componet.StyleWheel;
 import myMind.componet.Subject;
 import myMind.controller.ContextMenuController;
-import myMind.manager.ShortcutManager;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import myMind.controller.TitleBarController;
+import myMind.manager.ShortcutManager;
 import myMind.util.MessageUtil;
 
 import java.io.IOException;
@@ -28,7 +29,9 @@ import java.util.List;
 
 public class Launch extends Application {
     @Getter
-    private static Stage stage;
+    private static Stage mapStage;
+    @Getter
+    private static Stage noteStage;
     private static Scene scene;
     private static AnchorPane root;
     private static HBox titleBar;
@@ -46,17 +49,18 @@ public class Launch extends Application {
             Launch.class.getResource("/css/base.css").toExternalForm(),
             Launch.class.getResource("/css/menu.css").toExternalForm(),
             Launch.class.getResource("/css/node.css").toExternalForm(),
+            Launch.class.getResource("/css/note.css").toExternalForm(),
             Launch.class.getResource("/css/style-wheel.css").toExternalForm(),
             Launch.class.getResource("/css/title-bar.css").toExternalForm()
     );
 
     public static void createMindMap(Stage stage) {
-        Launch.stage = stage;
+        Launch.mapStage = stage;
         try {
             FXMLLoader loader = new FXMLLoader(Launch.class.getResource("/fxml/title-bar.fxml"));
             titleBar = loader.load();
             titleBarController = loader.getController();
-            titleBarController.setStage(stage);
+            titleBarController.setMapStage(stage);
 
             loader = new FXMLLoader(Launch.class.getResource("/fxml/context-menu.fxml"));
             contextMenu = loader.load();
@@ -102,7 +106,7 @@ public class Launch extends Application {
     }
 
     private static void addListener() {
-        stage.setUserData(new ShortcutManager(scene, contextMenuController, titleBarController));
+        mapStage.setUserData(new ShortcutManager(scene, contextMenuController, titleBarController));
 
         // 防止被 StyleClassedTextArea 阻止事件
         root.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> {
@@ -114,11 +118,11 @@ public class Launch extends Application {
 
             if (selectedNode.getTextArea().getSelection().getLength() != 0) {
                 // 默认将 content 的左上角放到 (x, y) 处，所以加上偏移，使轮盘居中
-                styleWheel.show(stage, event.getScreenX() - 125, event.getScreenY() - 125);
+                styleWheel.show(mapStage, event.getScreenX() - 125, event.getScreenY() - 125);
             }
             // 得到当前被点中的实际节点，再向上查找是否属于 MindNode
             else if (isMindNode(event.getPickResult().getIntersectedNode())) {
-                contextMenu.show(stage, event.getScreenX(), event.getScreenY());
+                contextMenu.show(mapStage, event.getScreenX(), event.getScreenY());
             }
         });
 
@@ -136,14 +140,14 @@ public class Launch extends Application {
         });
 
         // 切换导图
-        stage.focusedProperty().addListener((obs, oldVal, newVal) -> {
+        mapStage.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 StyleWheelArcController.setSubjectController(mindMap.getSubjectController());
             }
         });
 
         // 通过任务栏关闭时，也执行关闭逻辑
-        stage.setOnCloseRequest(event -> titleBarController.close());
+        mapStage.setOnCloseRequest(event -> titleBarController.close());
     }
 
     private static boolean isMindNode(Node node) {
@@ -160,15 +164,33 @@ public class Launch extends Application {
     public void start(Stage primaryStage) {
         createMindMap(primaryStage);
 
-//
-//        DialogPane dialogPane = new DialogPane();
-//        dialogPane.setContentText("HHHHH");
-//        dialogPane.
-//
-//        primaryStage.setScene(new Scene(dialogPane));
-//        primaryStage.setWidth(900);
-//        primaryStage.setHeight(700);
-//        primaryStage.show();
+        BorderPane borderPane = null;
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(Launch.class.getResource("/fxml/note.fxml"));
+            borderPane = fxmlLoader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Scene scene = new Scene(borderPane);
+        scene.getStylesheets().addAll(STYLE_SHEETS);
+
+        noteStage = new Stage();
+        noteStage.setScene(scene);
+        Image icon = new Image(Launch.class.getResourceAsStream("/icon.png"));
+        noteStage.getIcons().add(icon);
+        noteStage.setTitle("MyNote");
+        noteStage.setWidth(1200);
+        noteStage.setHeight(720);
+        noteStage.setMaximized(true);
+    }
+
+    public static void toMap() {
+//        if (mindMap.isEmpty()) {
+//            noteStage.hide();
+//        }
+        mapStage.show();
+        mapStage.toFront();
     }
 
     public static void main(String[] args) {

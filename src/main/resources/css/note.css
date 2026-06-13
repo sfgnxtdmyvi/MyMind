@@ -1,0 +1,23 @@
+#treeView {
+    -fx-border-color: #f0f3f5;
+    -fx-border-width: 0 1px 0 0;
+}
+
+#treeView:selected {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-border-color: #f0f3f5;
+}
+
+#textArea {
+    -fx-font-family: 'Microsoft YaHei';
+    -fx-font-size: 22px;
+    -fx-padding: 15px 35px;
+}
+
+#textArea .paragraph-text {
+    /* 行间距 */
+    -fx-line-spacing: 3px;
+    /* 段落额外的间距 */
+    -fx-padding: 5px 0;
+}

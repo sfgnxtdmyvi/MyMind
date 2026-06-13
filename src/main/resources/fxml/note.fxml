@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import org.fxmisc.richtext.StyleClassedTextArea?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="myMind.controller.NoteController">
+    <left>
+        <TreeView fx:id="treeView"/>
+    </left>
+    <center>
+        <StyleClassedTextArea fx:id="textArea" wrapText="true"/>
+    </center>
+</BorderPane>
