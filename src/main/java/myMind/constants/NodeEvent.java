@@ -10,5 +10,5 @@ public enum NodeEvent {
     ADJUST_R,
     ADJUST_L,
     ADJUST_YR,
-    ADJUST_YL,
+    ADJUST_YL
 }

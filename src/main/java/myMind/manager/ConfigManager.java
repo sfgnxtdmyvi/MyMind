@@ -8,7 +8,8 @@ public class ConfigManager {
     public static final String DIR_FILES;
     public static final String DIR_IMAGE;
     public static final String DIR_RECENT_FILES;
-    public static final String SHORTCUTS;
+    public static final String DIR_NOTES;
+    public static final String DIR_SHORTCUTS;
 
     static {
         ResourceBundle config = ResourceBundle.getBundle("properties/config");
@@ -16,6 +17,7 @@ public class ConfigManager {
         DIR_FILES = config.getString("directory.files");
         DIR_IMAGE = config.getString("directory.images");
         DIR_RECENT_FILES = config.getString("directory.recent_files");
-        SHORTCUTS = config.getString("directory.shortcuts");
+        DIR_SHORTCUTS = config.getString("directory.shortcuts");
+        DIR_NOTES = config.getString("directory.notes");
     }
 }

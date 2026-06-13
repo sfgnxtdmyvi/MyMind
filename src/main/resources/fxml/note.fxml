@@ -8,7 +8,7 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="myMind.controller.NoteController">
     <left>
-        <TreeView fx:id="treeView"/>
+        <TreeView fx:id="treeView" fixedCellSize="40"/>
     </left>
     <center>
         <StyleClassedTextArea fx:id="textArea" wrapText="true"/>

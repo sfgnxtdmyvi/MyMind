@@ -83,6 +83,9 @@ public class SubjectController {
             return;
         }
 
+        if (!selectedNode.getChildrenR().isEmpty()) {
+            setSubjectTranslateY(-NodeConstants.NODE_TRANSLATE);
+        }
         MindNode childNode = new MindNode(PosConstants.RIGHT, calculateChildXR(selectedNode), 0);
         selectedNode.addChildR(childNode);
         addNodeAndSelect(childNode);
@@ -96,6 +99,9 @@ public class SubjectController {
             return;
         }
 
+        if (!selectedNode.getChildrenL().isEmpty()) {
+            setSubjectTranslateY(-NodeConstants.NODE_TRANSLATE);
+        }
         MindNode childNode = new MindNode(PosConstants.LEFT, calculateChildXL(selectedNode), 0);
         selectedNode.addChildL(childNode);
         addNodeAndSelect(childNode);
@@ -114,6 +120,7 @@ public class SubjectController {
             return;
         }
 
+        setSubjectTranslateY(-NodeConstants.NODE_TRANSLATE);
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             MindNode siblingNode = new MindNode(PosConstants.RIGHT, selectedNode.getLayoutX(), 0);
             parentNode.addChildRAt(parentNode.getChildrenR().indexOf(selectedNode) + 1, siblingNode);
@@ -140,6 +147,11 @@ public class SubjectController {
             return;
         }
 
+        if (selectedNode.getChildrenR().isEmpty()) {
+            setSubjectTranslateY(-NodeConstants.FOUR_NODE_TRANSLATE);
+        } else {
+            setSubjectTranslateY(-NodeConstants.FIVE_NODE_TRANSLATE);
+        }
         MindNode firstNode = new MindNode(PosConstants.RIGHT, calculateChildXR(selectedNode), 0);
         addNodeR(firstNode);
         for (int i = 0; i < 4; i++) {
@@ -156,6 +168,11 @@ public class SubjectController {
             return;
         }
 
+        if (selectedNode.getChildrenR().isEmpty()) {
+            setSubjectTranslateY(-NodeConstants.FOUR_NODE_TRANSLATE);
+        } else {
+            setSubjectTranslateY(-NodeConstants.FIVE_NODE_TRANSLATE);
+        }
         MindNode firstNode = new MindNode(PosConstants.LEFT, calculateChildXL(selectedNode), 0);
         addNodeL(firstNode);
         for (int i = 0; i < 4; i++) {
@@ -177,6 +194,7 @@ public class SubjectController {
             return;
         }
 
+        setSubjectTranslateY(-NodeConstants.FIVE_NODE_TRANSLATE);
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             MindNode firstNode = new MindNode(PosConstants.RIGHT, selectedNode.getLayoutX(), 0);
             parentNode.addChildRAt(parentNode.getChildrenR().indexOf(selectedNode) + 1, firstNode);
@@ -276,6 +294,8 @@ public class SubjectController {
                 }
             }
         });
+
+        node.setSetSubjectTranslateY(this::setSubjectTranslateY);
     }
 
     private void setOnActionChildrenR(MindNode cloneNode) {
@@ -407,11 +427,17 @@ public class SubjectController {
         }
 
         if (selectedNode.getPos() == PosConstants.RIGHT) {
+            if (selectedNode.getParentNode().getChildrenR().size() != 1) {
+                setSubjectTranslateY(selectedNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
+            }
             deleteChildrenFromSubjectR(selectedNode);
             deleteR();
             adjustChildrenYR();
             refreshLinesR();
         } else {
+            if (selectedNode.getParentNode().getChildrenL().size() != 1) {
+                setSubjectTranslateY(selectedNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
+            }
             deleteChildrenFromSubjectL(selectedNode);
             deleteL();
             adjustChildrenYL();
@@ -442,6 +468,10 @@ public class SubjectController {
 
             subject.addClone(cloneNode);
             setOnActionChildrenR(cloneNode);
+
+            if (cloneNode.getParentNode().getChildrenR().size() != 1) {
+                setSubjectTranslateY(-cloneNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
+            }
             adjustR(cloneNode);
         } else {
             // calculateChildXL 算的是新增空节点的 x 坐标
@@ -457,6 +487,10 @@ public class SubjectController {
 
             subject.addClone(cloneNode);
             setOnActionChildrenL(cloneNode);
+
+            if (cloneNode.getParentNode().getChildrenL().size() != 1) {
+                setSubjectTranslateY(-cloneNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
+            }
             adjustL(cloneNode);
         }
 
@@ -487,6 +521,10 @@ public class SubjectController {
 
             subject.addClone(cloneNode);
             setOnActionChildrenR(cloneNode);
+
+            if (parentNode.getChildrenR().size() != 1) {
+                setSubjectTranslateY(-cloneNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
+            }
             adjustR(cloneNode);
         } else {
             int index = parentNode.getChildrenL().indexOf(selectedNode);
@@ -501,6 +539,10 @@ public class SubjectController {
 
             subject.addClone(cloneNode);
             setOnActionChildrenL(cloneNode);
+
+            if (parentNode.getChildrenL().size() != 1) {
+                setSubjectTranslateY(-cloneNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
+            }
             adjustL(cloneNode);
         }
 
@@ -601,11 +643,17 @@ public class SubjectController {
         }
 
         if (selectedNode.getPos() == PosConstants.RIGHT) {
+            if (selectedNode.getParentNode().getChildrenR().size() != 1) {
+                setSubjectTranslateY(selectedNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
+            }
             deleteChildrenR(selectedNode);
             deleteR();
             adjustChildrenYR();
             refreshLinesR();
         } else {
+            if (selectedNode.getParentNode().getChildrenL().size() != 1) {
+                setSubjectTranslateY(selectedNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
+            }
             deleteChildrenL(selectedNode);
             deleteL();
             adjustChildrenYL();
@@ -637,6 +685,9 @@ public class SubjectController {
 
             adjustChildrenXR(parentNode);
             if (selfHeight > childrenHeight) {
+                if (parentNode.getChildrenR().size() != 1) {
+                    setSubjectTranslateY(selfHeight * NodeConstants.TRANSLATE_RATE);
+                }
                 adjustChildrenYR();
             }
             refreshLinesR();
@@ -654,6 +705,9 @@ public class SubjectController {
 
             adjustChildrenXL(parentNode);
             if (selfHeight > childrenHeight) {
+                if (parentNode.getChildrenL().size() != 1) {
+                    setSubjectTranslateY(selfHeight * NodeConstants.TRANSLATE_RATE);
+                }
                 adjustChildrenYL();
             }
             refreshLinesL();
@@ -692,6 +746,7 @@ public class SubjectController {
                 // 空白节点如果有子节点，一并删除
                 // 一个节点有两个引用，父节点和 nodesLayer，两个引用都删除，就会被 GC 掉
                 deleteChildrenFromSubjectR(childNode);
+                setSubjectTranslateY(childNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
             } else {
                 // 非空时，递归看子节点是否为空
                 deleteEmptyR(childNode);
@@ -708,6 +763,7 @@ public class SubjectController {
                 childNode.setParentNode(null);
                 subject.remove(childNode);
                 deleteChildrenFromSubjectL(childNode);
+                setSubjectTranslateY(childNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
             } else {
                 deleteEmptyL(childNode);
             }
@@ -955,6 +1011,10 @@ public class SubjectController {
             childNode.adjustSize();
             adjustChildrenSizeL(childNode);
         }
+    }
+
+    public void setSubjectTranslateY(double translateY) {
+        subject.setTranslateY(subject.getTranslateY() + translateY);
     }
 
     //———————————————————————————————————————————刷新连线———————————————————————————————————————————

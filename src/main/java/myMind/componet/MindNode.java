@@ -48,6 +48,7 @@ public class MindNode extends StackPane {
     private final List<MindNode> childrenL = new ArrayList<>();
 
     private Consumer<NodeEvent> onAction;
+    private Consumer<Double> setSubjectTranslateY;
 
     private VBox contentBox;
     private String imageName;
@@ -205,7 +206,12 @@ public class MindNode extends StackPane {
 
         // 文本变化调整节点大小
         textArea.textProperty()
-                .addListener((obs, oldText, newText) -> adjust());
+                .addListener((obs, oldText, newText) -> {
+                    double oldWidth = getPrefHeight();
+                    adjust();
+                    double newWidth = getPrefHeight();
+                    setSubjectTranslateY.accept(-(newWidth - oldWidth) * NodeConstants.TRANSLATE_RATE);
+                });
 
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
@@ -491,14 +497,14 @@ public class MindNode extends StackPane {
      * 节点的高度
      * Math.max（当前节点的高度，子节点的总高度）
      */
-    private double getHeightR() {
+    public double getHeightR() {
         if (childrenR.isEmpty()) {
             return getPrefHeight();
         }
         return Math.max(getPrefHeight(), getChildrenHeightR());
     }
 
-    private double getHeightL() {
+    public double getHeightL() {
         if (childrenL.isEmpty()) {
             return getPrefHeight();
         }

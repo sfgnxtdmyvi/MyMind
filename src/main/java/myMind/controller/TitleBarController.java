@@ -78,7 +78,7 @@ public class TitleBarController {
     }
 
     @FXML
-    public void toNote() {
+    public void openNote() {
         if (mindMap.isEmpty()) {
             mapStage.hide();
         }

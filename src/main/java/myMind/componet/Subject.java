@@ -117,6 +117,7 @@ public class Subject extends StackPane {
         setTranslateX(getTranslateX() + dx);
     }
 
+    //todo translateYProperty()
     public void constrainTranslationY() {
         double dy = 0;
         Bounds parentBounds = getParent().getLayoutBounds();

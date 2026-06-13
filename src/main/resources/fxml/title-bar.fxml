@@ -18,7 +18,7 @@
 
     <!-- 图标、标题 -->
     <HBox fx:id="topLeft" spacing="8">
-        <ImageView fx:id="icon" onMouseClicked="#toNote" fitWidth="20" fitHeight="20"/>
+        <ImageView fx:id="icon" onMouseClicked="#openNote" fitWidth="20" fitHeight="20"/>
         <Label fx:id="title"/>
     </HBox>
 
