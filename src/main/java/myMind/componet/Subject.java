@@ -32,6 +32,7 @@ public class Subject extends StackPane {
         linesLayerR.setMouseTransparent(true);
         nodesLayer.setMouseTransparent(false);
         getChildren().addAll(linesLayerL, linesLayerR, nodesLayer);
+
         // 阻止焦点从 textArea 转移出去，导致清空选区，进行无法唤出样式轮盘
         // 不能用空处理器，如果事件冒泡给 TabPane，在 setOnMousePressed 之前就会获取焦点
         setOnMousePressed(e -> {
@@ -41,6 +42,54 @@ public class Subject extends StackPane {
             if (e.getButton() == MouseButton.SECONDARY) {
                 e.consume();
             }
+        });
+
+        // 限制 Subject 的移动
+        translateXProperty().addListener((observable, oldValue, newValue) -> {
+            double dx = 0;
+            // 父容器视口大小
+            Bounds parentBounds = getParent().getLayoutBounds();
+            double parentWidth = parentBounds.getWidth();
+            // Subject（包含所有子节点）在父容器中的实际边界
+            Bounds subjectBounds = getBoundsInParent();
+
+            //        |                 |
+            // 视口的左边缘（0） 视口的右边缘（parentWidth）
+            //         |                    |
+            //  Subject 的左边缘（10） Subject 的右边缘（parentWidth+10）
+            // - subjectBounds.getMinX()后 Subject 左边缘与视口的左边缘重合
+            //        |        |            |
+            // 视口的左边缘（0） 200 视口的右边缘（parentWidth）
+            //                  |                     |
+            //          Subject 的左边缘（210） Subject 的右边缘（parentWidth+210）
+            // 调整后 Subject 左边缘与 SizeConstants.TRANSLATE_OFFSET 重合，中间存在 SizeConstants.TRANSLATE_OFFSET 的间隔
+
+            // 变小后，四周的间隔要变大
+            // 0 200         800 1000
+            // 0     400 600     1000
+            double translateConstrain = getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / getScaleX() : SizeConstants.TRANSLATE_CONSTRAIN;
+            if (translateConstrain < subjectBounds.getMinX()) {
+                dx = translateConstrain - subjectBounds.getMinX();
+            } else if (subjectBounds.getMaxX() < parentWidth - translateConstrain) {
+                dx = parentWidth - translateConstrain - subjectBounds.getMaxX();
+            }
+
+            setTranslateX(getTranslateX() + dx);
+        });
+
+        translateYProperty().addListener((observable, oldValue, newValue) -> {
+            double dy = 0;
+            Bounds parentBounds = getParent().getLayoutBounds();
+            double parentHeight = parentBounds.getHeight();
+            Bounds subjectBounds = getBoundsInParent();
+
+            double translateOffset = SizeConstants.TRANSLATE_CONSTRAIN / getScaleX();
+            if (translateOffset < subjectBounds.getMinY()) {
+                dy = translateOffset - subjectBounds.getMinY();
+            } else if (subjectBounds.getMaxY() < parentHeight - translateOffset) {
+                dy = parentHeight - translateOffset - subjectBounds.getMaxY();
+            }
+            setTranslateY(getTranslateY() + dy);
         });
     }
 
@@ -54,84 +103,8 @@ public class Subject extends StackPane {
         scale = Math.max(0.5, Math.min(scale, 2.0));
         setScaleX(scale);
         setScaleY(scale);
-        constrainTranslation();
 
         MessageUtil.showScale(scale);
-    }
-
-    /**
-     * 限制 Subject 的移动
-     */
-    public void constrainTranslation() {
-        double dx = 0, dy = 0;
-        // 父容器视口大小
-        Bounds parentBounds = getParent().getLayoutBounds();
-        double parentWidth = parentBounds.getWidth();
-        double parentHeight = parentBounds.getHeight();
-        // Subject（包含所有子节点）在父容器中的实际边界
-        Bounds subjectBounds = getBoundsInParent();
-
-        //        |                 |
-        // 视口的左边缘（0） 视口的右边缘（parentWidth）
-        //         |                    |
-        //  Subject 的左边缘（10） Subject 的右边缘（parentWidth+10）
-        // - subjectBounds.getMinX()后 Subject 左边缘与视口的左边缘重合
-        //        |        |            |
-        // 视口的左边缘（0） 200 视口的右边缘（parentWidth）
-        //                  |                     |
-        //          Subject 的左边缘（210） Subject 的右边缘（parentWidth+210）
-        // 调整后 Subject 左边缘与 SizeConstants.TRANSLATE_OFFSET 重合，中间存在 SizeConstants.TRANSLATE_OFFSET 的间隔
-
-        // 变小后，四周的间隔要变大
-        // 0 200         800 1000
-        // 0     400 600     1000
-        double translateConstrain = getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / getScaleX() : SizeConstants.TRANSLATE_CONSTRAIN;
-        if (translateConstrain < subjectBounds.getMinX()) {
-            dx = translateConstrain - subjectBounds.getMinX();
-        } else if (subjectBounds.getMaxX() < parentWidth - translateConstrain) {
-            dx = parentWidth - translateConstrain - subjectBounds.getMaxX();
-        }
-        if (translateConstrain < subjectBounds.getMinY()) {
-            dy = translateConstrain - subjectBounds.getMinY();
-        } else if (subjectBounds.getMaxY() < parentHeight - translateConstrain) {
-            dy = parentHeight - translateConstrain - subjectBounds.getMaxY();
-        }
-
-        setTranslateX(getTranslateX() + dx);
-        setTranslateY(getTranslateY() + dy);
-    }
-
-    public void constrainTranslationX() {
-        double dx = 0;
-        Bounds parentBounds = getParent().getLayoutBounds();
-        double parentWidth = parentBounds.getWidth();
-        Bounds subjectBounds = getBoundsInParent();
-
-        double translateConstrain = getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / getScaleX() :SizeConstants.TRANSLATE_CONSTRAIN;
-        if (translateConstrain < subjectBounds.getMinX()) {
-            dx = translateConstrain - subjectBounds.getMinX();
-        } else if (subjectBounds.getMaxX() < parentWidth - translateConstrain) {
-            dx = parentWidth - translateConstrain - subjectBounds.getMaxX();
-        }
-
-        setTranslateX(getTranslateX() + dx);
-    }
-
-    //todo translateYProperty()
-    public void constrainTranslationY() {
-        double dy = 0;
-        Bounds parentBounds = getParent().getLayoutBounds();
-        double parentHeight = parentBounds.getHeight();
-        Bounds subjectBounds = getBoundsInParent();
-
-        double translateOffset = SizeConstants.TRANSLATE_CONSTRAIN / getScaleX();
-        if (translateOffset < subjectBounds.getMinY()) {
-            dy = translateOffset - subjectBounds.getMinY();
-        } else if (subjectBounds.getMaxY() < parentHeight - translateOffset) {
-            dy = parentHeight - translateOffset - subjectBounds.getMaxY();
-        }
-
-        setTranslateY(getTranslateY() + dy);
     }
 
     //———————————————————————————————————————————节点———————————————————————————————————————————

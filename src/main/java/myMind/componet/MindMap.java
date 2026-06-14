@@ -58,7 +58,7 @@ public class MindMap extends TabPane {
                 for (int i = 0; i < 3; i++) {
                     subject.setTranslateY(subject.getTranslateY() + deltaY);
                 }
-                subject.constrainTranslationY();
+//                subject.constrainTranslationY();
             }
         });
 
@@ -75,8 +75,6 @@ public class MindMap extends TabPane {
                 subject.setTranslateY(subject.getTranslateY() + e.getSceneY() - subject.getDragStartY());
                 subject.setDragStartX(e.getSceneX());
                 subject.setDragStartY(e.getSceneY());
-
-                subject.constrainTranslation();
             }
             e.consume();
         });
@@ -110,27 +108,21 @@ public class MindMap extends TabPane {
                 }
                 case PAGE_UP -> {
                     subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET_PLUS);
-                    subject.constrainTranslationY();
                 }
                 case PAGE_DOWN, SPACE -> {
                     subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET_PLUS);
-                    subject.constrainTranslationY();
                 }
                 case UP -> {
                     subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET);
-                    subject.constrainTranslationY();
                 }
                 case DOWN -> {
                     subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET);
-                    subject.constrainTranslationY();
                 }
                 case LEFT -> {
                     subject.setTranslateX(subject.getTranslateX() + SizeConstants.TRANSLATE_OFFSET);
-                    subject.constrainTranslationX();
                 }
                 case RIGHT -> {
                     subject.setTranslateX(subject.getTranslateX() - SizeConstants.TRANSLATE_OFFSET);
-                    subject.constrainTranslationX();
                 }
             }
         });

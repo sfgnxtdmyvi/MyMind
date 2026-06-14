@@ -523,7 +523,7 @@ public class SubjectController {
             setOnActionChildrenR(cloneNode);
 
             if (parentNode.getChildrenR().size() != 1) {
-                setSubjectTranslateY(-cloneNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
+                setSubjectTranslateY(cloneNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
             }
             adjustR(cloneNode);
         } else {
@@ -541,7 +541,7 @@ public class SubjectController {
             setOnActionChildrenL(cloneNode);
 
             if (parentNode.getChildrenL().size() != 1) {
-                setSubjectTranslateY(-cloneNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
+                setSubjectTranslateY(cloneNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
             }
             adjustL(cloneNode);
         }

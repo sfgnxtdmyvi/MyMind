@@ -207,10 +207,7 @@ public class MindNode extends StackPane {
         // 文本变化调整节点大小
         textArea.textProperty()
                 .addListener((obs, oldText, newText) -> {
-                    double oldWidth = getPrefHeight();
                     adjust();
-                    double newWidth = getPrefHeight();
-                    setSubjectTranslateY.accept(-(newWidth - oldWidth) * NodeConstants.TRANSLATE_RATE);
                 });
 
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
@@ -380,7 +377,10 @@ public class MindNode extends StackPane {
      */
     public void adjust() {
         double oldWidth = getPrefWidth();
+        double oldHeight = getPrefHeight();
         adjustSize();
+        double newHeight = getPrefHeight();
+        setSubjectTranslateY.accept(-(newHeight - oldHeight) * 0.5);
 
         // 调整位置
         if (pos == PosConstants.LEFT) {
@@ -396,7 +396,7 @@ public class MindNode extends StackPane {
      */
     public void adjustSize() {
         String text = textArea.getText();
-        boolean imageVisible = imageContainer != null;
+        boolean imageVisible = imageName != null;
         double nodeWidth;
         double nodeHeight;
         double textWidth;
