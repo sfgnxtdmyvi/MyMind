@@ -3,14 +3,14 @@ package myMind.componet;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.Pane;
 import javafx.stage.Popup;
-import myMind.manager.ConfigManager;
+import myMind.manager.CssManager;
 
 import java.io.IOException;
 
 public class StyleWheel extends Popup {
     private StyleWheel() {
         try {
-            FXMLLoader loader = new FXMLLoader(StyleWheel.class.getResource(ConfigManager.STYLE_WHEEL));
+            FXMLLoader loader = new FXMLLoader(StyleWheel.class.getResource(CssManager.getStyleWheel()));
             Pane styleWheel = loader.load();
             getContent().add(styleWheel);
             setAutoHide(true);

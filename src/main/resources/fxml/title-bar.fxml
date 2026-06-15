@@ -57,7 +57,7 @@
         <Menu text="设置">
             <!--            todo -->
             <MenuItem onAction="#addSubject" text="快捷键"/>
-            <MenuItem onAction="#addSubject" text="样式"/>
+            <MenuItem onAction="#change" text="样式"/>
         </Menu>
     </MenuBar>
 

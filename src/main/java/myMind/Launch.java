@@ -17,10 +17,12 @@ import myMind.componet.MindMap;
 import myMind.componet.MindNode;
 import myMind.componet.StyleWheel;
 import myMind.componet.Subject;
+import myMind.constants.CssStyle;
 import myMind.controller.ContextMenuController;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import myMind.controller.TitleBarController;
+import myMind.manager.CssManager;
 import myMind.manager.ShortcutManager;
 import myMind.util.MessageUtil;
 
@@ -72,6 +74,7 @@ public class Launch extends Application {
         root = new AnchorPane(titleBar);
         scene = new Scene(root);
         scene.getStylesheets().addAll(STYLE_SHEETS);
+        root.setStyle(CssStyle.getStyle(CssManager.getTabStyle()));
 
         stage.setScene(scene);
         Image icon = new Image(Launch.class.getResourceAsStream("/icon.png"));
@@ -99,6 +102,7 @@ public class Launch extends Application {
         MessageUtil.init(root, stage);
 
         titleBarController.setMindMap(mindMap);
+        titleBarController.setRoot(root);
         titleBarController.setSubjectController(mindMap.getSubjectController());
         contextMenuController.setSubjectController(mindMap.getSubjectController());
 

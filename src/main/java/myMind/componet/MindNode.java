@@ -18,9 +18,10 @@ import lombok.EqualsAndHashCode;
 import myMind.constants.NodeConstants;
 import myMind.constants.NodeEvent;
 import myMind.constants.PosConstants;
-import myMind.manager.ConfigManager;
+import myMind.constants.ConfigConstants;
 import myMind.util.FileUtil;
 import myMind.util.MeasureTextUtil;
+import myMind.util.MessageUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import java.awt.Toolkit;
@@ -92,7 +93,7 @@ public class MindNode extends StackPane {
         this.pos = pos;
         buildNode(textArea);
         buildImageContainer();
-        imageView.setImage(new Image(new File(ConfigManager.DIR_IMAGE + imageName).toURI().toString()));
+        imageView.setImage(new Image(new File(ConfigConstants.DIR_IMAGE + imageName).toURI().toString()));
         imageView.setFitWidth(imageWidth);
         imageView.setFitHeight(imageHeight);
         ratio = imageWidth / imageHeight;
@@ -196,7 +197,7 @@ public class MindNode extends StackPane {
 
                         adjust();
                     } catch (UnsupportedFlavorException | IOException ex) {
-                        ex.printStackTrace();
+                        MessageUtil.showMessage("粘贴失败：" + ex.getMessage());
                     }
                 }
 
@@ -206,9 +207,7 @@ public class MindNode extends StackPane {
 
         // 文本变化调整节点大小
         textArea.textProperty()
-                .addListener((obs, oldText, newText) -> {
-                    adjust();
-                });
+                .addListener((obs, oldText, newText) -> adjust());
 
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {

@@ -32,10 +32,10 @@
     -fx-font-size: 14px;
     -fx-text-fill: white;
 
-    -fx-min-width: 18px;
-    -fx-min-height: 18px;
-    -fx-max-width: 18px;
-    -fx-max-height: 18px;
+    -fx-min-width: -button-size;
+    -fx-min-height: -button-size;
+    -fx-max-width: -button-size;
+    -fx-max-height: -button-size;
     -fx-background-radius: 9;
 
     -fx-padding: 0;
@@ -45,8 +45,8 @@
 
 .close-button {
     -fx-background-color: #7ed1d1;
-    -fx-translate-x: 9.8;
-    -fx-translate-y: -9.8;
+    -fx-translate-x: -button-translate;
+    -fx-translate-y: -button-translate-negative;
 }
 
 .close-button:hover {
@@ -66,9 +66,9 @@
 }
 
 .add-button-r {
-    -fx-translate-x: 9.8;
+    -fx-translate-x: -button-translate;
 }
 
 .add-button-l {
-    -fx-translate-x: -9.8;
+    -fx-translate-x: -button-translate-negative;
 }

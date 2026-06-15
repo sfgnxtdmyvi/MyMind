@@ -19,17 +19,21 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import lombok.Getter;
 import lombok.Setter;
 import myMind.Launch;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
 import myMind.componet.Subject;
+import myMind.constants.CssStyle;
 import myMind.constants.FileConstants;
 import myMind.constants.PosConstants;
+import myMind.manager.CssManager;
 import myMind.util.FileUtil;
 import myMind.util.MessageUtil;
 import myMind.util.ScheduleUtil;
@@ -59,6 +63,7 @@ public class TitleBarController {
     @FXML
     private HBox titleBar;
 
+    private AnchorPane root;
     private Stage mapStage;
     private MindMap mindMap;
     private SubjectController subjectController;
@@ -220,11 +225,28 @@ public class TitleBarController {
         subjectController.batchAddSibling();
     }
 
-    //—————————————————————————————————————————复制粘贴—————————————————————————————————————————
+    //—————————————————————————————————————————其他—————————————————————————————————————————
     @FXML
     private void addSubject() {
         mindMap.addSubject();
         subjectController = mindMap.getSubjectController();
+    }
+
+    @FXML
+    public void change() {
+        if (root.getStyle().isEmpty()) {
+            CssManager.setCss("tabStyle", CssStyle.TAB_LIGHT.getStyleName());
+            CssManager.setTabStyle(CssStyle.TAB_LIGHT.getStyleName());
+            for (Window window : Stage.getWindows()) {
+                window.getScene().getRoot().setStyle(CssStyle.TAB_LIGHT.getValue());
+            }
+        } else {
+            CssManager.setCss("tabStyle", "");
+            CssManager.setTabStyle("");
+            for (Window window : Stage.getWindows()) {
+                window.getScene().getRoot().setStyle("");
+            }
+        }
     }
 
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————

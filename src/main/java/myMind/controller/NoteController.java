@@ -5,7 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.TextFieldTreeCell;
-import myMind.manager.ConfigManager;
+import myMind.constants.ConfigConstants;
 
 import java.io.File;
 
@@ -16,7 +16,7 @@ public class NoteController {
 
     @FXML
     public void initialize() {
-        File dirNote = new File(ConfigManager.DIR_NOTES);
+        File dirNote = new File(ConfigConstants.DIR_NOTES);
         TreeItem<String> rootItem = new TreeItem<>(dirNote.getName());
         treeView.setRoot(rootItem);
         treeView.setShowRoot(false);

@@ -14,7 +14,7 @@ import myMind.constants.FileConstants;
 import myMind.constants.PosConstants;
 import myMind.constants.SizeConstants;
 import myMind.controller.SubjectController;
-import myMind.manager.ConfigManager;
+import myMind.constants.ConfigConstants;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import javax.imageio.ImageIO;
@@ -38,7 +38,7 @@ public class FileUtil {
 
     public static File openFileChooser(int type, MindMap mindMap) {
         FileChooser fc = new FileChooser();
-        fc.setInitialDirectory(new File(ConfigManager.DIR_FILES));
+        fc.setInitialDirectory(new File(ConfigConstants.DIR_FILES));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
         if (type == FileConstants.OPEN_TYPE) {
             return fc.showOpenDialog(mindMap.getScene().getWindow());
@@ -325,7 +325,7 @@ public class FileUtil {
     //—————————————————————————————————————————最近打开—————————————————————————————————————————
     static {
         recentFiles = new LinkedList<>();
-        File file = new File(ConfigManager.DIR_RECENT_FILES);
+        File file = new File(ConfigConstants.DIR_RECENT_FILES);
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -349,7 +349,7 @@ public class FileUtil {
     }
 
     public static void saveRecentFiles() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(ConfigManager.DIR_RECENT_FILES))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(ConfigConstants.DIR_RECENT_FILES))) {
             for (String fileName : recentFiles) {
                 bw.write(fileName);
                 bw.newLine();
@@ -364,7 +364,7 @@ public class FileUtil {
         if (imageName == null) {
             imageName = System.currentTimeMillis() + ".png";
         }
-        String imagePath = ConfigManager.DIR_IMAGE + imageName;
+        String imagePath = ConfigConstants.DIR_IMAGE + imageName;
 
         File output = new File(imagePath);
         try {
@@ -376,7 +376,7 @@ public class FileUtil {
     }
 
     public static void deleteImage(String imageName) {
-        File file = new File(ConfigManager.DIR_IMAGE + imageName);
+        File file = new File(ConfigConstants.DIR_IMAGE + imageName);
         if (file.exists()) {
             file.delete();
         }
@@ -388,10 +388,10 @@ public class FileUtil {
     public static void deleteUnusefulImage() {
         // 所有导图的图片
         Set<String> fileNameSet = new HashSet<>();
-        addImage(new File(ConfigManager.DIR_FILES), fileNameSet);
+        addImage(new File(ConfigConstants.DIR_FILES), fileNameSet);
 
         int count = 0;
-        File dirImage = new File(ConfigManager.DIR_IMAGE);
+        File dirImage = new File(ConfigConstants.DIR_IMAGE);
         for (File file : dirImage.listFiles()) {
             if (!fileNameSet.contains(file.getName())) {
                 file.delete();

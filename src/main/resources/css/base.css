@@ -1,3 +1,14 @@
+.root {
+    -tab-header-background-color: #f4f4f4;
+    -tab-background-color: #e3e3e3;
+    -tab-selected-background-color: #e3e3e3;
+    -tab-selected-border-color: #84dcff;
+
+    -button-translate: 9.8;
+    -button-translate-negative: -9.8;
+    -button-size: 18px;
+}
+
 .workspace {
     -fx-background-color: white;
 }
@@ -8,25 +19,26 @@
 
 /*隐藏标签页*/
 .hide-tabs .tab-header-area {
-    visibility:hidden;
+    visibility: hidden;
 }
 
 .tab-header-background {
-    -fx-background-color: #f4f4f4;
+    -fx-background-color: -tab-header-background-color;
 }
 
 .tab {
     -fx-background-radius: 8 8 0 0;
     /*背景区域缩进，让背后的颜色透出来，从而在视觉上形成间隙*/
     -fx-background-insets: 0 5;
-    -fx-background-color: #e3e3e3;
+    -fx-background-color: -tab-background-color;
 }
 
 .tab:selected {
+    -fx-background-color: -tab-selected-background-color;
     -fx-pref-height: 25px;
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
-    -fx-border-color: #82dafd;
+    -fx-border-color: -tab-selected-border-color;
     -fx-border-width: 0 0 3 0;
     -fx-border-insets: 0 12;
     -fx-border-radius: 2px;
