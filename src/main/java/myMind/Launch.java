@@ -13,18 +13,17 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.Getter;
+import myMind.common.manager.CssManager;
+import myMind.common.manager.ShortcutManager;
+import myMind.common.util.MessageUtil;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
 import myMind.componet.StyleWheel;
 import myMind.componet.Subject;
-import myMind.constants.CssStyle;
 import myMind.controller.ContextMenuController;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import myMind.controller.TitleBarController;
-import myMind.manager.CssManager;
-import myMind.manager.ShortcutManager;
-import myMind.util.MessageUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -74,7 +73,7 @@ public class Launch extends Application {
         root = new AnchorPane(titleBar);
         scene = new Scene(root);
         scene.getStylesheets().addAll(STYLE_SHEETS);
-        root.setStyle(CssStyle.getStyle(CssManager.getTabStyle()));
+        CssManager.init(root);
 
         stage.setScene(scene);
         Image icon = new Image(Launch.class.getResourceAsStream("/icon.png"));

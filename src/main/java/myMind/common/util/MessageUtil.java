@@ -1,4 +1,4 @@
-package myMind.util;
+package myMind.common.util;
 
 import javafx.animation.PauseTransition;
 import javafx.scene.control.Label;

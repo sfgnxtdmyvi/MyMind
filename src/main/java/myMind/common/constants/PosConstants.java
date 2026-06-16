@@ -1,4 +1,4 @@
-package myMind.constants;
+package myMind.common.constants;
 
 public class PosConstants {
     public static final byte LEFT = 0;

@@ -1,4 +1,4 @@
-package myMind.constants;
+package myMind.common.constants;
 
 public class FileConstants {
 

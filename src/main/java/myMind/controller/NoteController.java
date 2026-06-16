@@ -5,7 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.TextFieldTreeCell;
-import myMind.constants.ConfigConstants;
+import myMind.common.constants.ConfigConstants;
 
 import java.io.File;
 

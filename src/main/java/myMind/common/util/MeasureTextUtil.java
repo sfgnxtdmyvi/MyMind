@@ -1,12 +1,12 @@
-package myMind.util;
+package myMind.common.util;
 
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import myMind.constants.NodeConstants;
+import myMind.common.constants.NodeConstants;
 
 public class MeasureTextUtil {
     //用于测量文本尺寸
-    private static Text measureText;
+    private static final Text measureText;
 
     static {
         measureText = new Text();

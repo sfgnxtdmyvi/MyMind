@@ -1,4 +1,4 @@
-package myMind.util;
+package myMind.common.util;
 
 import myMind.componet.MindMap;
 
@@ -20,7 +20,7 @@ public class ScheduleUtil {
         }
 
         ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() ->
-                FileUtil.saveFileScheduled(new File(filePath), mindMap), 1, 1, TimeUnit.SECONDS);
+                FileUtil.saveFileScheduled(new File(filePath), mindMap), 60, 60, TimeUnit.SECONDS);
         fileSaveFutures.put(filePath, future);
     }
 

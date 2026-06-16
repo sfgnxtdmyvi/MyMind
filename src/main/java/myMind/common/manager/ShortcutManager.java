@@ -1,14 +1,14 @@
-package myMind.manager;
+package myMind.common.manager;
 
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
-import myMind.constants.ConfigConstants;
+import myMind.common.constants.ConfigConstants;
 import myMind.controller.ContextMenuController;
 import myMind.controller.TitleBarController;
-import myMind.util.MessageUtil;
+import myMind.common.util.MessageUtil;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

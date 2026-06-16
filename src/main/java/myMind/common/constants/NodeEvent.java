@@ -1,4 +1,4 @@
-package myMind.constants;
+package myMind.common.constants;
 
 public enum NodeEvent {
     SELECT,

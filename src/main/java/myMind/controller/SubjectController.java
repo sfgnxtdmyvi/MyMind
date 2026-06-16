@@ -9,9 +9,9 @@ import javafx.scene.shape.QuadCurve;
 import lombok.Data;
 import myMind.componet.MindNode;
 import myMind.componet.Subject;
-import myMind.constants.NodeConstants;
-import myMind.constants.PosConstants;
-import myMind.util.CloneNodeUtil;
+import myMind.common.constants.NodeConstants;
+import myMind.common.constants.PosConstants;
+import myMind.common.util.CloneNodeUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import java.util.Collection;

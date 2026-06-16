@@ -1,4 +1,4 @@
-package myMind.constants;
+package myMind.common.constants;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

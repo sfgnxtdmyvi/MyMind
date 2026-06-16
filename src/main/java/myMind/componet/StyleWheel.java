@@ -3,7 +3,7 @@ package myMind.componet;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.Pane;
 import javafx.stage.Popup;
-import myMind.manager.CssManager;
+import myMind.common.manager.CssManager;
 
 import java.io.IOException;
 

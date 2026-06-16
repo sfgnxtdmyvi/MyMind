@@ -1,9 +1,11 @@
-package myMind.manager;
+package myMind.common.manager;
 
+import javafx.scene.layout.AnchorPane;
 import lombok.Getter;
 import lombok.Setter;
-import myMind.constants.ConfigConstants;
-import myMind.util.MessageUtil;
+import myMind.common.constants.ConfigConstants;
+import myMind.common.constants.CssStyle;
+import myMind.common.util.MessageUtil;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -32,6 +34,10 @@ public class CssManager {
 
         styleWheel = props.getProperty("styleWheel");
         tabStyle = props.getProperty("tabStyle");
+    }
+
+    public static void init(AnchorPane root) {
+        root.setStyle(CssStyle.getStyle(CssManager.getTabStyle()));
     }
 
     public static void setCss(String style, String value) {

@@ -8,8 +8,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.QuadCurve;
 import lombok.Data;
-import myMind.constants.SizeConstants;
-import myMind.util.MessageUtil;
+import myMind.common.constants.SizeConstants;
+import myMind.common.util.MessageUtil;
 
 @Data
 public class Subject extends StackPane {
@@ -96,7 +96,6 @@ public class Subject extends StackPane {
     /**
      * 改变缩放比例
      *
-     * @param scale
      */
     public void changeScale(Double scale) {
         scale = Math.round(scale * 10.0) / 10.0;

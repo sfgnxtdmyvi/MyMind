@@ -1,4 +1,4 @@
-package myMind.util;
+package myMind.common.util;
 
 import myMind.componet.MindNode;
 

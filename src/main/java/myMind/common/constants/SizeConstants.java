@@ -1,4 +1,4 @@
-package myMind.constants;
+package myMind.common.constants;
 
 public class SizeConstants {
     public static final int MAX_RECENT_FILES = 10;

@@ -1,4 +1,4 @@
-package myMind.manager;
+package myMind.common.manager;
 
 import lombok.Data;
 

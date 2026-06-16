@@ -12,8 +12,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import lombok.Data;
-import myMind.constants.NodeConstants;
-import myMind.constants.SizeConstants;
+import myMind.common.constants.NodeConstants;
+import myMind.common.constants.SizeConstants;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -106,24 +106,12 @@ public class MindMap extends TabPane {
                     double deltaY = subject.getParent().getLayoutBounds().getHeight() - translateConstrain - subject.getBoundsInParent().getMaxY();
                     subject.setTranslateY(subject.getTranslateY() + deltaY);
                 }
-                case PAGE_UP -> {
-                    subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET_PLUS);
-                }
-                case PAGE_DOWN, SPACE -> {
-                    subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET_PLUS);
-                }
-                case UP -> {
-                    subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET);
-                }
-                case DOWN -> {
-                    subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET);
-                }
-                case LEFT -> {
-                    subject.setTranslateX(subject.getTranslateX() + SizeConstants.TRANSLATE_OFFSET);
-                }
-                case RIGHT -> {
-                    subject.setTranslateX(subject.getTranslateX() - SizeConstants.TRANSLATE_OFFSET);
-                }
+                case PAGE_UP -> subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET_PLUS);
+                case PAGE_DOWN, SPACE -> subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET_PLUS);
+                case UP -> subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET);
+                case DOWN -> subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET);
+                case LEFT -> subject.setTranslateX(subject.getTranslateX() + SizeConstants.TRANSLATE_OFFSET);
+                case RIGHT -> subject.setTranslateX(subject.getTranslateX() - SizeConstants.TRANSLATE_OFFSET);
             }
         });
 

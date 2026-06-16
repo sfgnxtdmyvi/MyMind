@@ -1,4 +1,4 @@
-package myMind.util;
+package myMind.common.util;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
@@ -10,11 +10,11 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
-import myMind.constants.FileConstants;
-import myMind.constants.PosConstants;
-import myMind.constants.SizeConstants;
+import myMind.common.constants.FileConstants;
+import myMind.common.constants.PosConstants;
+import myMind.common.constants.SizeConstants;
 import myMind.controller.SubjectController;
-import myMind.constants.ConfigConstants;
+import myMind.common.constants.ConfigConstants;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import javax.imageio.ImageIO;
@@ -209,7 +209,7 @@ public class FileUtil {
         try (FileWriter fw = new FileWriter(file)) {
             fw.write(subjects.toString());
         } catch (IOException e) {
-            e.printStackTrace();
+            MessageUtil.showMessage("自动保存失败：" + e.getMessage());
         }
     }
 

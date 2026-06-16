@@ -30,13 +30,13 @@ import myMind.Launch;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
 import myMind.componet.Subject;
-import myMind.constants.CssStyle;
-import myMind.constants.FileConstants;
-import myMind.constants.PosConstants;
-import myMind.manager.CssManager;
-import myMind.util.FileUtil;
-import myMind.util.MessageUtil;
-import myMind.util.ScheduleUtil;
+import myMind.common.constants.CssStyle;
+import myMind.common.constants.FileConstants;
+import myMind.common.constants.PosConstants;
+import myMind.common.manager.CssManager;
+import myMind.common.util.FileUtil;
+import myMind.common.util.MessageUtil;
+import myMind.common.util.ScheduleUtil;
 
 import java.io.File;
 import java.util.Iterator;
@@ -384,6 +384,8 @@ public class TitleBarController {
                     return;
                 }
             }
+        }else {
+            FileUtil.save(mindMap);
         }
 
         if (Stage.getWindows().size() <= 1) {
