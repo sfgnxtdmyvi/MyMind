@@ -15,10 +15,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.NodeEvent;
 import myMind.common.constants.PosConstants;
-import myMind.common.constants.ConfigConstants;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MeasureTextUtil;
 import myMind.common.util.MessageUtil;
@@ -163,7 +163,7 @@ public class MindNode extends StackPane {
         // 使用 addEventFilter 的话，OnMouseClicked 的默认行为会让 MindNode 获得焦点，TextArea 就会失去焦点
         // 添加 e.consume() 的话，能阻止 OnMouseClicked 的默认行为，但是 addButton 就不会触发
         // 使用 setOnMouseClicked 的话，由于 addButton 是一个独立的 Button 组件，它会消费鼠标事件，事件不会冒泡到父节点 MindNode，
-        // 需要在 addButton 的事件处理逻辑中添加 setselectedNode(model);
+        // 需要在 addButton 的事件处理逻辑中添加 setSelectedNode(model);
         contentBox.setOnMouseClicked(e -> {
             onAction.accept(NodeEvent.SELECT);
             onAction.accept(NodeEvent.PASTE_SIBLING);
@@ -476,19 +476,27 @@ public class MindNode extends StackPane {
      */
     public double getChildrenHeightR() {
         double totalHeight = 0;
+        int size = 0;
         for (MindNode child : childrenR) {
-            totalHeight += child.getHeightR();
+            if (child.isVisible()) {
+                totalHeight += child.getHeightR();
+                size++;
+            }
         }
-        totalHeight += NodeConstants.GAP_Y * (childrenR.size() - 1);
+        totalHeight += size != 0 ? NodeConstants.GAP_Y * (size - 1) : 0;
         return totalHeight;
     }
 
     public double getChildrenHeightL() {
         double totalHeight = 0;
+        int size = 0;
         for (MindNode child : childrenL) {
-            totalHeight += child.getHeightL();
+            if (child.isVisible()) {
+                totalHeight += child.getHeightL();
+                size++;
+            }
         }
-        totalHeight += NodeConstants.GAP_Y * (childrenL.size() - 1);
+        totalHeight += size != 0 ? NodeConstants.GAP_Y * (size - 1) : 0;
         return totalHeight;
     }
 
@@ -497,6 +505,7 @@ public class MindNode extends StackPane {
      * Math.max（当前节点的高度，子节点的总高度）
      */
     public double getHeightR() {
+        // 每个调用的地方都可见，不用判断 isVisible
         if (childrenR.isEmpty()) {
             return getPrefHeight();
         }
@@ -512,7 +521,16 @@ public class MindNode extends StackPane {
 
     //———————————————————————————————————————————位置计算———————————————————————————————————————————
     public double getStartYR() {
+        // 找到第一个可见的子节点
         MindNode fistNode = childrenR.get(0);
+        for (int i = 1; i < childrenR.size() && !fistNode.isVisible(); i++) {
+            fistNode = childrenR.get(i);
+        }
+        // 从 adjustChildrenY 调用这个方法时，必然有可见的子节点，
+        // 递归时，可能会找到收起的节点，返回到上层的 Math.min(selfEndY, Integer.MAX_VALUE)
+        if (!fistNode.isVisible()) {
+            return Integer.MAX_VALUE;
+        }
         if (!fistNode.childrenR.isEmpty()) {
             // 当前节点可能比子节节点的总高度更高
             return Math.min(fistNode.getLayoutY(), fistNode.getStartYR());
@@ -523,6 +541,12 @@ public class MindNode extends StackPane {
 
     public double getStartYL() {
         MindNode fistNode = childrenL.get(0);
+        for (int i = 1; i < childrenL.size() && !fistNode.isVisible(); i++) {
+            fistNode = childrenL.get(i);
+        }
+        if (!fistNode.isVisible()) {
+            return Integer.MAX_VALUE;
+        }
         if (!fistNode.childrenL.isEmpty()) {
             return Math.min(fistNode.getLayoutY(), fistNode.getStartYL());
         } else {
@@ -532,7 +556,13 @@ public class MindNode extends StackPane {
 
     public double getEndYR() {
         MindNode lastNode = childrenR.get(childrenR.size() - 1);
+        for (int i = childrenR.size() - 2; i >= 0 && !lastNode.isVisible(); i--) {
+            lastNode = childrenR.get(i);
+        }
         double selfEndY = lastNode.getLayoutY() + lastNode.getPrefHeight();
+        if (!lastNode.isVisible()) {
+            return Integer.MIN_VALUE;
+        }
         if (!lastNode.childrenR.isEmpty()) {
             return Math.max(selfEndY, lastNode.getEndYR());
         } else {
@@ -542,6 +572,12 @@ public class MindNode extends StackPane {
 
     public double getEndYL() {
         MindNode lastNode = childrenL.get(childrenL.size() - 1);
+        for (int i = childrenL.size() - 2; i >= 0 && !lastNode.isVisible(); i--) {
+            lastNode = childrenL.get(i);
+        }
+        if (!lastNode.isVisible()) {
+            return Integer.MIN_VALUE;
+        }
         double selfEndY = lastNode.getLayoutY() + lastNode.getPrefHeight();
         if (!lastNode.childrenL.isEmpty()) {
             return Math.max(selfEndY, lastNode.getEndYL());
@@ -555,4 +591,8 @@ public class MindNode extends StackPane {
                 textArea.getText().isEmpty() && imageName == null;
     }
 
+    @Override
+    public String toString() {
+        return textArea.getText();
+    }
 }

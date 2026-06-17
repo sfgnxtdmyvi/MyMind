@@ -107,7 +107,8 @@ public class MindMap extends TabPane {
                     subject.setTranslateY(subject.getTranslateY() + deltaY);
                 }
                 case PAGE_UP -> subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET_PLUS);
-                case PAGE_DOWN, SPACE -> subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET_PLUS);
+                case PAGE_DOWN, SPACE ->
+                        subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET_PLUS);
                 case UP -> subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET);
                 case DOWN -> subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET);
                 case LEFT -> subject.setTranslateX(subject.getTranslateX() + SizeConstants.TRANSLATE_OFFSET);
@@ -126,7 +127,8 @@ public class MindMap extends TabPane {
                 return;
             }
 
-            if (shortcutDown) {
+            // 检查 Shift，防止干扰收起和展开
+            if (shortcutDown && !e.isShiftDown()) {
                 if (code == KeyCode.DIGIT0) {
                     subject.changeScale(1.0);
                 } else if (code == KeyCode.MINUS) {

@@ -10,6 +10,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.image.ImageView?>
 
+<?import javafx.scene.control.CheckMenuItem?>
 <HBox xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="myMind.controller.TitleBarController"
@@ -57,6 +58,11 @@
         <Menu text="设置">
             <!--            todo -->
             <MenuItem onAction="#addSubject" text="快捷键"/>
+        </Menu>
+
+        <Menu text="显示">
+            <MenuItem fx:id="collapseOrExpandItem" text="收起叶子节点 ▲"
+                      onAction="#collapseOrExpand" userData="collapse" accelerator="Ctrl+Shift+-"/>
             <MenuItem onAction="#change" text="样式"/>
         </Menu>
     </MenuBar>

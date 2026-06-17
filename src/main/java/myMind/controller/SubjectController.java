@@ -27,13 +27,13 @@ public class SubjectController {
     public SubjectController() {
         rootNode = new MindNode(PosConstants.MIDDLE);
         // todo 根节点样式
-//        rootNode.getStyleClass().add("root-node");
+        rootNode.getStyleClass().add("root-node");
         addNodeAndSelect(rootNode);
     }
 
     public SubjectController(MindNode node) {
         rootNode = node;
-//        rootNode.getStyleClass().add("root-node");
+        rootNode.getStyleClass().add("root-node");
         addNodeAndSelect(node);
     }
 
@@ -596,16 +596,16 @@ public class SubjectController {
         }
     }
 
-    private void transToLAt(int index, MindNode clonenode) {
-        clonenode.setPos(PosConstants.LEFT);
+    private void transToLAt(int index, MindNode cloneNode) {
+        cloneNode.setPos(PosConstants.LEFT);
         if (index != -1) {
-            clonenode.getParentNode().addChildLAt(index, clonenode);
+            cloneNode.getParentNode().addChildLAt(index, cloneNode);
         } else {
-            clonenode.getParentNode().addChildL(clonenode);
+            cloneNode.getParentNode().addChildL(cloneNode);
         }
-        transBtnToL(clonenode);
+        transBtnToL(cloneNode);
 
-        Iterator<MindNode> iterator = clonenode.getChildrenR().iterator();
+        Iterator<MindNode> iterator = cloneNode.getChildrenR().iterator();
         while (iterator.hasNext()) {
             MindNode child = iterator.next();
             iterator.remove();
@@ -630,6 +630,97 @@ public class SubjectController {
         children.remove(cloneNode.getAddButtonL());
         cloneNode.addButtonR(children);
         cloneNode.addButtonListenR();
+    }
+
+    //———————————————————————————————————————————收起、展开———————————————————————————————————————————
+    public void collapse() {
+        if (selectedNode.getPos() == PosConstants.LEFT) {
+            collapseL(selectedNode);
+            adjustChildrenYL();
+            refreshLinesL();
+        } else {
+            collapseR(selectedNode);
+            adjustChildrenYR();
+            refreshLinesR();
+        }
+    }
+
+    private void collapseR(MindNode parentNode) {
+        for (MindNode childNode : parentNode.getChildrenR()) {
+            childNode.setVisible(false);
+            collapseR(childNode);
+        }
+    }
+
+    private void collapseL(MindNode parentNode) {
+        for (MindNode childNode : parentNode.getChildrenL()) {
+            childNode.setVisible(false);
+            collapseL(childNode);
+        }
+    }
+
+    public void expand() {
+        if (selectedNode.getPos() == PosConstants.LEFT) {
+            expandL(selectedNode);
+            adjustChildrenYL();
+            refreshLinesL();
+        } else {
+            expandR(selectedNode);
+            adjustChildrenYR();
+            refreshLinesR();
+        }
+    }
+
+    private void expandR(MindNode parentNode) {
+        for (MindNode childNode : parentNode.getChildrenR()) {
+            childNode.setVisible(true);
+            expandR(childNode);
+        }
+    }
+
+    private void expandL(MindNode parentNode) {
+        for (MindNode childNode : parentNode.getChildrenL()) {
+            childNode.setVisible(true);
+            expandL(childNode);
+        }
+    }
+
+    /**
+     * 收起叶子节点
+     */
+    public void collapseLeaf() {
+        collapseLeafR(rootNode);
+        collapseLeafL(rootNode);
+        adjustChildrenY();
+        refreshLines();
+    }
+
+    private void collapseLeafR(MindNode parentNode) {
+        for (MindNode childNode : parentNode.getChildrenR()) {
+            if (childNode.getChildrenR().isEmpty()) {
+                childNode.setVisible(false);
+            } else {
+                collapseLeafR(childNode);
+            }
+        }
+    }
+
+    private void collapseLeafL(MindNode parentNode) {
+        for (MindNode childNode : parentNode.getChildrenL()) {
+            if (childNode.getChildrenL().isEmpty()) {
+                childNode.setVisible(false);
+            } else {
+                collapseLeafL(childNode);
+            }
+        }
+    }
+
+    public void expandLeaf() {
+        for (Node node : subject.getNodesLayer().getChildren()) {
+            node.setVisible(true);
+        }
+        adjustChildrenY();
+        refreshLines();
     }
 
     //———————————————————————————————————————————删除———————————————————————————————————————————
@@ -903,6 +994,11 @@ public class SubjectController {
         }
     }
 
+    public void adjustChildrenY() {
+        adjustChildrenYR();
+        adjustChildrenYL();
+    }
+
     // 调整子节点Y坐标
     public void adjustChildrenYR() {
         adjustChildrenYR(rootNode, null);
@@ -932,6 +1028,9 @@ public class SubjectController {
         }
 
         for (MindNode childNode : children) {
+            if(!childNode.isVisible()){
+                continue;
+            }
             List<MindNode> childrenOfChild = childNode.getChildrenR();
 
             double selfHeight = childNode.getPrefHeight();
@@ -973,6 +1072,9 @@ public class SubjectController {
         }
 
         for (MindNode childNode : children) {
+            if(!childNode.isVisible()){
+                continue;
+            }
             List<MindNode> childrenOfChild = childNode.getChildrenL();
 
             double selfHeight = childNode.getPrefHeight();
@@ -1018,6 +1120,11 @@ public class SubjectController {
     }
 
     //———————————————————————————————————————————刷新连线———————————————————————————————————————————
+    public void refreshLines() {
+        refreshLinesR();
+        refreshLinesL();
+    }
+
     public void refreshLinesR() {
         subject.clearLineR();
         refreshLinesR(rootNode);
@@ -1034,6 +1141,10 @@ public class SubjectController {
         int maxIndex = size - 1;
 
         for (MindNode childNode : childrenR) {
+            // 收起的节点不绘制
+            if (!childNode.isVisible()) {
+                continue;
+            }
             // todo 根据高度优化
             QuadCurve curve = getQuadCurve(getStartR(parentNode, childrenR.indexOf(childNode), maxIndex),
                     getEndR(childNode));
@@ -1049,6 +1160,9 @@ public class SubjectController {
         int maxIndex = size - 1;
 
         for (MindNode childNode : childrenL) {
+            if (!childNode.isVisible()) {
+                continue;
+            }
             QuadCurve curve = getQuadCurve(getStartL(parentNode, childrenL.indexOf(childNode), maxIndex),
                     getEndL(childNode));
             subject.addLineL(curve);

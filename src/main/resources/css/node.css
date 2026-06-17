@@ -21,10 +21,10 @@
     -fx-font-size: 20px;
 }
 
-/*.root-node .text-area {*/
-/*    -fx-font-weight:bold;*/
-/*    -fx-font-size:22px;*/
-/*}*/
+.root-node {
+    -fx-border-width: 2;
+    -fx-border-color: #aad1ff;
+}
 
 /*——————————————————————————————————按钮——————————————————————————————————*/
 .close-button, .add-button {

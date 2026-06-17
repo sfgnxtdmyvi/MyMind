@@ -10,11 +10,11 @@
              xmlns:fx="http://javafx.com/fxml/1"
              fx:controller="myMind.controller.ContextMenuController">
     <items>
-        <MenuItem onAction="#copy" >
+        <MenuItem onAction="#copy">
             <graphic>
                 <Label text="复制">
                     <tooltip>
-                        <Tooltip text="Ctrl+Shift+C"/>
+                        <Tooltip text="Ctrl + Shift + C"/>
                     </tooltip>
                 </Label>
             </graphic>
@@ -23,7 +23,16 @@
             <graphic>
                 <Label text="剪切">
                     <tooltip>
-                        <Tooltip text="Ctrl+Shift+X"/>
+                        <Tooltip text="Ctrl + Shift + X"/>
+                    </tooltip>
+                </Label>
+            </graphic>
+        </MenuItem>
+        <MenuItem fx:id="collapseOrExpandItem" onAction="#collapseOrExpand" userData="collapse">
+            <graphic>
+                <Label text="收起 ▲">
+                    <tooltip>
+                        <Tooltip text="Alt + -"/>
                     </tooltip>
                 </Label>
             </graphic>
@@ -34,7 +43,7 @@
             <graphic>
                 <Label text="删除">
                     <tooltip>
-                        <Tooltip text="Alt+←"/>
+                        <Tooltip text="Alt + ←"/>
                     </tooltip>
                 </Label>
             </graphic>
@@ -43,7 +52,7 @@
             <graphic>
                 <Label text="删除（保留子节点）">
                     <tooltip>
-                        <Tooltip text="Ctrl+Alt+←"/>
+                        <Tooltip text="Ctrl + Alt + ←"/>
                     </tooltip>
                 </Label>
             </graphic>
@@ -52,7 +61,7 @@
             <graphic>
                 <Label text="删除空白节点">
                     <tooltip>
-                        <Tooltip text="Alt+Delete"/>
+                        <Tooltip text="Alt + Delete"/>
                     </tooltip>
                 </Label>
             </graphic>

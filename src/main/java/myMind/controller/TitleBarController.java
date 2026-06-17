@@ -18,6 +18,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -27,9 +28,6 @@ import javafx.stage.Window;
 import lombok.Getter;
 import lombok.Setter;
 import myMind.Launch;
-import myMind.componet.MindMap;
-import myMind.componet.MindNode;
-import myMind.componet.Subject;
 import myMind.common.constants.CssStyle;
 import myMind.common.constants.FileConstants;
 import myMind.common.constants.PosConstants;
@@ -37,6 +35,9 @@ import myMind.common.manager.CssManager;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MessageUtil;
 import myMind.common.util.ScheduleUtil;
+import myMind.componet.MindMap;
+import myMind.componet.MindNode;
+import myMind.componet.Subject;
 
 import java.io.File;
 import java.util.Iterator;
@@ -52,9 +53,8 @@ public class TitleBarController {
     private Label title;
     private StringProperty titleProperty = new SimpleStringProperty();
 
-    public StringProperty titleProperty() {
-        return titleProperty;
-    }
+    @FXML
+    private MenuItem collapseOrExpandItem;
 
     @FXML
     private Menu recentFilesMenu;
@@ -75,6 +75,10 @@ public class TitleBarController {
     private double height;
     private double x;
     private double y;
+
+    public StringProperty titleProperty() {
+        return titleProperty;
+    }
 
     @FXML
     public void initialize() {
@@ -191,6 +195,12 @@ public class TitleBarController {
 
     //—————————————————————————————————————————添加—————————————————————————————————————————
     @FXML
+    private void addSubject() {
+        mindMap.addSubject();
+        subjectController = mindMap.getSubjectController();
+    }
+
+    @FXML
     private void insertChild() {
         subjectController.insertChild();
     }
@@ -225,13 +235,7 @@ public class TitleBarController {
         subjectController.batchAddSibling();
     }
 
-    //—————————————————————————————————————————其他—————————————————————————————————————————
-    @FXML
-    private void addSubject() {
-        mindMap.addSubject();
-        subjectController = mindMap.getSubjectController();
-    }
-
+    //—————————————————————————————————————————显示—————————————————————————————————————————
     @FXML
     public void change() {
         if (root.getStyle().isEmpty()) {
@@ -246,6 +250,21 @@ public class TitleBarController {
             for (Window window : Stage.getWindows()) {
                 window.getScene().getRoot().setStyle("");
             }
+        }
+    }
+
+    @FXML
+    public void collapseOrExpand() {
+        if (collapseOrExpandItem.getUserData().equals("collapse")) {
+            subjectController.collapseLeaf();
+            collapseOrExpandItem.setText("展开叶子节点 ▼");
+            collapseOrExpandItem.setAccelerator(KeyCombination.keyCombination("Ctrl+Shift+="));
+            collapseOrExpandItem.setUserData("expand");
+        } else {
+            subjectController.expandLeaf();
+            collapseOrExpandItem.setText("收起叶子节点 ▲");
+            collapseOrExpandItem.setAccelerator(KeyCombination.keyCombination("Ctrl+Shift+-"));
+            collapseOrExpandItem.setUserData("collapse");
         }
     }
 
@@ -384,7 +403,7 @@ public class TitleBarController {
                     return;
                 }
             }
-        }else {
+        } else {
             FileUtil.save(mindMap);
         }
 

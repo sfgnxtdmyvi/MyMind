@@ -30,9 +30,15 @@ public class ShortcutManager {
                 new ShortcutBinding(contextMenuController::copy, "复制"));
         keyMap.put(new KeyCodeCombination(KeyCode.X, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN),
                 new ShortcutBinding(contextMenuController::cut, "剪切"));
+
+        keyMap.put(new KeyCodeCombination(KeyCode.MINUS, KeyCombination.ALT_DOWN),
+                new ShortcutBinding(contextMenuController::collapse, "收起"));
+        keyMap.put(new KeyCodeCombination(KeyCode.EQUALS, KeyCombination.ALT_DOWN),
+                new ShortcutBinding(contextMenuController::expand, "展开"));
+
         keyMap.put(new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN),
                 new ShortcutBinding(contextMenuController::delete, "删除"));
-        keyMap.put(new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN, KeyCombination.SHORTCUT_DOWN),
+        keyMap.put(new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN),
                 new ShortcutBinding(contextMenuController::deleteRemainChildren, "删除（保留子节点）"));
         keyMap.put(new KeyCodeCombination(KeyCode.DELETE, KeyCombination.ALT_DOWN),
                 new ShortcutBinding(contextMenuController::deleteEmpty, "删除空白节点"));

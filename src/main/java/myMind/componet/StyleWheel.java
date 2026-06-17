@@ -8,6 +8,7 @@ import myMind.common.manager.CssManager;
 import java.io.IOException;
 
 public class StyleWheel extends Popup {
+    // 用静态代码块的话，只能用静态的东西，无法使用继承下来的非静态方法
     private StyleWheel() {
         try {
             FXMLLoader loader = new FXMLLoader(StyleWheel.class.getResource(CssManager.getStyleWheel()));
