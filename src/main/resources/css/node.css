@@ -29,7 +29,7 @@
 /*——————————————————————————————————按钮——————————————————————————————————*/
 .close-button, .add-button {
     -fx-font-weight: bold;
-    -fx-font-size: 14px;
+    -fx-font-size: 18px;
     -fx-text-fill: white;
 
     -fx-min-width: -button-size;
@@ -39,7 +39,6 @@
     -fx-background-radius: 9;
 
     -fx-padding: 0;
-    -fx-alignment: center;
     -fx-cursor: hand;
 }
 
@@ -58,7 +57,8 @@
 }
 
 .close-button .text, .add-button .text {
-    -fx-translate-x: 0.5;
+    -fx-translate-x: 0.2;
+    -fx-translate-y: -3.2;
 }
 
 .add-button:hover {

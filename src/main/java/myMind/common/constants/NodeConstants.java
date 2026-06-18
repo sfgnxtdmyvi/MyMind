@@ -39,4 +39,9 @@ public class NodeConstants {
     public static double CENTER_X;
     public static double CENTER_Y;
 
+    public static String ADD = "+";
+    public static String CLOSE = "×";
+    public static String EXPAND_R = "▸";
+    public static String EXPAND_L = "◂";
+
 }

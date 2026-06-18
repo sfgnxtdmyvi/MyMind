@@ -265,20 +265,34 @@ public class SubjectController {
                 }
                 case ADD_BUTTON_R -> {
                     setSelectedNode(node);
-                    MindNode cloneNode = CloneNodeUtil.getNode();
-                    if (cloneNode == null) {
-                        addChildR();
+                    if (node.getAddButtonR().getText().equals(NodeConstants.EXPAND_R)) {
+                        node.getAddButtonR().setText(NodeConstants.ADD);
+                        expandR(node);
+                        adjustChildrenYR();
+                        refreshLinesR();
                     } else {
-                        pasteChild(cloneNode, PosConstants.RIGHT);
+                        MindNode cloneNode = CloneNodeUtil.getNode();
+                        if (cloneNode == null) {
+                            addChildR();
+                        } else {
+                            pasteChild(cloneNode, PosConstants.RIGHT);
+                        }
                     }
                 }
                 case ADD_BUTTON_L -> {
                     setSelectedNode(node);
-                    MindNode cloneNode = CloneNodeUtil.getNode();
-                    if (cloneNode == null) {
-                        addChildL();
+                    if (node.getAddButtonL().getText().equals(NodeConstants.EXPAND_L)) {
+                        node.getAddButtonL().setText(NodeConstants.ADD);
+                        expandL(node);
+                        adjustChildrenYL();
+                        refreshLinesL();
                     } else {
-                        pasteChild(cloneNode, PosConstants.LEFT);
+                        MindNode cloneNode = CloneNodeUtil.getNode();
+                        if (cloneNode == null) {
+                            addChildL();
+                        } else {
+                            pasteChild(cloneNode, PosConstants.LEFT);
+                        }
                     }
                 }
 
@@ -635,10 +649,12 @@ public class SubjectController {
     //———————————————————————————————————————————收起、展开———————————————————————————————————————————
     public void collapse() {
         if (selectedNode.getPos() == PosConstants.LEFT) {
+            selectedNode.getAddButtonL().setText(NodeConstants.EXPAND_L);
             collapseL(selectedNode);
             adjustChildrenYL();
             refreshLinesL();
         } else {
+            selectedNode.getAddButtonR().setText(NodeConstants.EXPAND_R);
             collapseR(selectedNode);
             adjustChildrenYR();
             refreshLinesR();
@@ -1028,7 +1044,7 @@ public class SubjectController {
         }
 
         for (MindNode childNode : children) {
-            if(!childNode.isVisible()){
+            if (!childNode.isVisible()) {
                 continue;
             }
             List<MindNode> childrenOfChild = childNode.getChildrenR();
@@ -1072,7 +1088,7 @@ public class SubjectController {
         }
 
         for (MindNode childNode : children) {
-            if(!childNode.isVisible()){
+            if (!childNode.isVisible()) {
                 continue;
             }
             List<MindNode> childrenOfChild = childNode.getChildrenL();

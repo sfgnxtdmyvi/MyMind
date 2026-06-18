@@ -31,5 +31,5 @@
 }
 
 .tooltip {
-    -fx-show-delay: 150ms;
+    -fx-show-delay: 30ms;
 }

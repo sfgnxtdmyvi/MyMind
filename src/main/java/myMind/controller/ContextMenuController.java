@@ -3,8 +3,11 @@ package myMind.controller;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.Tooltip;
 import lombok.Setter;
+import myMind.common.constants.PosConstants;
+import myMind.componet.MindNode;
+
+import java.util.List;
 
 
 public class ContextMenuController {
@@ -13,6 +16,28 @@ public class ContextMenuController {
 
     @FXML
     private MenuItem collapseOrExpandItem;
+
+    @FXML
+    private void onShowing() {
+        MindNode selectedNode = subjectController.getSelectedNode();
+        List<MindNode> children;
+        if (selectedNode.getPos() == PosConstants.LEFT) {
+            children = selectedNode.getChildrenL();
+        } else {
+            children = selectedNode.getChildrenR();
+        }
+        if (children.isEmpty() || children.get(0).isVisible()) {
+            Label label = (Label) collapseOrExpandItem.getGraphic();
+            label.setText("收起 ▲");
+            label.getTooltip().setText("Alt + -");
+            collapseOrExpandItem.setUserData("collapse");
+        } else {
+            Label label = (Label) collapseOrExpandItem.getGraphic();
+            label.setText("展开 ▼");
+            label.getTooltip().setText("Alt + =");
+            collapseOrExpandItem.setUserData("expand");
+        }
+    }
 
     @FXML
     public void copy() {
@@ -27,26 +52,18 @@ public class ContextMenuController {
     @FXML
     public void collapseOrExpand() {
         if (collapseOrExpandItem.getUserData().equals("collapse")) {
-            collapse();
-        }else {
-            expand();
+            subjectController.collapse();
+        } else {
+            subjectController.expand();
         }
     }
 
     public void collapse() {
         subjectController.collapse();
-        Label label = (Label) collapseOrExpandItem.getGraphic();
-        label.setText("展开 ▼");
-        label.setTooltip(new Tooltip("Alt + ="));
-        collapseOrExpandItem.setUserData("expand");
     }
 
     public void expand() {
         subjectController.expand();
-        Label label = (Label) collapseOrExpandItem.getGraphic();
-        label.setText("收起 ▲");
-        label.setTooltip(new Tooltip("Alt + -"));
-        collapseOrExpandItem.setUserData("collapse");
     }
 
     @FXML

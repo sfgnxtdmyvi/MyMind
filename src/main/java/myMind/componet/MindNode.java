@@ -104,7 +104,7 @@ public class MindNode extends StackPane {
         imageView = new ImageView();
         imageView.setSmooth(true);
 
-        closeButton = new Button("✖");
+        closeButton = new Button(NodeConstants.CLOSE);
         closeButton.getStyleClass().add("close-button");
         closeButton.setVisible(false);
         StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
@@ -144,7 +144,7 @@ public class MindNode extends StackPane {
     }
 
     public void addButtonR(ObservableList<Node> children) {
-        addButtonR = new Button("✚");
+        addButtonR = new Button(NodeConstants.ADD);
         addButtonR.getStyleClass().addAll("add-button", "add-button-r");
         addButtonR.setVisible(false);
         StackPane.setAlignment(addButtonR, Pos.CENTER_RIGHT);
@@ -152,7 +152,7 @@ public class MindNode extends StackPane {
     }
 
     public void addButtonL(ObservableList<Node> children) {
-        addButtonL = new Button("✚");
+        addButtonL = new Button(NodeConstants.ADD);
         addButtonL.getStyleClass().addAll("add-button", "add-button-l");
         addButtonL.setVisible(false);
         StackPane.setAlignment(addButtonL, Pos.CENTER_LEFT);
@@ -527,7 +527,7 @@ public class MindNode extends StackPane {
             fistNode = childrenR.get(i);
         }
         // 从 adjustChildrenY 调用这个方法时，必然有可见的子节点，
-        // 递归时，可能会找到收起的节点，返回到上层的 Math.min(selfEndY, Integer.MAX_VALUE)
+        // 递归时，可能从头找到尾都是收起的节点，返回到上层的 Math.min(selfEndY, Integer.MAX_VALUE)
         if (!fistNode.isVisible()) {
             return Integer.MAX_VALUE;
         }
