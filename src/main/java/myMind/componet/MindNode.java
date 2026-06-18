@@ -207,7 +207,9 @@ public class MindNode extends StackPane {
 
         // 文本变化调整节点大小
         textArea.textProperty()
-                .addListener((obs, oldText, newText) -> adjust());
+                .addListener((obs, oldText, newText) -> {
+                    adjust();
+                });
 
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {

@@ -7,11 +7,13 @@ import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.QuadCurve;
 import lombok.Data;
-import myMind.componet.MindNode;
-import myMind.componet.Subject;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.PosConstants;
+import myMind.common.history.CommandHistory;
+import myMind.common.history.DeleteCommand;
 import myMind.common.util.CloneNodeUtil;
+import myMind.componet.MindNode;
+import myMind.componet.Subject;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import java.util.Collection;
@@ -23,6 +25,7 @@ public class SubjectController {
     private final Subject subject = new Subject();
     private MindNode rootNode;
     private MindNode selectedNode;
+    private CommandHistory commandHistory = new CommandHistory();
 
     public SubjectController() {
         rootNode = new MindNode(PosConstants.MIDDLE);
@@ -445,7 +448,7 @@ public class SubjectController {
                 setSubjectTranslateY(selectedNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
             }
             deleteChildrenFromSubjectR(selectedNode);
-            deleteR();
+            deleteR(selectedNode);
             adjustChildrenYR();
             refreshLinesR();
         } else {
@@ -453,7 +456,7 @@ public class SubjectController {
                 setSubjectTranslateY(selectedNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
             }
             deleteChildrenFromSubjectL(selectedNode);
-            deleteL();
+            deleteL(selectedNode);
             adjustChildrenYL();
             refreshLinesL();
         }
@@ -714,6 +717,7 @@ public class SubjectController {
     private void collapseLeafR(MindNode parentNode) {
         for (MindNode childNode : parentNode.getChildrenR()) {
             if (childNode.getChildrenR().isEmpty()) {
+                parentNode.getAddButtonR().setText(NodeConstants.EXPAND_R);
                 childNode.setVisible(false);
             } else {
                 collapseLeafR(childNode);
@@ -724,6 +728,7 @@ public class SubjectController {
     private void collapseLeafL(MindNode parentNode) {
         for (MindNode childNode : parentNode.getChildrenL()) {
             if (childNode.getChildrenL().isEmpty()) {
+                parentNode.getAddButtonL().setText(NodeConstants.EXPAND_L);
                 childNode.setVisible(false);
             } else {
                 collapseLeafL(childNode);
@@ -745,27 +750,7 @@ public class SubjectController {
      * 删除节点及其子节点
      */
     public void delete() {
-        if (selectedNode == null || selectedNode == rootNode) {
-            return;
-        }
-
-        if (selectedNode.getPos() == PosConstants.RIGHT) {
-            if (selectedNode.getParentNode().getChildrenR().size() != 1) {
-                setSubjectTranslateY(selectedNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
-            }
-            deleteChildrenR(selectedNode);
-            deleteR();
-            adjustChildrenYR();
-            refreshLinesR();
-        } else {
-            if (selectedNode.getParentNode().getChildrenL().size() != 1) {
-                setSubjectTranslateY(selectedNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
-            }
-            deleteChildrenL(selectedNode);
-            deleteL();
-            adjustChildrenYL();
-            refreshLinesL();
-        }
+        commandHistory.execute(new DeleteCommand(this, selectedNode, false));
     }
 
     /**
@@ -788,7 +773,7 @@ public class SubjectController {
             for (MindNode childNode : childrenR) {
                 parentNode.addChildR(childNode);
             }
-            deleteR();
+            deleteR(selectedNode);
 
             adjustChildrenXR(parentNode);
             if (selfHeight > childrenHeight) {
@@ -808,7 +793,7 @@ public class SubjectController {
             for (MindNode childNode : childrenL) {
                 parentNode.addChildL(childNode);
             }
-            deleteL();
+            deleteL(selectedNode);
 
             adjustChildrenXL(parentNode);
             if (selfHeight > childrenHeight) {
@@ -879,64 +864,35 @@ public class SubjectController {
 
     /**
      * 删除节点
+     * 传入参数，保证在重做时，不选中节点的情况下，仍然能删除
      */
-    private void deleteR() {
-        MindNode parent = selectedNode.getParentNode();
-        // 改变选中节点，记录之前选中的要删除的节点
-        MindNode toDelete = selectedNode;
-        changeSelectedNode(toDelete, parent, parent.getChildrenR());
+    public void deleteR(MindNode deletedNode) {
+        MindNode parent = deletedNode.getParentNode();
+        changeSelectedNode(deletedNode, parent, parent.getChildrenR());
 
-        parent.removeChildR(toDelete);
-        subject.remove(toDelete);
+        parent.removeChildR(deletedNode);
+        subject.remove(deletedNode);
     }
 
-    private void deleteL() {
-        MindNode parent = selectedNode.getParentNode();
-        MindNode toDelete = selectedNode;
-        changeSelectedNode(toDelete, parent, parent.getChildrenL());
+    public void deleteL(MindNode deletedNode) {
+        MindNode parent = deletedNode.getParentNode();
+        changeSelectedNode(deletedNode, parent, parent.getChildrenL());
 
-        parent.removeChildL(toDelete);
-        subject.remove(toDelete);
+        parent.removeChildL(deletedNode);
+        subject.remove(deletedNode);
     }
 
     /**
-     * 从 subject 和父节点的子节点数组中删除子节点
+     * 删除 subject 中的子节点
      */
-    private void deleteChildrenR(MindNode parentNode) {
-        Iterator<MindNode> iterator = parentNode.getChildrenR().iterator();
-        while (iterator.hasNext()) {
-            MindNode childNode = iterator.next();
-            subject.remove(childNode);
-            iterator.remove();
-            childNode.setParentNode(null);
-
-            deleteChildrenR(childNode);
-        }
-    }
-
-    private void deleteChildrenL(MindNode parentNode) {
-        Iterator<MindNode> iterator = parentNode.getChildrenL().iterator();
-        while (iterator.hasNext()) {
-            MindNode childNode = iterator.next();
-            subject.remove(childNode);
-            iterator.remove();
-            childNode.setParentNode(null);
-
-            deleteChildrenL(childNode);
-        }
-    }
-
-    /**
-     * 仅从 subject 删除子节点
-     */
-    private void deleteChildrenFromSubjectR(MindNode parentNode) {
+    public void deleteChildrenFromSubjectR(MindNode parentNode) {
         for (MindNode childNode : parentNode.getChildrenR()) {
             subject.remove(childNode);
             deleteChildrenFromSubjectR(childNode);
         }
     }
 
-    private void deleteChildrenFromSubjectL(MindNode parentNode) {
+    public void deleteChildrenFromSubjectL(MindNode parentNode) {
         for (MindNode childNode : parentNode.getChildrenL()) {
             subject.remove(childNode);
             deleteChildrenFromSubjectL(childNode);
@@ -967,13 +923,13 @@ public class SubjectController {
         adjustL(rootNode);
     }
 
-    private void adjustR(MindNode node) {
+    public void adjustR(MindNode node) {
         adjustChildrenXR(node);
         adjustChildrenYR();
         refreshLinesR();
     }
 
-    private void adjustL(MindNode node) {
+    public void adjustL(MindNode node) {
         adjustChildrenXL(node);
         adjustChildrenYL();
         refreshLinesL();
@@ -1241,5 +1197,13 @@ public class SubjectController {
     public void setSelectedNode(MindNode node) {
         this.selectedNode = node;
         selectedNode.getTextArea().requestFocus();
+    }
+
+    public boolean undo() {
+        return commandHistory.undo();
+    }
+
+    public boolean redo() {
+        return commandHistory.redo();
     }
 }

@@ -81,16 +81,24 @@ public class MindMap extends TabPane {
 
         addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             KeyCode code = event.getCode();
+            boolean shortcutDown = event.isShortcutDown();
+
             // textArea 触发事件时忽略
-            if (event.getTarget() != this || (code != KeyCode.HOME &&
-                    code != KeyCode.END &&
-                    code != KeyCode.PAGE_UP &&
-                    code != KeyCode.PAGE_DOWN &&
-                    code != KeyCode.SPACE &&
-                    code != KeyCode.UP &&
-                    code != KeyCode.DOWN &&
-                    code != KeyCode.LEFT &&
-                    code != KeyCode.RIGHT)) {
+            if (event.getTarget() != this && code != KeyCode.Z) {
+                return;
+            }
+
+            if (shortcutDown && event.isShiftDown() && code == KeyCode.Z) {
+                if (subjectController.redo()) {
+                    event.consume();
+                }
+                return;
+            }
+
+            if (shortcutDown && code == KeyCode.Z) {
+                if (subjectController.undo()) {
+                    event.consume();
+                }
                 return;
             }
 
@@ -119,6 +127,7 @@ public class MindMap extends TabPane {
         setOnKeyPressed(e -> {
             KeyCode code = e.getCode();
             boolean shortcutDown = e.isShortcutDown();
+            boolean shiftDown = e.isShiftDown();
 
             // 回到中心
             if (shortcutDown && code == KeyCode.G) {
@@ -128,7 +137,7 @@ public class MindMap extends TabPane {
             }
 
             // 检查 Shift，防止干扰收起和展开
-            if (shortcutDown && !e.isShiftDown()) {
+            if (shortcutDown && !shiftDown) {
                 if (code == KeyCode.DIGIT0) {
                     subject.changeScale(1.0);
                 } else if (code == KeyCode.MINUS) {
