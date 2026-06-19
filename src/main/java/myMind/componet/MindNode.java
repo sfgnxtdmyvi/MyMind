@@ -3,6 +3,7 @@ package myMind.componet;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -19,6 +20,7 @@ import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.NodeEvent;
 import myMind.common.constants.PosConstants;
+import myMind.common.constants.SizeConstants;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MeasureTextUtil;
 import myMind.common.util.MessageUtil;
@@ -50,6 +52,7 @@ public class MindNode extends StackPane {
 
     private Consumer<NodeEvent> onAction;
     private Consumer<Double> setSubjectTranslateY;
+    private Consumer<Double> setSubjectTranslateX;
 
     private VBox contentBox;
     private String imageName;
@@ -378,14 +381,25 @@ public class MindNode extends StackPane {
         double oldWidth = getPrefWidth();
         double oldHeight = getPrefHeight();
         adjustSize();
-        double newHeight = getPrefHeight();
-        setSubjectTranslateY.accept(-(newHeight - oldHeight) * 0.5);
+        setSubjectTranslateY.accept(-(getPrefHeight() - oldHeight) * 0.5);
 
         // 调整位置
         if (pos == PosConstants.LEFT) {
             setLayoutX(getLayoutX() - (getPrefWidth() - oldWidth));
+            // 与 scene 左边的距离
+            Point2D sceneCoords = localToScene(0, 0);
+            double nodeX = sceneCoords.getX();
+            if (nodeX < SizeConstants.SUBJECT_MARGIN) {
+                setSubjectTranslateX.accept(-nodeX + SizeConstants.SUBJECT_MARGIN);
+            }
             onAction.accept(NodeEvent.ADJUST_L);
         } else {
+            Point2D sceneCoords = localToScene(0, 0);
+            double nodeX = sceneCoords.getX();
+            if (SizeConstants.SCREEN_WIDTH < nodeX + getPrefWidth() + SizeConstants.SUBJECT_MARGIN) {
+                double dx = nodeX + getPrefWidth() - SizeConstants.SCREEN_WIDTH;
+                setSubjectTranslateX.accept(-dx - SizeConstants.SUBJECT_MARGIN);
+            }
             onAction.accept(NodeEvent.ADJUST_R);
         }
     }
@@ -480,6 +494,7 @@ public class MindNode extends StackPane {
     }
 
     //———————————————————————————————————————————宽高计算———————————————————————————————————————————
+
     /**
      * 子节点的总高度
      * 所有子节点的高度 + 间隔

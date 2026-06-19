@@ -67,7 +67,7 @@ public class Subject extends StackPane {
             // 变小后，四周的间隔要变大
             // 0 200         800 1000
             // 0     400 600     1000
-            double translateConstrain = getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / getScaleX() : SizeConstants.TRANSLATE_CONSTRAIN;
+            double translateConstrain = getScaleX() < 1 ? SizeConstants.SUBJECT_MARGIN / getScaleX() : SizeConstants.SUBJECT_MARGIN;
             if (translateConstrain < subjectBounds.getMinX()) {
                 dx = translateConstrain - subjectBounds.getMinX();
             } else if (subjectBounds.getMaxX() < parentWidth - translateConstrain) {
@@ -83,7 +83,7 @@ public class Subject extends StackPane {
             double parentHeight = parentBounds.getHeight();
             Bounds subjectBounds = getBoundsInParent();
 
-            double translateOffset = SizeConstants.TRANSLATE_CONSTRAIN / getScaleX();
+            double translateOffset = SizeConstants.SUBJECT_MARGIN / getScaleX();
             if (translateOffset < subjectBounds.getMinY()) {
                 dy = translateOffset - subjectBounds.getMinY();
             } else if (subjectBounds.getMaxY() < parentHeight - translateOffset) {

@@ -316,6 +316,7 @@ public class SubjectController {
         });
 
         node.setSetSubjectTranslateY(this::setSubjectTranslateY);
+        node.setSetSubjectTranslateX(this::setSubjectTranslateX);
     }
 
     private void setOnActionChildrenR(MindNode cloneNode) {
@@ -1034,6 +1035,10 @@ public class SubjectController {
 
     public void setSubjectTranslateY(double translateY) {
         subject.setTranslateY(subject.getTranslateY() + translateY);
+    }
+
+    public void setSubjectTranslateX(double translateX) {
+        subject.setTranslateX(subject.getTranslateX() + translateX);
     }
 
     //———————————————————————————————————————————刷新连线———————————————————————————————————————————

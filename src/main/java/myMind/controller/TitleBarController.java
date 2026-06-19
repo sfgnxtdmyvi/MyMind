@@ -5,7 +5,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -22,7 +21,6 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import lombok.Getter;
@@ -31,6 +29,7 @@ import myMind.Launch;
 import myMind.common.constants.CssStyle;
 import myMind.common.constants.FileConstants;
 import myMind.common.constants.PosConstants;
+import myMind.common.constants.SizeConstants;
 import myMind.common.manager.CssManager;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MessageUtil;
@@ -68,7 +67,6 @@ public class TitleBarController {
     private MindMap mindMap;
     private SubjectController subjectController;
 
-    private final Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
     private boolean maximized = false;
     // 最大化时，记录宽高位置，恢复时使用
     private double width;
@@ -91,14 +89,13 @@ public class TitleBarController {
         if (mindMap.isEmpty()) {
             mapStage.hide();
         }
-        Launch.getNoteStage().show();
-        Launch.getNoteStage().toFront();
+        NoteController.createNote(new Stage());
     }
 
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
     public void newMindMap() {
-        Launch.createMindMap(new Stage());
+        new MindMapController().createMindMap(new Stage());
     }
 
     @FXML
@@ -122,13 +119,13 @@ public class TitleBarController {
             FileUtil.load(file, mindMap);
             selectFirstSubject();
         } else {
-            Stage stage = new Stage();
-            Launch.createMindMap(stage);
-            FileUtil.load(file, Launch.getMindMap());
-            Launch.getTitleBarController().selectFirstSubject();
+            MindMapController mindMapController = new MindMapController();
+            mindMapController.createMindMap(new Stage());
+            FileUtil.load(file, mindMapController.getMindMap());
+            mindMapController.getTitleBarController().selectFirstSubject();
             // 打开 FileChooser 可能会导致图标设置失败
             Platform.runLater(() -> {
-                ObservableList<Image> icons = Launch.getMapStage().getIcons();
+                ObservableList<Image> icons = mindMapController.getStage().getIcons();
                 icons.clear();
                 icons.add(new Image(Launch.class.getResourceAsStream("/icon.png")));
             });
@@ -368,8 +365,8 @@ public class TitleBarController {
             mapStage.setX(0);
             mapStage.setY(0);
             // UNDECORATED 模式下，setMaximized()会让窗口覆盖整个屏幕（包括任务栏）
-            mapStage.setWidth(screenBounds.getWidth());
-            mapStage.setHeight(screenBounds.getHeight());
+            mapStage.setWidth(SizeConstants.SCREEN_WIDTH);
+            mapStage.setHeight(SizeConstants.SCREEN_HEIGHT);
             maximizeBtn.setText("❐");
         }
         maximized = !maximized;
@@ -378,8 +375,11 @@ public class TitleBarController {
     // todo bug
     @FXML
     public void close() {
+        if (mindMap.getFilePath() != null) {
+            FileUtil.save(mindMap);
+        }
         // 未保存且不为空
-        if (mindMap.getFilePath() == null && !mindMap.isEmpty()) {
+        else if (!mindMap.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("保存导图");
             alert.setHeaderText(null);
@@ -403,8 +403,6 @@ public class TitleBarController {
                     return;
                 }
             }
-        } else {
-            FileUtil.save(mindMap);
         }
 
         if (Stage.getWindows().size() <= 1) {

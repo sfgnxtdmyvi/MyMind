@@ -83,13 +83,6 @@ public class MindMap extends TabPane {
             KeyCode code = event.getCode();
             boolean shortcutDown = event.isShortcutDown();
 
-            // textArea 触发事件时，且按的不是 z 时，放行
-            // 即放行 textArea 的光标移动
-            if (event.getTarget() != this && code != KeyCode.Z) {
-                return;
-            }
-            event.consume();
-
             if (shortcutDown && event.isShiftDown() && code == KeyCode.Z) {
                 // 先让 StyleClassedTextArea 撤消，如果撤消之后没有变化，则执行节点的撤消
                 StyleClassedTextArea textArea = subjectController.getSelectedNode().getTextArea();
@@ -115,24 +108,33 @@ public class MindMap extends TabPane {
                 return;
             }
 
+            // textArea 触发光标移动事件和 MindMap 触发 subject 移动事件之外的事件时，放行
+            if (event.getTarget() != this || (code != KeyCode.HOME && code != KeyCode.END &&
+                    code != KeyCode.PAGE_UP && code != KeyCode.PAGE_DOWN && code != KeyCode.SPACE &&
+                    code != KeyCode.UP && code != KeyCode.DOWN &&
+                    code != KeyCode.LEFT && code != KeyCode.RIGHT)) {
+                return;
+            }
+            event.consume();
+
             switch (code) {
                 case HOME -> {
-                    double translateConstrain = subject.getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / subject.getScaleX() : SizeConstants.TRANSLATE_CONSTRAIN;
+                    double translateConstrain = subject.getScaleX() < 1 ? SizeConstants.SUBJECT_MARGIN / subject.getScaleX() : SizeConstants.SUBJECT_MARGIN;
                     subject.setTranslateY(subject.getTranslateY() + translateConstrain - subject.getBoundsInParent().getMinY());
                 }
                 case END -> {
-                    double translateConstrain = subject.getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / subject.getScaleX() : SizeConstants.TRANSLATE_CONSTRAIN;
+                    double translateConstrain = subject.getScaleX() < 1 ? SizeConstants.SUBJECT_MARGIN / subject.getScaleX() : SizeConstants.SUBJECT_MARGIN;
                     // subject.getParent() 是 TabPaneSkin$TabContentRegion 所以不能直接用 getLayoutBounds().getHeight()
                     double deltaY = subject.getParent().getLayoutBounds().getHeight() - translateConstrain - subject.getBoundsInParent().getMaxY();
                     subject.setTranslateY(subject.getTranslateY() + deltaY);
                 }
-                case PAGE_UP -> subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET_PLUS);
+                case PAGE_UP -> subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_MOVE_TEN);
                 case PAGE_DOWN, SPACE ->
-                        subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET_PLUS);
-                case UP -> subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_OFFSET);
-                case DOWN -> subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_OFFSET);
-                case LEFT -> subject.setTranslateX(subject.getTranslateX() + SizeConstants.TRANSLATE_OFFSET);
-                case RIGHT -> subject.setTranslateX(subject.getTranslateX() - SizeConstants.TRANSLATE_OFFSET);
+                        subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_MOVE_TEN);
+                case UP -> subject.setTranslateY(subject.getTranslateY() + SizeConstants.TRANSLATE_MOVE);
+                case DOWN -> subject.setTranslateY(subject.getTranslateY() - SizeConstants.TRANSLATE_MOVE);
+                case LEFT -> subject.setTranslateX(subject.getTranslateX() + SizeConstants.TRANSLATE_MOVE);
+                case RIGHT -> subject.setTranslateX(subject.getTranslateX() - SizeConstants.TRANSLATE_MOVE);
             }
         });
 
