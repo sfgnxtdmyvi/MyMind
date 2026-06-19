@@ -8,14 +8,17 @@ import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
-import myMind.componet.MindMap;
-import myMind.componet.MindNode;
+import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.FileConstants;
 import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
+import myMind.componet.MindMap;
+import myMind.componet.MindNode;
 import myMind.controller.SubjectController;
-import myMind.common.constants.ConfigConstants;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
+import org.fxmisc.richtext.model.SegmentOps;
+import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -27,9 +30,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class FileUtil {
@@ -136,11 +141,19 @@ public class FileUtil {
     }
 
     private static StyleClassedTextArea buildTextArea(JSONObject json) {
-        StyleClassedTextArea textArea = new StyleClassedTextArea();
-        textArea.getStyleClass().add("text-area");
-        textArea.setWrapText(true);
-        textArea.replaceText(json.getString("text"));
+        // 带文本的只读文档
+        ReadOnlyStyledDocument<Collection<String>, String, Collection<String>> initialDoc =
+                ReadOnlyStyledDocument.fromString(
+                        json.getString("text"),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        SegmentOps.styledTextOps((s1, s2) -> Optional.empty())
+                );
 
+        SimpleEditableStyledDocument<Collection<String>, Collection<String>> doc =
+                new SimpleEditableStyledDocument<>(initialDoc);
+
+        // 设置样式
         JSONArray styles = json.getJSONArray("styles");
         if (styles != null) {
             for (int i = 0; i < styles.size(); i++) {
@@ -150,12 +163,15 @@ public class FileUtil {
                 for (int j = 0; j < styleArray.size(); j++) {
                     styleList.add(styleArray.getString(j));
                 }
-
-                textArea.setStyle(styleItem.getIntValue("start"),
+                doc.setStyle(styleItem.getIntValue("start"),
                         styleItem.getIntValue("end"),
                         styleList);
             }
         }
+
+        StyleClassedTextArea textArea = new StyleClassedTextArea(doc, true);
+        textArea.getStyleClass().add("text-area");
+        textArea.setWrapText(true);
 
         return textArea;
     }
@@ -398,9 +414,9 @@ public class FileUtil {
                 count++;
             }
         }
-        if(count > 0) {
+        if (count > 0) {
             MessageUtil.showMessage("删除了 " + count + " 张图片");
-        }else {
+        } else {
             MessageUtil.showMessage("没有多余的图片");
         }
     }

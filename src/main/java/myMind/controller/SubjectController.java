@@ -15,6 +15,9 @@ import myMind.common.util.CloneNodeUtil;
 import myMind.componet.MindNode;
 import myMind.componet.Subject;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
+import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -392,41 +395,31 @@ public class SubjectController {
     }
 
     private StyleClassedTextArea buildTextArea(StyleClassedTextArea originalTextArea) {
-        StyleClassedTextArea textArea = new StyleClassedTextArea();
-        textArea.getStyleClass().add("text-area");
-        textArea.setWrapText(true);
+        // EditableStyledDocument 是 StyleClassedTextArea 的内容（文本和样式）
+        EditableStyledDocument<Collection<String>, String, Collection<String>> originalDoc
+                = originalTextArea.getContent();
 
-        int length = originalTextArea.getLength();
+        int length = originalDoc.getLength();
         if (length == 0) {
+            StyleClassedTextArea textArea = new StyleClassedTextArea(true);
+            textArea.getStyleClass().add("text-area");
+            textArea.setWrapText(true);
             textArea.setMaxWidth(NodeConstants.MIN_TEXTAREA_WIDTH);
             return textArea;
         }
 
+        // 获取只读快照
+        ReadOnlyStyledDocument<Collection<String>, String, Collection<String>> snapshot
+                = (ReadOnlyStyledDocument<Collection<String>, String, Collection<String>>)
+                originalDoc.subSequence(0, length);
+
+        // 基于快照构造新的可编辑文档
+        StyleClassedTextArea textArea
+                = new StyleClassedTextArea(new SimpleEditableStyledDocument<>(snapshot), true);
+        textArea.getStyleClass().add("text-area");
+        textArea.setWrapText(true);
         textArea.setPrefHeight(originalTextArea.getPrefHeight());
         textArea.setMaxWidth(originalTextArea.getMaxWidth());
-        textArea.replaceText(originalTextArea.getText());
-        // 样式
-        int start = 0;
-        Collection<String> lastStyles = originalTextArea.getStyleOfChar(0);
-
-        for (int i = 1; i < length; i++) {
-            Collection<String> currentStyles = originalTextArea.getStyleOfChar(i);
-
-            // 样式变化时保存前一段
-            if (!currentStyles.equals(lastStyles)) {
-                if (!lastStyles.isEmpty()) {
-                    textArea.setStyle(start, i, lastStyles);
-                }
-
-                lastStyles = currentStyles;
-                start = i;
-            }
-        }
-
-        // 由于最后一段不会变化，额外处理
-        if (!lastStyles.isEmpty()) {
-            textArea.setStyle(start, length, lastStyles);
-        }
 
         return textArea;
     }

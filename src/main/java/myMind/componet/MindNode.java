@@ -172,8 +172,8 @@ public class MindNode extends StackPane {
         addButtonListen();
 
         // 粘贴图片
-        setOnKeyReleased(e -> {
-            if (e.isControlDown() && e.getCode() == KeyCode.V) {
+        setOnKeyReleased(event -> {
+            if (event.isControlDown() && event.getCode() == KeyCode.V) {
                 // javafx 的剪贴板获取不了图片，只能用 awt 的
                 Transferable transferable = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
                 if (transferable != null && transferable.isDataFlavorSupported(DataFlavor.imageFlavor)) {
@@ -201,15 +201,13 @@ public class MindNode extends StackPane {
                     }
                 }
 
-                e.consume();
+                event.consume();
             }
         });
 
         // 文本变化调整节点大小
         textArea.textProperty()
-                .addListener((obs, oldText, newText) -> {
-                    adjust();
-                });
+                .addListener((obs, oldText, newText) -> adjust());
 
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {

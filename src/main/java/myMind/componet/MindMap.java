@@ -83,26 +83,38 @@ public class MindMap extends TabPane {
             KeyCode code = event.getCode();
             boolean shortcutDown = event.isShortcutDown();
 
-            // textArea 触发事件时忽略
+            // textArea 触发事件时，且按的不是 z 时，放行
+            // 即放行 textArea 的光标移动
             if (event.getTarget() != this && code != KeyCode.Z) {
                 return;
             }
+            event.consume();
 
             if (shortcutDown && event.isShiftDown() && code == KeyCode.Z) {
-                if (subjectController.redo()) {
-                    event.consume();
+                // 先让 StyleClassedTextArea 撤消，如果撤消之后没有变化，则执行节点的撤消
+                StyleClassedTextArea textArea = subjectController.getSelectedNode().getTextArea();
+                if (textArea.isFocused()) {
+                    if (!textArea.getUndoManager().redo()) {
+                        subjectController.redo();
+                    }
+                } else {
+                    subjectController.redo();
                 }
                 return;
             }
 
             if (shortcutDown && code == KeyCode.Z) {
-                if (subjectController.undo()) {
-                    event.consume();
+                StyleClassedTextArea textArea = subjectController.getSelectedNode().getTextArea();
+                if (textArea.isFocused()) {
+                    if (!textArea.getUndoManager().undo()) {
+                        subjectController.undo();
+                    }
+                } else {
+                    subjectController.undo();
                 }
                 return;
             }
 
-            event.consume();
             switch (code) {
                 case HOME -> {
                     double translateConstrain = subject.getScaleX() < 1 ? SizeConstants.TRANSLATE_CONSTRAIN / subject.getScaleX() : SizeConstants.TRANSLATE_CONSTRAIN;
