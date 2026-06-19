@@ -20,28 +20,23 @@ public class CommandHistory {
         }
     }
 
-    /**
-     * 撤销
-     * @return 是否成功，如果成功，则不让
-     */
-    public boolean undo() {
+
+    public void undo() {
         if (undoStack.isEmpty()) {
-            return false;
+            return;
         }
         Command command = undoStack.pop();
         command.undo();
         redoStack.push(command);
-        return true;
     }
 
-    public boolean redo() {
+    public void redo() {
         if (redoStack.isEmpty()) {
-            return false;
+            return;
         }
         Command command = redoStack.pop();
         command.execute();
         // 重做也可以被撤销
         undoStack.push(command);
-        return true;
     }
 }

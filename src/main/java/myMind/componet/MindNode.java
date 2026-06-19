@@ -437,7 +437,7 @@ public class MindNode extends StackPane {
         setPrefHeight(nodeHeight);
     }
 
-    //—————————————————————————————————————————增删—————————————————————————————————————————
+    //—————————————————————————————————————————增—————————————————————————————————————————
     public void addChildR(MindNode child) {
         childrenR.add(child);
         child.setParentNode(this);
@@ -458,6 +458,7 @@ public class MindNode extends StackPane {
         child.setParentNode(this);
     }
 
+    //—————————————————————————————————————————删—————————————————————————————————————————
     public void removeChildR(MindNode child) {
         childrenR.remove(child);
         child.setParentNode(null);
@@ -468,8 +469,17 @@ public class MindNode extends StackPane {
         child.setParentNode(null);
     }
 
-    //———————————————————————————————————————————宽高计算———————————————————————————————————————————
+    public void undoR(MindNode child, MindNode parentNode) {
+        childrenR.remove(child);
+        child.setParentNode(parentNode);
+    }
 
+    public void undoL(MindNode child, MindNode parentNode) {
+        childrenL.remove(child);
+        child.setParentNode(parentNode);
+    }
+
+    //———————————————————————————————————————————宽高计算———————————————————————————————————————————
     /**
      * 子节点的总高度
      * 所有子节点的高度 + 间隔

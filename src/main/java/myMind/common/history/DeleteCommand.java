@@ -6,11 +6,14 @@ import myMind.componet.MindNode;
 import myMind.componet.Subject;
 import myMind.controller.SubjectController;
 
+import java.util.List;
+
 public class DeleteCommand implements Command {
     private final SubjectController subjectController;
     private final Subject subject;
-    private final MindNode parent;
+    private final MindNode parentNode;
     private final MindNode deletedNode;
+
     private final byte pos;
     private final int index;
     private final boolean keepChildren;
@@ -18,55 +21,156 @@ public class DeleteCommand implements Command {
     public DeleteCommand(SubjectController subjectController, MindNode deletedNode, boolean keepChildren) {
         this.subjectController = subjectController;
         this.subject = subjectController.getSubject();
-        this.parent = deletedNode.getParentNode();
+        this.parentNode = deletedNode.getParentNode();
         this.deletedNode = deletedNode;
         this.pos = deletedNode.getPos();
         // 撤消时，插入原位置
-        this.index = (pos == PosConstants.RIGHT) ? parent.getChildrenR().indexOf(deletedNode) : parent.getChildrenL().indexOf(deletedNode);
+        this.index = (pos == PosConstants.RIGHT) ? parentNode.getChildrenR().indexOf(deletedNode) : parentNode.getChildrenL().indexOf(deletedNode);
+        // 是否保留子节点
         this.keepChildren = keepChildren;
     }
 
     @Override
     public void execute() {
-        if (deletedNode == null || deletedNode == subjectController.getRootNode()) {
-            return;
-        }
+        if (keepChildren) {
+            double selfHeight = deletedNode.getPrefHeight();
+            if (pos == PosConstants.RIGHT) {
+                List<MindNode> childrenR = deletedNode.getChildrenR();
+                if (childrenR.isEmpty()) {
+                    return;
+                }
 
-        if (pos == PosConstants.RIGHT) {
-            if (parent.getChildrenR().size() != 1) {
-                subjectController.setSubjectTranslateY(deletedNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
+                // 删除节点，子节点成为父节点的子节点
+                int i = index;
+                for (MindNode childNode : childrenR) {
+                    parentNode.addChildRAt(i, childNode);
+                    i++;
+                }
+                // deletedNode 的子节点 List 中仍保留子节点，方便 undo
+                subjectController.deleteR(deletedNode);
+
+                subjectController.adjustChildrenXR(parentNode);
+                // 删除节点比它的子节点高，才有必要调整 Y
+                double childrenHeight = deletedNode.getChildrenHeightR();
+                if (selfHeight > childrenHeight) {
+                    if (parentNode.getChildrenR().size() != 1) {
+                        subjectController.setSubjectTranslateY(selfHeight * NodeConstants.TRANSLATE_RATE);
+                    }
+                    subjectController.adjustChildrenYR();
+                }
+                subjectController.refreshLinesR();
+            } else {
+                List<MindNode> childrenL = deletedNode.getChildrenL();
+                if (childrenL.isEmpty()) {
+                    return;
+                }
+
+                int i = index;
+                for (MindNode childNode : childrenL) {
+                    parentNode.addChildLAt(i, childNode);
+                    i++;
+                }
+                subjectController.deleteL(deletedNode);
+
+                subjectController.adjustChildrenXL(parentNode);
+                double childrenHeight = deletedNode.getChildrenHeightL();
+                if (selfHeight > childrenHeight) {
+                    if (parentNode.getChildrenL().size() != 1) {
+                        subjectController.setSubjectTranslateY(selfHeight * NodeConstants.TRANSLATE_RATE);
+                    }
+                    subjectController.adjustChildrenYL();
+                }
+                subjectController.refreshLinesL();
             }
-            // 删除 subject 中的子节点
-            subjectController.deleteChildrenFromSubjectR(deletedNode);
-            subjectController.deleteR(deletedNode);
-            subjectController.adjustChildrenYR();
-            subjectController.refreshLinesR();
         } else {
-            if (parent.getChildrenL().size() != 1) {
-                subjectController.setSubjectTranslateY(deletedNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
+            if (pos == PosConstants.RIGHT) {
+                if (parentNode.getChildrenR().size() != 1) {
+                    subjectController.setSubjectTranslateY(deletedNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
+                }
+                // 删除 subject 中的子节点
+                subjectController.deleteChildrenFromSubjectR(deletedNode);
+                subjectController.deleteR(deletedNode);
+                subjectController.adjustChildrenYR();
+                subjectController.refreshLinesR();
+            } else {
+                if (parentNode.getChildrenL().size() != 1) {
+                    subjectController.setSubjectTranslateY(deletedNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
+                }
+                subjectController.deleteChildrenFromSubjectL(deletedNode);
+                subjectController.deleteL(deletedNode);
+                subjectController.adjustChildrenYL();
+                subjectController.refreshLinesL();
             }
-            subjectController.deleteChildrenFromSubjectL(deletedNode);
-            subjectController.deleteL(deletedNode);
-            subjectController.adjustChildrenYL();
-            subjectController.refreshLinesL();
         }
     }
 
     @Override
     public void undo() {
-        if (pos == PosConstants.RIGHT) {
-            undoR(deletedNode);
-            parent.addChildRAt(index, deletedNode);
-//            subjectController.adjustR(parent);
-            subjectController.adjustChildrenYR();
-            subjectController.refreshLinesR();
-        } else {
-            undoL(deletedNode);
-            parent.addChildLAt(index, deletedNode);
-            subjectController.adjustChildrenYL();
-            subjectController.refreshLinesL();
-        }
+        if (keepChildren) {
+            double selfHeight = deletedNode.getPrefHeight();
+            if (pos == PosConstants.RIGHT) {
+                List<MindNode> childrenR = deletedNode.getChildrenR();
+                if (childrenR.isEmpty()) {
+                    return;
+                }
 
+                // 删除节点重新插入，该节点在父节点中的子节点删除
+                for (MindNode childNode : childrenR) {
+                    parentNode.undoR(childNode, deletedNode);
+                }
+                parentNode.addChildRAt(index, deletedNode);
+                subject.addNode(deletedNode);
+
+                subjectController.adjustChildrenXR(parentNode);
+                double childrenHeight = deletedNode.getChildrenHeightR();
+                if (selfHeight > childrenHeight) {
+                    if (parentNode.getChildrenR().size() != 1) {
+                        subjectController.setSubjectTranslateY(-selfHeight * NodeConstants.TRANSLATE_RATE);
+                    }
+                    subjectController.adjustChildrenYR();
+                }
+                subjectController.refreshLinesR();
+            } else {
+                List<MindNode> childrenL = deletedNode.getChildrenL();
+                if (childrenL.isEmpty()) {
+                    return;
+                }
+
+                for (MindNode childNode : childrenL) {
+                    parentNode.undoL(childNode, deletedNode);
+                }
+                parentNode.addChildLAt(index, deletedNode);
+                subject.addNode(deletedNode);
+
+                subjectController.adjustChildrenXL(parentNode);
+                double childrenHeight = deletedNode.getChildrenHeightL();
+                if (selfHeight > childrenHeight) {
+                    if (parentNode.getChildrenL().size() != 1) {
+                        subjectController.setSubjectTranslateY(-selfHeight * NodeConstants.TRANSLATE_RATE);
+                    }
+                    subjectController.adjustChildrenYL();
+                }
+                subjectController.refreshLinesL();
+            }
+        } else {
+            if (pos == PosConstants.RIGHT) {
+                undoR(deletedNode);
+                parentNode.addChildRAt(index, deletedNode);
+                if (parentNode.getChildrenR().size() != 1) {
+                    subjectController.setSubjectTranslateY(-(deletedNode.getHeightR() * NodeConstants.TRANSLATE_RATE));
+                }
+                subjectController.adjustChildrenYR();
+                subjectController.refreshLinesR();
+            } else {
+                undoL(deletedNode);
+                parentNode.addChildLAt(index, deletedNode);
+                if (parentNode.getChildrenL().size() != 1) {
+                    subjectController.setSubjectTranslateY(-(deletedNode.getHeightL() * NodeConstants.TRANSLATE_RATE));
+                }
+                subjectController.adjustChildrenYL();
+                subjectController.refreshLinesL();
+            }
+        }
         subjectController.setSelectedNode(deletedNode);
     }
 

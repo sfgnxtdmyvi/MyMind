@@ -740,63 +740,15 @@ public class SubjectController {
     //———————————————————————————————————————————删除———————————————————————————————————————————
 
     /**
-     * 删除节点及其子节点
+     *
+     * @param keepChildren true： 删除选中节点及其子节点
+     *                     false：删除选中节点，子节点成为父节点的子节点
      */
-    public void delete() {
-        commandHistory.execute(new DeleteCommand(this, selectedNode, false));
-    }
-
-    /**
-     * 删除节点，子节点成为父节点的子节点
-     */
-    public void deleteRemainChildren() {
+    public void delete(boolean keepChildren) {
         if (selectedNode == null || selectedNode == rootNode) {
             return;
         }
-
-        MindNode parentNode = selectedNode.getParentNode();
-        double selfHeight = selectedNode.getPrefHeight();
-        if (selectedNode.getPos() == PosConstants.RIGHT) {
-            List<MindNode> childrenR = selectedNode.getChildrenR();
-            if (childrenR.isEmpty()) {
-                return;
-            }
-
-            double childrenHeight = selectedNode.getChildrenHeightR();
-            for (MindNode childNode : childrenR) {
-                parentNode.addChildR(childNode);
-            }
-            deleteR(selectedNode);
-
-            adjustChildrenXR(parentNode);
-            if (selfHeight > childrenHeight) {
-                if (parentNode.getChildrenR().size() != 1) {
-                    setSubjectTranslateY(selfHeight * NodeConstants.TRANSLATE_RATE);
-                }
-                adjustChildrenYR();
-            }
-            refreshLinesR();
-        } else {
-            List<MindNode> childrenL = selectedNode.getChildrenL();
-            if (childrenL.isEmpty()) {
-                return;
-            }
-
-            double childrenHeight = selectedNode.getChildrenHeightL();
-            for (MindNode childNode : childrenL) {
-                parentNode.addChildL(childNode);
-            }
-            deleteL(selectedNode);
-
-            adjustChildrenXL(parentNode);
-            if (selfHeight > childrenHeight) {
-                if (parentNode.getChildrenL().size() != 1) {
-                    setSubjectTranslateY(selfHeight * NodeConstants.TRANSLATE_RATE);
-                }
-                adjustChildrenYL();
-            }
-            refreshLinesL();
-        }
+        commandHistory.execute(new DeleteCommand(this, selectedNode, keepChildren));
     }
 
     /**
@@ -1192,11 +1144,11 @@ public class SubjectController {
         selectedNode.getTextArea().requestFocus();
     }
 
-    public boolean undo() {
-        return commandHistory.undo();
+    public void undo() {
+        commandHistory.undo();
     }
 
-    public boolean redo() {
-        return commandHistory.redo();
+    public void redo() {
+        commandHistory.redo();
     }
 }
