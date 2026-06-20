@@ -20,7 +20,7 @@ public class ScheduleUtil {
         }
 
         ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() ->
-                FileUtil.saveFileScheduled(new File(filePath), mindMap), 60, 60, TimeUnit.SECONDS);
+                FileUtil.saveFileSilence(new File(filePath), mindMap), 60, 60, TimeUnit.SECONDS);
         fileSaveFutures.put(filePath, future);
     }
 

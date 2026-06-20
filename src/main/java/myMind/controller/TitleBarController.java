@@ -372,11 +372,10 @@ public class TitleBarController {
         maximized = !maximized;
     }
 
-    // todo bug
     @FXML
     public void close() {
         if (mindMap.getFilePath() != null) {
-            FileUtil.save(mindMap);
+            FileUtil.saveFileSilence(new File(mindMap.getFilePath()), mindMap);
         }
         // 未保存且不为空
         else if (!mindMap.isEmpty()) {

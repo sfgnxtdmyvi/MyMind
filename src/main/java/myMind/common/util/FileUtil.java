@@ -219,7 +219,7 @@ public class FileUtil {
         }
     }
 
-    public static void saveFileScheduled(File file, MindMap mindMap) {
+    public static void saveFileSilence(File file, MindMap mindMap) {
         JSONObject subjects = saveSubjects(mindMap);
 
         try (FileWriter fw = new FileWriter(file)) {

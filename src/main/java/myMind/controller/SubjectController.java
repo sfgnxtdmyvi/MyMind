@@ -9,6 +9,7 @@ import javafx.scene.shape.QuadCurve;
 import lombok.Data;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.PosConstants;
+import myMind.common.constants.SizeConstants;
 import myMind.common.history.CommandHistory;
 import myMind.common.history.DeleteCommand;
 import myMind.common.util.CloneNodeUtil;
@@ -98,6 +99,7 @@ public class SubjectController {
 
         adjustChildrenYR();
         refreshLinesR();
+        adjustTranslate(childNode);
     }
 
     public void addChildL() {
@@ -114,6 +116,7 @@ public class SubjectController {
 
         adjustChildrenYL();
         refreshLinesL();
+        adjustTranslate(childNode);
     }
 
     public void addSibling() {
@@ -126,9 +129,9 @@ public class SubjectController {
             return;
         }
 
-        setSubjectTranslateY(-NodeConstants.NODE_TRANSLATE);
+        MindNode siblingNode;
         if (selectedNode.getPos() == PosConstants.RIGHT) {
-            MindNode siblingNode = new MindNode(PosConstants.RIGHT, selectedNode.getLayoutX(), 0);
+            siblingNode = new MindNode(PosConstants.RIGHT, selectedNode.getLayoutX(), 0);
             parentNode.addChildRAt(parentNode.getChildrenR().indexOf(selectedNode) + 1, siblingNode);
             addNodeAndSelect(siblingNode);
 
@@ -136,13 +139,16 @@ public class SubjectController {
             refreshLinesR();
         } else {
             // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-            MindNode siblingNode = new MindNode(PosConstants.LEFT, parentNode.getLayoutX() - NodeConstants.ADD_LEFT_NODE_GAP_X, 0);
+            siblingNode = new MindNode(PosConstants.LEFT, parentNode.getLayoutX() - NodeConstants.ADD_LEFT_NODE_GAP_X, 0);
             parentNode.addChildLAt(parentNode.getChildrenL().indexOf(selectedNode) + 1, siblingNode);
             addNodeAndSelect(siblingNode);
 
             adjustChildrenYL();
             refreshLinesL();
         }
+
+        setSubjectTranslateY(-NodeConstants.NODE_TRANSLATE);
+        adjustTranslate(siblingNode);
     }
 
     /**
@@ -454,6 +460,7 @@ public class SubjectController {
             adjustChildrenYL();
             refreshLinesL();
         }
+        adjustTranslate(selectedNode);
     }
 
     /**
@@ -480,9 +487,6 @@ public class SubjectController {
             subject.addClone(cloneNode);
             setOnActionChildrenR(cloneNode);
 
-            if (cloneNode.getParentNode().getChildrenR().size() != 1) {
-                setSubjectTranslateY(-cloneNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
-            }
             adjustR(cloneNode);
         } else {
             // calculateChildXL 算的是新增空节点的 x 坐标
@@ -499,12 +503,9 @@ public class SubjectController {
             subject.addClone(cloneNode);
             setOnActionChildrenL(cloneNode);
 
-            if (cloneNode.getParentNode().getChildrenL().size() != 1) {
-                setSubjectTranslateY(-cloneNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
-            }
             adjustL(cloneNode);
         }
-
+        adjustTranslate(cloneNode);
         setSelectedNode(cloneNode);
     }
 
@@ -533,9 +534,6 @@ public class SubjectController {
             subject.addClone(cloneNode);
             setOnActionChildrenR(cloneNode);
 
-            if (parentNode.getChildrenR().size() != 1) {
-                setSubjectTranslateY(cloneNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
-            }
             adjustR(cloneNode);
         } else {
             int index = parentNode.getChildrenL().indexOf(selectedNode);
@@ -551,12 +549,9 @@ public class SubjectController {
             subject.addClone(cloneNode);
             setOnActionChildrenL(cloneNode);
 
-            if (parentNode.getChildrenL().size() != 1) {
-                setSubjectTranslateY(cloneNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
-            }
             adjustL(cloneNode);
         }
-
+        adjustTranslate(cloneNode);
         setSelectedNode(cloneNode);
     }
 
@@ -1030,6 +1025,20 @@ public class SubjectController {
         for (MindNode childNode : MindNode.getChildrenL()) {
             childNode.adjustSize();
             adjustChildrenSizeL(childNode);
+        }
+    }
+
+    /**
+     * 调整节点与 scene 下面和上面的间距
+     */
+    public void adjustTranslate(MindNode node) {
+        Point2D sceneCoords = node.localToScene(0, 0);
+        double nodeY = sceneCoords.getY();
+        if (nodeY < SizeConstants.SUBJECT_MARGIN) {
+            setSubjectTranslateY(-nodeY + SizeConstants.SUBJECT_MARGIN);
+        } else if (node.getScene().getHeight() < nodeY + node.getPrefHeight() + SizeConstants.SUBJECT_MARGIN) {
+            double dx = nodeY + node.getPrefHeight() - node.getScene().getHeight();
+            setSubjectTranslateY(-dx - SizeConstants.SUBJECT_MARGIN);
         }
     }
 

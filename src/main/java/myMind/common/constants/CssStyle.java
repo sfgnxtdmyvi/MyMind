@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public enum CssStyle {
 
-    TAB_LIGHT("TAB_LIGHT", "-tab-header-background-color: #e3e3e3;" +
+    TAB_LIGHT("TAB_LIGHT", "-tab-header-background-color: #e6e6e6;" +
             "-tab-background-color: #f4f4f4;" +
             "-tab-selected-background-color: #ffffff;" +
             "-tab-selected-border-color: #5381dd;");

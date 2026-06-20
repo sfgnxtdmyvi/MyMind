@@ -1,5 +1,5 @@
 .title-bar {
-    -fx-background-color: linear-gradient(to right, #dfe9ec, #f8edd0, #e0eef1);
+    -fx-background-color: linear-gradient(to right, #dfe9ec, #fff4d4, #e0eef1);
     -fx-pref-height: 25px;
 }
 

@@ -56,7 +56,6 @@
         </Menu>
 
         <Menu text="设置">
-            <!--            todo -->
             <MenuItem onAction="#addSubject" text="快捷键"/>
         </Menu>
 

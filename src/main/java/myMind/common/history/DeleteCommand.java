@@ -14,20 +14,22 @@ public class DeleteCommand implements Command {
     private final MindNode parentNode;
     private final MindNode deletedNode;
 
+    private boolean keepChildren;
+    private final double translateY;
     private final byte pos;
     private final int index;
-    private final boolean keepChildren;
 
     public DeleteCommand(SubjectController subjectController, MindNode deletedNode, boolean keepChildren) {
         this.subjectController = subjectController;
         this.subject = subjectController.getSubject();
         this.parentNode = deletedNode.getParentNode();
         this.deletedNode = deletedNode;
+        // 是否保留子节点
+        this.keepChildren = keepChildren;
+        this.translateY = subject.getTranslateY();
         this.pos = deletedNode.getPos();
         // 撤消时，插入原位置
         this.index = (pos == PosConstants.RIGHT) ? parentNode.getChildrenR().indexOf(deletedNode) : parentNode.getChildrenL().indexOf(deletedNode);
-        // 是否保留子节点
-        this.keepChildren = keepChildren;
     }
 
     @Override
@@ -37,6 +39,8 @@ public class DeleteCommand implements Command {
             if (pos == PosConstants.RIGHT) {
                 List<MindNode> childrenR = deletedNode.getChildrenR();
                 if (childrenR.isEmpty()) {
+                    deleteNotRemain();
+                    keepChildren = false;
                     return;
                 }
 
@@ -59,9 +63,15 @@ public class DeleteCommand implements Command {
                     subjectController.adjustChildrenYR();
                 }
                 subjectController.refreshLinesR();
+                MindNode lastChildR = deletedNode.getLastChildR();
+                subjectController.setSelectedNode(lastChildR);
+                subjectController.adjustTranslate(lastChildR);
             } else {
                 List<MindNode> childrenL = deletedNode.getChildrenL();
+                subjectController.deleteL(deletedNode);
                 if (childrenL.isEmpty()) {
+                    deleteNotRemain();
+                    keepChildren = false;
                     return;
                 }
 
@@ -70,7 +80,6 @@ public class DeleteCommand implements Command {
                     parentNode.addChildLAt(i, childNode);
                     i++;
                 }
-                subjectController.deleteL(deletedNode);
 
                 subjectController.adjustChildrenXL(parentNode);
                 double childrenHeight = deletedNode.getChildrenHeightL();
@@ -81,27 +90,36 @@ public class DeleteCommand implements Command {
                     subjectController.adjustChildrenYL();
                 }
                 subjectController.refreshLinesL();
+                MindNode lastChildL = deletedNode.getLastChildL();
+                subjectController.setSelectedNode(lastChildL);
+                subjectController.adjustTranslate(lastChildL);
             }
         } else {
-            if (pos == PosConstants.RIGHT) {
-                if (parentNode.getChildrenR().size() != 1) {
-                    subjectController.setSubjectTranslateY(deletedNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
-                }
-                // 删除 subject 中的子节点
-                subjectController.deleteChildrenFromSubjectR(deletedNode);
-                subjectController.deleteR(deletedNode);
-                subjectController.adjustChildrenYR();
-                subjectController.refreshLinesR();
-            } else {
-                if (parentNode.getChildrenL().size() != 1) {
-                    subjectController.setSubjectTranslateY(deletedNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
-                }
-                subjectController.deleteChildrenFromSubjectL(deletedNode);
-                subjectController.deleteL(deletedNode);
-                subjectController.adjustChildrenYL();
-                subjectController.refreshLinesL();
-            }
+            deleteNotRemain();
         }
+    }
+
+    private void deleteNotRemain() {
+        if (pos == PosConstants.RIGHT) {
+            // 删除空白节点时，这里的调整就够了
+            if (parentNode.getChildrenR().size() != 1) {
+                subjectController.setSubjectTranslateY(deletedNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
+            }
+            // 删除 subject 中的子节点
+            subjectController.deleteChildrenFromSubjectR(deletedNode);
+            subjectController.deleteR(deletedNode);
+            subjectController.adjustChildrenYR();
+            subjectController.refreshLinesR();
+        } else {
+            if (parentNode.getChildrenL().size() != 1) {
+                subjectController.setSubjectTranslateY(deletedNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
+            }
+            subjectController.deleteChildrenFromSubjectL(deletedNode);
+            subjectController.deleteL(deletedNode);
+            subjectController.adjustChildrenYL();
+            subjectController.refreshLinesL();
+        }
+        subjectController.adjustTranslate(subjectController.getSelectedNode());
     }
 
     @Override
@@ -124,9 +142,6 @@ public class DeleteCommand implements Command {
                 subjectController.adjustChildrenXR(parentNode);
                 double childrenHeight = deletedNode.getChildrenHeightR();
                 if (selfHeight > childrenHeight) {
-                    if (parentNode.getChildrenR().size() != 1) {
-                        subjectController.setSubjectTranslateY(-selfHeight * NodeConstants.TRANSLATE_RATE);
-                    }
                     subjectController.adjustChildrenYR();
                 }
                 subjectController.refreshLinesR();
@@ -145,9 +160,6 @@ public class DeleteCommand implements Command {
                 subjectController.adjustChildrenXL(parentNode);
                 double childrenHeight = deletedNode.getChildrenHeightL();
                 if (selfHeight > childrenHeight) {
-                    if (parentNode.getChildrenL().size() != 1) {
-                        subjectController.setSubjectTranslateY(-selfHeight * NodeConstants.TRANSLATE_RATE);
-                    }
                     subjectController.adjustChildrenYL();
                 }
                 subjectController.refreshLinesL();
@@ -172,6 +184,7 @@ public class DeleteCommand implements Command {
             }
         }
         subjectController.setSelectedNode(deletedNode);
+        subject.setTranslateY(translateY);
     }
 
     private void undoR(MindNode parentNode) {

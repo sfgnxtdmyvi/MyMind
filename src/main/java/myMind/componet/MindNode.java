@@ -396,8 +396,8 @@ public class MindNode extends StackPane {
         } else {
             Point2D sceneCoords = localToScene(0, 0);
             double nodeX = sceneCoords.getX();
-            if (SizeConstants.SCREEN_WIDTH < nodeX + getPrefWidth() + SizeConstants.SUBJECT_MARGIN) {
-                double dx = nodeX + getPrefWidth() - SizeConstants.SCREEN_WIDTH;
+            if (getScene().getWidth() < nodeX + getPrefWidth() + SizeConstants.SUBJECT_MARGIN) {
+                double dx = nodeX + getPrefWidth() - getScene().getWidth();
                 setSubjectTranslateX.accept(-dx - SizeConstants.SUBJECT_MARGIN);
             }
             onAction.accept(NodeEvent.ADJUST_R);
@@ -609,6 +609,14 @@ public class MindNode extends StackPane {
         } else {
             return selfEndY;
         }
+    }
+
+    public MindNode getLastChildR() {
+        return childrenR.get(childrenR.size() - 1);
+    }
+
+    public MindNode getLastChildL() {
+        return childrenL.get(childrenL.size() - 1);
     }
 
     public boolean isEmpty() {
