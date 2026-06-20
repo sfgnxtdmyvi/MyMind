@@ -22,7 +22,7 @@
             <version>1.18.34</version>
         </dependency>
 
-<!--        javafx-->
+        <!-- javafx -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>

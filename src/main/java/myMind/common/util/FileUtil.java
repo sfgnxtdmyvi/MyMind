@@ -170,6 +170,7 @@ public class FileUtil {
         }
 
         StyleClassedTextArea textArea = new StyleClassedTextArea(doc, true);
+        StyleClassedTextAreaUtil.setInputMethodRequests(textArea);
         textArea.getStyleClass().add("text-area");
         textArea.setWrapText(true);
 

@@ -58,7 +58,6 @@ public class MindMap extends TabPane {
                 for (int i = 0; i < 3; i++) {
                     subject.setTranslateY(subject.getTranslateY() + deltaY);
                 }
-//                subject.constrainTranslationY();
             }
         });
 
@@ -83,6 +82,7 @@ public class MindMap extends TabPane {
             KeyCode code = event.getCode();
             boolean shortcutDown = event.isShortcutDown();
 
+            // todo
             if (shortcutDown && event.isShiftDown() && code == KeyCode.Z) {
                 // 先让 StyleClassedTextArea 撤消，如果撤消之后没有变化，则执行节点的撤消
                 StyleClassedTextArea textArea = subjectController.getSelectedNode().getTextArea();

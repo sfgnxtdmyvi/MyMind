@@ -63,7 +63,7 @@ public class TitleBarController {
     private HBox titleBar;
 
     private AnchorPane root;
-    private Stage mapStage;
+    private Stage stage;
     private MindMap mindMap;
     private SubjectController subjectController;
 
@@ -87,7 +87,7 @@ public class TitleBarController {
     @FXML
     public void openNote() {
         if (mindMap.isEmpty()) {
-            mapStage.hide();
+            stage.hide();
         }
         NoteController.createNote(new Stage());
     }
@@ -344,29 +344,29 @@ public class TitleBarController {
 
     @FXML
     public void minimize() {
-        mapStage.setIconified(true);
+        stage.setIconified(true);
     }
 
     @FXML
     public void maximize() {
         if (maximized) {
             // 还原
-            mapStage.setX(x);
-            mapStage.setY(y);
-            mapStage.setWidth(width);
-            mapStage.setHeight(height);
+            stage.setX(x);
+            stage.setY(y);
+            stage.setWidth(width);
+            stage.setHeight(height);
             maximizeBtn.setText("□");
         } else {
             // 最大化
-            x = mapStage.getX();
-            y = mapStage.getY();
-            width = mapStage.getWidth();
-            height = mapStage.getHeight();
-            mapStage.setX(0);
-            mapStage.setY(0);
+            x = stage.getX();
+            y = stage.getY();
+            width = stage.getWidth();
+            height = stage.getHeight();
+            stage.setX(0);
+            stage.setY(0);
             // UNDECORATED 模式下，setMaximized()会让窗口覆盖整个屏幕（包括任务栏）
-            mapStage.setWidth(SizeConstants.SCREEN_WIDTH);
-            mapStage.setHeight(SizeConstants.SCREEN_HEIGHT);
+            stage.setWidth(SizeConstants.SCREEN_WIDTH);
+            stage.setHeight(SizeConstants.SCREEN_HEIGHT);
             maximizeBtn.setText("❐");
         }
         maximized = !maximized;
@@ -411,7 +411,7 @@ public class TitleBarController {
                 ScheduleUtil.cancelSchedule(mindMap.getFilePath());
             }
         }
-        mapStage.close();
+        stage.close();
     }
 
 }

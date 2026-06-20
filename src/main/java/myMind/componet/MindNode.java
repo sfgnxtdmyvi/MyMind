@@ -24,6 +24,7 @@ import myMind.common.constants.SizeConstants;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MeasureTextUtil;
 import myMind.common.util.MessageUtil;
+import myMind.common.util.StyleClassedTextAreaUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import java.awt.Toolkit;
@@ -72,6 +73,7 @@ public class MindNode extends StackPane {
     public MindNode(byte pos) {
         this.pos = pos;
         StyleClassedTextArea textArea = new StyleClassedTextArea();
+        StyleClassedTextAreaUtil.setInputMethodRequests(textArea);
         textArea.getStyleClass().add("text-area");
         textArea.setMaxWidth(NodeConstants.MIN_TEXTAREA_WIDTH);
         textArea.setWrapText(true);
@@ -193,8 +195,8 @@ public class MindNode extends StackPane {
                         //如果开启了 150% 缩放
                         //截图时，系统记录的是逻辑像素，比如 100x100，按 150% 缩放渲染出来是 150x150
                         //但 awt 剪贴板拿到的是物理像素，就是 150x150，再按 150% 缩放渲染出来是 225x225
-                        imageView.setFitWidth(imageWidth / NodeConstants.SCALE);
-                        imageView.setFitHeight(imageHeight / NodeConstants.SCALE);
+                        imageView.setFitWidth(imageWidth / ConfigConstants.SCALE);
+                        imageView.setFitHeight(imageHeight / ConfigConstants.SCALE);
                         ratio = imageWidth / imageHeight;
                         imageName = FileUtil.saveImage(bufferedImage, imageName);
 

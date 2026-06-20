@@ -1,7 +1,5 @@
 package myMind.common.constants;
 
-import java.awt.GraphicsEnvironment;
-
 public class NodeConstants {
 
     public static final double MIN_NODE_WIDTH = 130;
@@ -23,12 +21,6 @@ public class NodeConstants {
     public static final double NODE_TRANSLATE = MIN_NODE_HEIGHT * TRANSLATE_RATE;
     public static final double FIVE_NODE_TRANSLATE = NODE_TRANSLATE * 5;
     public static final double FOUR_NODE_TRANSLATE = NODE_TRANSLATE * 4;
-
-    public static final double SCALE = GraphicsEnvironment.getLocalGraphicsEnvironment()
-            .getDefaultScreenDevice()
-            .getDefaultConfiguration()
-            .getDefaultTransform()
-            .getScaleX();
 
     public static final int FONT_SIZE = 20;
 

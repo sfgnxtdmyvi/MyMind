@@ -1,5 +1,7 @@
 package myMind.common.constants;
 
+import javafx.stage.Screen;
+
 import java.util.ResourceBundle;
 
 public class ConfigConstants {
@@ -10,6 +12,8 @@ public class ConfigConstants {
     public static final String DIR_NOTES;
     public static final String DIR_SHORTCUTS;
     public static final String DIR_CSS_PROPERTIES;
+
+    public static final double SCALE = Screen.getPrimary().getOutputScaleX();
 
     static {
         ResourceBundle config = ResourceBundle.getBundle("properties/config");

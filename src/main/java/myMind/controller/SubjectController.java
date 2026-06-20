@@ -13,6 +13,7 @@ import myMind.common.constants.SizeConstants;
 import myMind.common.history.CommandHistory;
 import myMind.common.history.DeleteCommand;
 import myMind.common.util.CloneNodeUtil;
+import myMind.common.util.StyleClassedTextAreaUtil;
 import myMind.componet.MindNode;
 import myMind.componet.Subject;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -409,6 +410,7 @@ public class SubjectController {
         int length = originalDoc.getLength();
         if (length == 0) {
             StyleClassedTextArea textArea = new StyleClassedTextArea(true);
+            StyleClassedTextAreaUtil.setInputMethodRequests(textArea);
             textArea.getStyleClass().add("text-area");
             textArea.setWrapText(true);
             textArea.setMaxWidth(NodeConstants.MIN_TEXTAREA_WIDTH);
@@ -423,6 +425,7 @@ public class SubjectController {
         // 基于快照构造新的可编辑文档
         StyleClassedTextArea textArea
                 = new StyleClassedTextArea(new SimpleEditableStyledDocument<>(snapshot), true);
+        StyleClassedTextAreaUtil.setInputMethodRequests(textArea);
         textArea.getStyleClass().add("text-area");
         textArea.setWrapText(true);
         textArea.setPrefHeight(originalTextArea.getPrefHeight());

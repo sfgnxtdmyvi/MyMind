@@ -50,7 +50,7 @@ public class MindMapController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/title-bar.fxml"));
             titleBar = loader.load();
             titleBarController = loader.getController();
-            titleBarController.setMapStage(stage);
+            titleBarController.setStage(stage);
 
             loader = new FXMLLoader(getClass().getResource("/fxml/context-menu.fxml"));
             contextMenu = loader.load();
