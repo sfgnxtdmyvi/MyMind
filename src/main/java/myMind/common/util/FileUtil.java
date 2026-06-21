@@ -12,6 +12,7 @@ import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.FileConstants;
 import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
+import myMind.componet.MapTextArea;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
 import myMind.controller.SubjectController;
@@ -169,10 +170,7 @@ public class FileUtil {
             }
         }
 
-        StyleClassedTextArea textArea = new StyleClassedTextArea(doc, true);
-        StyleClassedTextAreaUtil.setInputMethodRequests(textArea);
-        textArea.getStyleClass().add("text-area");
-        textArea.setWrapText(true);
+        StyleClassedTextArea textArea = new MapTextArea(doc, true);
 
         return textArea;
     }

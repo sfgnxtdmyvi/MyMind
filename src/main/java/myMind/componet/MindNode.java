@@ -24,7 +24,6 @@ import myMind.common.constants.SizeConstants;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MeasureTextUtil;
 import myMind.common.util.MessageUtil;
-import myMind.common.util.StyleClassedTextAreaUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 import java.awt.Toolkit;
@@ -72,12 +71,8 @@ public class MindNode extends StackPane {
 
     public MindNode(byte pos) {
         this.pos = pos;
-        StyleClassedTextArea textArea = new StyleClassedTextArea();
-        StyleClassedTextAreaUtil.setInputMethodRequests(textArea);
-        textArea.getStyleClass().add("text-area");
+        StyleClassedTextArea textArea = new MapTextArea();
         textArea.setMaxWidth(NodeConstants.MIN_TEXTAREA_WIDTH);
-        textArea.setWrapText(true);
-
         // 不能用 this()，它必须在第一行
         // 用 this() 或 super() 时，不能使用任何实例字段
         buildNode(textArea);
@@ -424,7 +419,6 @@ public class MindNode extends StackPane {
             nodeWidth = NodeConstants.MIN_NODE_WIDTH;
             nodeHeight = NodeConstants.MIN_NODE_HEIGHT;
         } else {
-            // todo 宽度bug
             // todo 增加微小宽度时，不改变宽度
             // textArea 宽度 + border + padding
             textWidth = Math.min(MeasureTextUtil.getTextWidth(text), NodeConstants.MAX_TEXTAREA_WIDTH);
