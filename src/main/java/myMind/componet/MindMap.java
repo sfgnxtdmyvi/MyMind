@@ -1,10 +1,7 @@
 package myMind.componet;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
-import javafx.geometry.Bounds;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -13,7 +10,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import lombok.Data;
-import myMind.common.constants.NodeConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.util.FormatUtil;
 import myMind.controller.StyleWheelArcController;
@@ -26,16 +22,18 @@ public class MindMap extends TabPane {
     private Subject subject;
     private String filePath;
 
-    public MindMap() {
+    public MindMap(Boolean addSubject) {
         //关闭按钮的显示策略
         //SELECTED_TAB：只在当前被选中的标签页显示
         //ALL_TABS：在所有标签页上都显示
         //UNAVAILABLE：完全不显示
         setTabClosingPolicy(TabClosingPolicy.SELECTED_TAB);
         setTabDragPolicy(TabDragPolicy.REORDER);
-        getStyleClass().addAll("hide-tabs", "workspace");
-        addSubject();
-        Platform.runLater(() -> subjectController.getSelectedNode().getTextArea().requestFocus());
+        getStyleClass().addAll("workspace");
+        if (addSubject) {
+            // 等 getWidth 有值
+            Platform.runLater(this::addSubject);
+        }
         addListener();
     }
 
@@ -166,7 +164,7 @@ public class MindMap extends TabPane {
     }
 
     /**
-     * 添加导图
+     * 添加主题
      */
     public void addSubject() {
         subjectController = new SubjectController();
@@ -174,32 +172,15 @@ public class MindMap extends TabPane {
         Tab tab = addTab(subjectName);
         tab.setText(subjectName);
         getSelectionModel().select(tab);
-
-        subject.layoutBoundsProperty().addListener(new ChangeListener<>() {
-            @Override
-            public void changed(ObservableValue<? extends Bounds> observable, Bounds oldBounds, Bounds newBounds) {
-                if (newBounds.getHeight() > 0) {
-                    MindNode rootNode = subjectController.getRootNode();
-                    rootNode.setLayoutX((newBounds.getWidth() - NodeConstants.MIN_NODE_WIDTH) / 2);
-                    rootNode.setLayoutY((newBounds.getHeight() - NodeConstants.MIN_NODE_HEIGHT) / 2);
-                    subject.layoutBoundsProperty().removeListener(this);
-                    NodeConstants.CENTER_X = newBounds.getWidth() / 2;
-                    NodeConstants.CENTER_Y = newBounds.getHeight() / 2;
-                }
-            }
-        });
     }
 
     /**
-     * 打开导图
+     * 打开导图时用
      */
     public void addSubject(MindNode node) {
         subjectController = new SubjectController(node);
         String subjectName = "主题-" + (getTabs().size() + 1);
         Tab tab = addTab(subjectName);
-
-        node.setLayoutX(NodeConstants.CENTER_X - node.getPrefWidth() / 2);
-        node.setLayoutY(NodeConstants.CENTER_Y - node.getPrefHeight() / 2);
 
         StyleClassedTextArea textArea = node.getTextArea();
         if (!textArea.getText().isEmpty()) {
@@ -218,13 +199,17 @@ public class MindMap extends TabPane {
         tab.setUserData(subjectController);
         getTabs().add(tab);
 
-        subjectController.getRootNode().getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
+        MindNode rootNode = subjectController.getRootNode();
+        rootNode.setLayoutX((getWidth() - rootNode.getPrefWidth()) / 2);
+        rootNode.setLayoutY((getHeight() - rootNode.getPrefHeight()) / 2);
+        rootNode.getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty()) {
                 tab.setText(newValue);
             } else {
                 tab.setText(subjectName);
             }
         });
+
         return tab;
     }
 

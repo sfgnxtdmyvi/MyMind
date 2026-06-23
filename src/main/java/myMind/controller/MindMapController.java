@@ -44,7 +44,7 @@ public class MindMapController {
             MindMapController.class.getResource("/css/title-bar.css").toExternalForm()
     );
 
-    public void createMindMap(Stage stage) {
+    public void createMindMap(Stage stage, Boolean addSubject) {
         this.stage = stage;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/title-bar.fxml"));
@@ -81,7 +81,7 @@ public class MindMapController {
 
         AnchorPane.setLeftAnchor(titleBar, 0.0);
         AnchorPane.setRightAnchor(titleBar, 0.0);
-        mindMap = new MindMap();
+        mindMap = new MindMap(addSubject);
         root.getChildren().add(mindMap);
         AnchorPane.setTopAnchor(mindMap, titleBar.getHeight());
         AnchorPane.setBottomAnchor(mindMap, 0.0);
@@ -98,7 +98,7 @@ public class MindMapController {
     }
 
     private void addListener() {
-        stage.setUserData(new ShortcutManager(scene, mindMap ,contextMenuController, titleBarController));
+        stage.setUserData(new ShortcutManager(scene, mindMap, contextMenuController, titleBarController));
 
         // 防止被 StyleClassedTextArea 阻止事件
         root.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> {

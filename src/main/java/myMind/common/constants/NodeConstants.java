@@ -28,9 +28,6 @@ public class NodeConstants {
     public static final double RESIZE_THRESHOLD = 10.0;
     public static final double BUTTON_THRESHOLD = 15.0;
 
-    public static double CENTER_X;
-    public static double CENTER_Y;
-
     public static String ADD = "+";
     public static String CLOSE = "×";
     public static String EXPAND_R = "▸";

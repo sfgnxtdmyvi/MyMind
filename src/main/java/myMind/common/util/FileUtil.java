@@ -69,11 +69,6 @@ public class FileUtil {
     }
 
     public static void load(File file, MindMap mindMap) {
-        if (mindMap.getFilePath() != null) {
-            ScheduleUtil.cancelSchedule(mindMap.getFilePath());
-        }
-        mindMap.getTabs().clear();
-
         JSONObject json = readFile(file);
         Stage stage = (Stage) mindMap.getScene().getWindow();
         stage.setTitle(file.getName().substring(0, file.getName().length() - 3));

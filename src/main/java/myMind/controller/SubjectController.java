@@ -1,5 +1,6 @@
 package myMind.controller;
 
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -36,6 +37,7 @@ public class SubjectController {
         // todo 根节点样式
         rootNode.getStyleClass().add("root-node");
         addNodeAndSelect(rootNode);
+        Platform.runLater(() -> rootNode.getTextArea().requestFocus());
     }
 
     public SubjectController(MindNode node) {

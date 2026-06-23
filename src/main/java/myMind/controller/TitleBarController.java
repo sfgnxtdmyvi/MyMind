@@ -15,7 +15,6 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
@@ -25,7 +24,6 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import lombok.Getter;
 import lombok.Setter;
-import myMind.Launch;
 import myMind.common.constants.CssStyle;
 import myMind.common.constants.FileConstants;
 import myMind.common.constants.PosConstants;
@@ -95,7 +93,7 @@ public class TitleBarController {
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
     public void newMindMap() {
-        new MindMapController().createMindMap(new Stage());
+        new MindMapController().createMindMap(new Stage(), true);
     }
 
     @FXML
@@ -107,29 +105,20 @@ public class TitleBarController {
         load(file);
     }
 
-    private void load(File file) {
+    public void load(File file) {
         if (ScheduleUtil.containsScheduled(file.getAbsolutePath())) {
             // todo 跳转过去
             MessageUtil.showMessage("导图已打开");
             return;
         }
 
-        MindNode rootNode = subjectController.getRootNode();
-        if (mindMap.getFilePath() == null && rootNode.isEmpty()) {
-            FileUtil.load(file, mindMap);
-            selectFirstSubject();
-        } else {
-            MindMapController mindMapController = new MindMapController();
-            mindMapController.createMindMap(new Stage());
+        MindMapController mindMapController = new MindMapController();
+        mindMapController.createMindMap(new Stage(), false);
+        // 其他更新 UI 的操作，可能会导致图标不显示，所以放在下一帧执行
+        Platform.runLater(() -> {
             FileUtil.load(file, mindMapController.getMindMap());
             mindMapController.getTitleBarController().selectFirstSubject();
-            // 打开 FileChooser 可能会导致图标设置失败
-            Platform.runLater(() -> {
-                ObservableList<Image> icons = mindMapController.getStage().getIcons();
-                icons.clear();
-                icons.add(new Image(Launch.class.getResourceAsStream("/icon.png")));
-            });
-        }
+        });
     }
 
     @FXML
@@ -172,6 +161,7 @@ public class TitleBarController {
         mindMap.setSubjectController(subjectController);
         mindMap.setSubject(firstSubject);
         this.subjectController = subjectController;
+        subjectController.getRootNode().getTextArea().requestFocus();
         StyleWheelArcController.setSubjectController(subjectController);
     }
 
