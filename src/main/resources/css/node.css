@@ -26,6 +26,20 @@
     -fx-border-color: #aad1ff;
 }
 
+.map-text-area{
+    -fx-background-radius:0;
+    -fx-background-color:white;
+    -fx-focus-color:transparent;
+    -fx-faint-focus-color:transparent;
+    -fx-padding: 0;
+}
+
+.map-text-area .content {
+    -fx-background-radius:0;
+    -fx-background-color:white;
+    -fx-padding:0;
+}
+
 /*——————————————————————————————————按钮——————————————————————————————————*/
 .close-button, .add-button {
     -fx-font-weight: bold;

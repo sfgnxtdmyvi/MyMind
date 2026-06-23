@@ -5,6 +5,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Bounds;
+import javafx.scene.control.IndexRange;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
@@ -14,6 +15,7 @@ import javafx.scene.input.ScrollEvent;
 import lombok.Data;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.SizeConstants;
+import myMind.common.util.FormatUtil;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -237,5 +239,23 @@ public class MindMap extends TabPane {
             }
         }
         return empty;
+    }
+
+    /**
+     * 格式化
+     */
+    public void format() {
+        StyleClassedTextArea textArea = subjectController.getSelectedNode().getTextArea();
+        IndexRange selection = textArea.getSelection();
+        // 没有选中文本则格式化全部，否则只格式化选中的文本
+        if (selection.getLength() == 0) {
+            textArea.selectAll();
+            String selectedText = textArea.getSelectedText();
+            textArea.replaceText(FormatUtil.format(selectedText));
+        } else {
+            String selectedText = textArea.getSelectedText();
+            String formatedText = FormatUtil.format(selectedText);
+            textArea.replaceText(selection.getStart(), selection.getEnd(), formatedText);
+        }
     }
 }

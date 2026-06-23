@@ -10,11 +10,12 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.FileConstants;
+import myMind.common.constants.NodeConstants;
 import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
-import myMind.componet.MapTextArea;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
+import myMind.componet.MapTextArea;
 import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
@@ -54,6 +55,18 @@ public class FileUtil {
     }
 
     //—————————————————————————————————————————打开—————————————————————————————————————————
+    private static JSONObject readFile(File file) {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                content.append(line);
+            }
+        } catch (Exception e) {
+            MessageUtil.showMessage("读取失败：" + e.getMessage());
+        }
+        return JSONObject.parseObject(content.toString());
+    }
 
     public static void load(File file, MindMap mindMap) {
         if (mindMap.getFilePath() != null) {
@@ -83,19 +96,6 @@ public class FileUtil {
         mindMap.setFilePath(absolutePath);
         ScheduleUtil.scheduleAutoSave(absolutePath, mindMap);
         addRecentFile(file);
-    }
-
-    private static JSONObject readFile(File file) {
-        StringBuilder content = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                content.append(line);
-            }
-        } catch (Exception e) {
-            MessageUtil.showMessage("读取失败：" + e.getMessage());
-        }
-        return JSONObject.parseObject(content.toString());
     }
 
     private static void loadChildR(JSONObject json, MindNode parentNode, SubjectController subjectController) {
@@ -171,7 +171,9 @@ public class FileUtil {
         }
 
         StyleClassedTextArea textArea = new MapTextArea(doc, true);
-
+        // 解决奇怪 bug，如果没有手动换行，只有前两行能看到，其他是空白的，点击后，才能正常显示
+        textArea.setMaxWidth(NodeConstants.MAX_TEXTAREA_WIDTH);
+        textArea.layout();
         return textArea;
     }
 
@@ -397,6 +399,7 @@ public class FileUtil {
         }
     }
 
+    //—————————————————————————————————————————批量处理—————————————————————————————————————————
     /**
      * 删除没有任何导图被使用的图片
      */
@@ -468,4 +471,57 @@ public class FileUtil {
         }
     }
 
+    /**
+     * 删除每个节点末尾的句号
+     */
+    public static void deletePeriod() {
+        deletePeriodFile(new File(ConfigConstants.DIR_FILES));
+        MessageUtil.showMessage("处理完毕");
+    }
+
+    private static void deletePeriodFile(File parentFile) {
+        for (File file : parentFile.listFiles()) {
+            if (file.isDirectory()) {
+                deletePeriodFile(file);
+            } else {
+                JSONObject json = readFile(file);
+                for (int i = 0; i < json.size(); i++) {
+                    JSONObject subject = json.getJSONObject(Integer.toString(i));
+                    String text = subject.getString("text");
+                    subject.put("text", FormatUtil.deletePeriod(text));
+                    deletePeriodNodeR(subject.getJSONObject("childrenR"));
+                    deletePeriodNodeL(subject.getJSONObject("childrenL"));
+                }
+                try (FileWriter fw = new FileWriter(file)) {
+                    fw.write(json.toString());
+                } catch (IOException e) {
+                    MessageUtil.showMessage("处理失败：" + e.getMessage());
+                }
+            }
+        }
+    }
+
+    private static void deletePeriodNodeR(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        for (int i = 0; i < json.size(); i++) {
+            JSONObject childJson = json.getJSONObject(Integer.toString(i));
+            String text = childJson.getString("text");
+            childJson.put("text", FormatUtil.deletePeriod(text));
+            deletePeriodNodeR(childJson.getJSONObject("childrenR"));
+        }
+    }
+
+    private static void deletePeriodNodeL(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        for (int i = 0; i < json.size(); i++) {
+            JSONObject childJson = json.getJSONObject(Integer.toString(i));
+            String text = childJson.getString("text");
+            childJson.put("text", FormatUtil.deletePeriod(text));
+            deletePeriodNodeL(childJson.getJSONObject("childrenL"));
+        }
+    }
 }

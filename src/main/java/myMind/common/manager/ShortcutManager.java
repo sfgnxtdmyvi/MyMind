@@ -6,6 +6,7 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import myMind.common.constants.ConfigConstants;
+import myMind.componet.MindMap;
 import myMind.controller.ContextMenuController;
 import myMind.controller.TitleBarController;
 import myMind.common.util.MessageUtil;
@@ -21,36 +22,42 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static javafx.scene.input.KeyCode.*;
+import static javafx.scene.input.KeyCombination.*;
+
 public class ShortcutManager {
     private Map<KeyCombination, ShortcutBinding> keyMap;
 
-    public ShortcutManager(Scene scene, ContextMenuController contextMenuController, TitleBarController titleBarController) {
+    public ShortcutManager(Scene scene, MindMap mindMap, ContextMenuController contextMenuController, TitleBarController titleBarController) {
         keyMap = new HashMap<>();
-        keyMap.put(new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN),
+        keyMap.put(new KeyCodeCombination(C, SHORTCUT_DOWN, SHIFT_DOWN),
                 new ShortcutBinding(contextMenuController::copy, "复制"));
-        keyMap.put(new KeyCodeCombination(KeyCode.X, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN),
+        keyMap.put(new KeyCodeCombination(X, SHORTCUT_DOWN, SHIFT_DOWN),
                 new ShortcutBinding(contextMenuController::cut, "剪切"));
 
-        keyMap.put(new KeyCodeCombination(KeyCode.MINUS, KeyCombination.ALT_DOWN),
+        keyMap.put(new KeyCodeCombination(MINUS, ALT_DOWN),
                 new ShortcutBinding(contextMenuController::collapse, "收起"));
-        keyMap.put(new KeyCodeCombination(KeyCode.EQUALS, KeyCombination.ALT_DOWN),
+        keyMap.put(new KeyCodeCombination(EQUALS, ALT_DOWN),
                 new ShortcutBinding(contextMenuController::expand, "展开"));
 
-        keyMap.put(new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.ALT_DOWN),
+        keyMap.put(new KeyCodeCombination(BACK_SPACE, ALT_DOWN),
                 new ShortcutBinding(contextMenuController::delete, "删除"));
-        keyMap.put(new KeyCodeCombination(KeyCode.BACK_SPACE, KeyCombination.SHORTCUT_DOWN, KeyCombination.ALT_DOWN),
+        keyMap.put(new KeyCodeCombination(BACK_SPACE, SHORTCUT_DOWN, ALT_DOWN),
                 new ShortcutBinding(contextMenuController::deleteRemainChildren, "删除（保留子节点）"));
-        keyMap.put(new KeyCodeCombination(KeyCode.DELETE, KeyCombination.ALT_DOWN),
+        keyMap.put(new KeyCodeCombination(DELETE, ALT_DOWN),
                 new ShortcutBinding(contextMenuController::deleteEmpty, "删除空白节点"));
 
-        keyMap.put(new KeyCodeCombination(KeyCode.RIGHT, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+        keyMap.put(new KeyCodeCombination(RIGHT, SHIFT_DOWN, ALT_DOWN),
                 new ShortcutBinding(titleBarController::moveRight, "右移"));
-        keyMap.put(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+        keyMap.put(new KeyCodeCombination(LEFT, SHIFT_DOWN, ALT_DOWN),
                 new ShortcutBinding(titleBarController::moveLeft, "左移"));
-        keyMap.put(new KeyCodeCombination(KeyCode.UP, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+        keyMap.put(new KeyCodeCombination(UP, SHIFT_DOWN, ALT_DOWN),
                 new ShortcutBinding(titleBarController::moveUp, "上移"));
-        keyMap.put(new KeyCodeCombination(KeyCode.DOWN, KeyCombination.SHIFT_DOWN, KeyCombination.ALT_DOWN),
+        keyMap.put(new KeyCodeCombination(DOWN, SHIFT_DOWN, ALT_DOWN),
                 new ShortcutBinding(titleBarController::moveDown, "下移"));
+
+        keyMap.put(new KeyCodeCombination(L, SHORTCUT_DOWN, ALT_DOWN),
+                new ShortcutBinding(mindMap::format, "格式化"));
         load();
 
         // getAccelerators 在目标节点处理完之后，且不消费事件时才触发

@@ -9,7 +9,6 @@ import javafx.scene.shape.QuadCurve;
 import lombok.Data;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.PosConstants;
-import myMind.common.constants.SizeConstants;
 import myMind.common.history.CommandHistory;
 import myMind.common.history.DeleteCommand;
 import myMind.common.util.CloneNodeUtil;
@@ -149,7 +148,7 @@ public class SubjectController {
         }
 
         setSubjectTranslateY(-NodeConstants.NODE_TRANSLATE);
-//        adjustTranslate(siblingNode);
+        adjustTranslate(siblingNode);
     }
 
     /**
@@ -424,6 +423,7 @@ public class SubjectController {
                 = new MapTextArea(new SimpleEditableStyledDocument<>(snapshot), true);
         textArea.setPrefHeight(originalTextArea.getPrefHeight());
         textArea.setMaxWidth(originalTextArea.getMaxWidth());
+        textArea.layout();
 
         return textArea;
     }
@@ -1031,11 +1031,11 @@ public class SubjectController {
     public void adjustTranslate(MindNode node) {
         Point2D sceneCoords = node.localToScene(0, 0);
         double nodeY = sceneCoords.getY();
-        if (nodeY < SizeConstants.SUBJECT_MARGIN) {
-            setSubjectTranslateY(-nodeY + SizeConstants.SUBJECT_MARGIN);
-        } else if (node.getScene().getHeight() < nodeY + node.getPrefHeight() + SizeConstants.SUBJECT_MARGIN) {
+        if (nodeY < 0) {
+            setSubjectTranslateY(-nodeY);
+        } else if (node.getScene().getHeight() < nodeY + node.getPrefHeight()) {
             double dx = nodeY + node.getPrefHeight() - node.getScene().getHeight();
-            setSubjectTranslateY(-dx - SizeConstants.SUBJECT_MARGIN);
+            setSubjectTranslateY(-dx);
         }
     }
 

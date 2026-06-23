@@ -98,7 +98,7 @@ public class MindMapController {
     }
 
     private void addListener() {
-        stage.setUserData(new ShortcutManager(scene, contextMenuController, titleBarController));
+        stage.setUserData(new ShortcutManager(scene, mindMap ,contextMenuController, titleBarController));
 
         // 防止被 StyleClassedTextArea 阻止事件
         root.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> {

@@ -190,6 +190,11 @@ public class TitleBarController {
         FileUtil.deleteUnusefulImage();
     }
 
+    @FXML
+    public void deletePeriod() {
+        FileUtil.deletePeriod();
+    }
+
     //—————————————————————————————————————————添加—————————————————————————————————————————
     @FXML
     private void addSubject() {

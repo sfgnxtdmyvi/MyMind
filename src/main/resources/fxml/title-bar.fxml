@@ -10,7 +10,6 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.image.ImageView?>
 
-<?import javafx.scene.control.CheckMenuItem?>
 <HBox xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="myMind.controller.TitleBarController"
@@ -38,6 +37,7 @@
             <SeparatorMenuItem/>
 
             <MenuItem onAction="#deleteUnusefulImage" text="清除无用图片"/>
+            <MenuItem onAction="#deletePeriod" text="删除节点末尾句号"/>
         </Menu>
 
         <Menu text="编辑">

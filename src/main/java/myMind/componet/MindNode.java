@@ -20,7 +20,6 @@ import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.NodeEvent;
 import myMind.common.constants.PosConstants;
-import myMind.common.constants.SizeConstants;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MeasureTextUtil;
 import myMind.common.util.MessageUtil;
@@ -386,16 +385,16 @@ public class MindNode extends StackPane {
             // 与 scene 左边的距离
             Point2D sceneCoords = localToScene(0, 0);
             double nodeX = sceneCoords.getX();
-            if (nodeX < SizeConstants.SUBJECT_MARGIN) {
-                setSubjectTranslateX.accept(-nodeX + SizeConstants.SUBJECT_MARGIN);
+            if (nodeX < 0) {
+                setSubjectTranslateX.accept(-nodeX);
             }
             onAction.accept(NodeEvent.ADJUST_L);
         } else {
             Point2D sceneCoords = localToScene(0, 0);
             double nodeX = sceneCoords.getX();
-            if (getScene().getWidth() < nodeX + getPrefWidth() + SizeConstants.SUBJECT_MARGIN) {
+            if (getScene().getWidth() < nodeX + getPrefWidth()) {
                 double dx = nodeX + getPrefWidth() - getScene().getWidth();
-                setSubjectTranslateX.accept(-dx - SizeConstants.SUBJECT_MARGIN);
+                setSubjectTranslateX.accept(-dx);
             }
             onAction.accept(NodeEvent.ADJUST_R);
         }
@@ -429,7 +428,11 @@ public class MindNode extends StackPane {
             }
 
             // textArea 高度 + border + padding [+ image 高度 + border]
-            textHeight = MeasureTextUtil.getTextHeight() * 1.023;
+            if (getPrefWidth() >= NodeConstants.MAX_TEXTAREA_WIDTH && !text.contains("\n")) {
+                textHeight = MeasureTextUtil.getTextHeight() * 1.06;
+            } else {
+                textHeight = MeasureTextUtil.getTextHeight() * 1.022;
+            }
             nodeHeight = textHeight + NodeConstants.BORDER_AND_PADDING;
             if (imageVisible) {
                 nodeHeight += imageView.getFitHeight() + 2.6;
