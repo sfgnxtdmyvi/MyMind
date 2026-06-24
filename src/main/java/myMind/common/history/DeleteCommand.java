@@ -65,7 +65,7 @@ public class DeleteCommand implements Command {
                 subjectController.refreshLinesR();
                 MindNode lastChildR = deletedNode.getLastChildR();
                 subjectController.setSelectedNode(lastChildR);
-                subjectController.adjustTranslate(lastChildR);
+                subjectController.adjustTranslateY(lastChildR);
             } else {
                 List<MindNode> childrenL = deletedNode.getChildrenL();
                 subjectController.deleteL(deletedNode);
@@ -92,7 +92,7 @@ public class DeleteCommand implements Command {
                 subjectController.refreshLinesL();
                 MindNode lastChildL = deletedNode.getLastChildL();
                 subjectController.setSelectedNode(lastChildL);
-                subjectController.adjustTranslate(lastChildL);
+                subjectController.adjustTranslateY(lastChildL);
             }
         } else {
             deleteNotRemain();
@@ -119,7 +119,7 @@ public class DeleteCommand implements Command {
             subjectController.adjustChildrenYL();
             subjectController.refreshLinesL();
         }
-        subjectController.adjustTranslate(subjectController.getSelectedNode());
+        subjectController.adjustTranslateY(subjectController.getSelectedNode());
     }
 
     @Override

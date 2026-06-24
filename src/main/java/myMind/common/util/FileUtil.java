@@ -103,7 +103,7 @@ public class FileUtil {
 
             MindNode node = buildNode(childrenJson, PosConstants.RIGHT);
             parentNode.addChildR(node);
-            subjectController.addNodeAndSelect(node);
+            subjectController.addNode(node);
 
             loadChildR(childrenJson.getJSONObject("childrenR"), node, subjectController);
         }
@@ -119,7 +119,7 @@ public class FileUtil {
 
             MindNode node = buildNode(childrenJson, PosConstants.LEFT);
             parentNode.addChildL(node);
-            subjectController.addNodeAndSelect(node);
+            subjectController.addNode(node);
 
             loadChildL(childrenJson.getJSONObject("childrenL"), node, subjectController);
         }
@@ -349,6 +349,7 @@ public class FileUtil {
     }
 
     public static void addRecentFile(File file) {
+        //head 123 tail
         // 导图可能在多级目录下，不能通过根目录名 + file.getName()读取
         String string = file.getName().substring(0, file.getName().length() - 3) + "=" + file.getAbsolutePath();
         recentFiles.remove(string);

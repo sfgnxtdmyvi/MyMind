@@ -26,7 +26,6 @@ import lombok.Getter;
 import lombok.Setter;
 import myMind.common.constants.CssStyle;
 import myMind.common.constants.FileConstants;
-import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.manager.CssManager;
 import myMind.common.util.FileUtil;
@@ -39,7 +38,6 @@ import myMind.componet.Subject;
 import java.io.File;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 
 @Setter
 public class TitleBarController {
@@ -161,7 +159,6 @@ public class TitleBarController {
         mindMap.setSubjectController(subjectController);
         mindMap.setSubject(firstSubject);
         this.subjectController = subjectController;
-        subjectController.getRootNode().getTextArea().requestFocus();
         StyleWheelArcController.setSubjectController(subjectController);
     }
 
@@ -227,7 +224,7 @@ public class TitleBarController {
         subjectController.batchAddSibling();
     }
 
-    //—————————————————————————————————————————显示—————————————————————————————————————————
+    //—————————————————————————————————————————样式—————————————————————————————————————————
     @FXML
     public void change() {
         if (root.getStyle().isEmpty()) {
@@ -262,72 +259,22 @@ public class TitleBarController {
 
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
     public void moveRight() {
-        MindNode selectedNode = subjectController.getSelectedNode();
-        // 左边节点 -> 父节点
-        // 根、右边节点 -> 中间的右子节点
-        if (selectedNode.getPos() == PosConstants.LEFT) {
-            subjectController.setSelectedNode(selectedNode.getParentNode());
-        } else {
-            List<MindNode> children = selectedNode.getChildrenR();
-            if (!children.isEmpty()) {
-                subjectController.setSelectedNode(children.get(children.size() / 2));
-            }
-        }
+        subjectController.moveRight();
     }
 
     public void moveLeft() {
-        MindNode selectedNode = subjectController.getSelectedNode();
-        // 父节点 <- 右边节点
-        // 中间的左子节点 <- 左边、根节点
-        if (selectedNode.getPos() == PosConstants.RIGHT) {
-            subjectController.setSelectedNode(selectedNode.getParentNode());
-        } else {
-            List<MindNode> children = selectedNode.getChildrenL();
-            if (!children.isEmpty()) {
-                subjectController.setSelectedNode(children.get(children.size() / 2));
-            }
-        }
+        subjectController.moveLeft();
     }
 
     public void moveUp() {
-        MindNode selectedNode = subjectController.getSelectedNode();
-        if (selectedNode.getPos() == PosConstants.MIDDLE) {
-            return;
-        }
-
-        MindNode parentModel = selectedNode.getParentNode();
-        List<MindNode> children;
-        if (selectedNode.getPos() == PosConstants.RIGHT) {
-            children = parentModel.getChildrenR();
-        } else {
-            children = parentModel.getChildrenL();
-        }
-        int index = children.indexOf(selectedNode);
-        if (index != 0) {
-            subjectController.setSelectedNode(children.get(index - 1));
-        }
+        subjectController.moveUp();
     }
 
     public void moveDown() {
-        MindNode selectedNode = subjectController.getSelectedNode();
-        if (selectedNode.getPos() == PosConstants.MIDDLE) {
-            return;
-        }
-
-        MindNode parentModel = selectedNode.getParentNode();
-        List<MindNode> children;
-        if (selectedNode.getPos() == PosConstants.RIGHT) {
-            children = parentModel.getChildrenR();
-        } else {
-            children = parentModel.getChildrenL();
-        }
-        int index = children.indexOf(selectedNode);
-        if (index != children.size() - 1) {
-            subjectController.setSelectedNode(children.get(index + 1));
-        }
+        subjectController.moveDown();
     }
 
-    //—————————————————————————————————————————最小化、最大化、关闭—————————————————————————————————————————
+    //—————————————————————————————————————————标题栏—————————————————————————————————————————
     // todo 调整尺寸
     // todo 移动窗口
     @FXML

@@ -6,6 +6,10 @@
     -fx-background-color: white;
 }
 
+.selected-node {
+    -fx-border-color: #e6af88;
+}
+
 .nodeImage {
     -fx-border-width: 1;
     -fx-border-color: #82a7f3;

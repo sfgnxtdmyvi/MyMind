@@ -36,14 +36,21 @@ public class SubjectController {
         rootNode = new MindNode(PosConstants.MIDDLE);
         // todo 根节点样式
         rootNode.getStyleClass().add("root-node");
-        addNodeAndSelect(rootNode);
-        Platform.runLater(() -> rootNode.getTextArea().requestFocus());
+        addNode(rootNode);
+        Platform.runLater(() -> {
+            selectedNode = rootNode;
+            selectedNode.getTextArea().requestFocus();
+        });
     }
 
     public SubjectController(MindNode node) {
         rootNode = node;
         rootNode.getStyleClass().add("root-node");
-        addNodeAndSelect(node);
+        addNode(node);
+        Platform.runLater(() -> {
+            selectedNode = rootNode;
+            selectedNode.getTextArea().requestFocus();
+        });
     }
 
     //———————————————————————————————————————————新增———————————————————————————————————————————
@@ -101,7 +108,7 @@ public class SubjectController {
 
         adjustChildrenYR();
         refreshLinesR();
-        adjustTranslate(childNode);
+        adjustTranslateY(childNode);
     }
 
     public void addChildL() {
@@ -118,7 +125,7 @@ public class SubjectController {
 
         adjustChildrenYL();
         refreshLinesL();
-        adjustTranslate(childNode);
+        adjustTranslateY(childNode);
     }
 
     public void addSibling() {
@@ -150,7 +157,7 @@ public class SubjectController {
         }
 
         setSubjectTranslateY(-NodeConstants.NODE_TRANSLATE);
-        adjustTranslate(siblingNode);
+        adjustTranslateY(siblingNode);
     }
 
     /**
@@ -260,7 +267,7 @@ public class SubjectController {
         addNode(childNode);
     }
 
-    private void addNode(MindNode node) {
+    public void addNode(MindNode node) {
         subject.addNode(node);
         setOnAction(node);
     }
@@ -459,7 +466,7 @@ public class SubjectController {
             adjustChildrenYL();
             refreshLinesL();
         }
-        adjustTranslate(selectedNode);
+        adjustTranslateY(selectedNode);
     }
 
     /**
@@ -504,7 +511,7 @@ public class SubjectController {
 
             adjustL(cloneNode);
         }
-        adjustTranslate(cloneNode);
+        adjustTranslateY(cloneNode);
         setSelectedNode(cloneNode);
     }
 
@@ -550,7 +557,7 @@ public class SubjectController {
 
             adjustL(cloneNode);
         }
-        adjustTranslate(cloneNode);
+        adjustTranslateY(cloneNode);
         setSelectedNode(cloneNode);
     }
 
@@ -1030,14 +1037,14 @@ public class SubjectController {
     /**
      * 调整节点与 scene 下面和上面的间距
      */
-    public void adjustTranslate(MindNode node) {
+    public void adjustTranslateY(MindNode node) {
         Point2D sceneCoords = node.localToScene(0, 0);
         double nodeY = sceneCoords.getY();
         if (nodeY < 0) {
             setSubjectTranslateY(-nodeY);
         } else if (node.getScene().getHeight() < nodeY + node.getPrefHeight()) {
-            double dx = nodeY + node.getPrefHeight() - node.getScene().getHeight();
-            setSubjectTranslateY(-dx);
+            double dy = nodeY + node.getPrefHeight() - node.getScene().getHeight();
+            setSubjectTranslateY(-dy);
         }
     }
 
@@ -1151,11 +1158,152 @@ public class SubjectController {
         return curve;
     }
 
-    //———————————————————————————————————————————其他———————————————————————————————————————————
+    //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
     public void setSelectedNode(MindNode node) {
-        this.selectedNode = node;
+        selectedNode.getStyleClass().remove("selected-node");
+        selectedNode = node;
+        selectedNode.getStyleClass().add("selected-node");
         selectedNode.getTextArea().requestFocus();
     }
+
+    public void moveRight() {
+        // 左边节点 -> 父节点
+        // 根、右边节点 -> 中间的右子节点
+        if (selectedNode.getPos() == PosConstants.LEFT) {
+            setSelectedNode(selectedNode.getParentNode());
+        } else {
+            List<MindNode> children = selectedNode.getChildrenR();
+            if (!children.isEmpty()) {
+                setSelectedNode(children.get(children.size() / 2));
+            }
+        }
+    }
+
+    public void moveLeft() {
+        // 父节点 <- 右边节点
+        // 中间的左子节点 <- 左边、根节点
+        if (selectedNode.getPos() == PosConstants.RIGHT) {
+            setSelectedNode(selectedNode.getParentNode());
+        } else {
+            List<MindNode> children = selectedNode.getChildrenL();
+            if (!children.isEmpty()) {
+                setSelectedNode(children.get(children.size() / 2));
+            }
+        }
+    }
+
+    public void moveUp() {
+        if (selectedNode.getPos() == PosConstants.MIDDLE) {
+            return;
+        }
+
+        MindNode parentNode = selectedNode.getParentNode();
+        if (selectedNode.getPos() == PosConstants.RIGHT) {
+            List<MindNode> childrenR = parentNode.getChildrenR();
+            int index = childrenR.indexOf(selectedNode);
+            // 有上一个兄弟就移动到上一个兄弟
+            if (index != 0) {
+                setSelectedNode(childrenR.get(index - 1));
+                adjustTranslateY(selectedNode);
+            }
+            //    叔 - 堂兄弟
+            // 爷      最下面的堂兄弟（目标）
+            //    父 - 当前
+            else {
+                MindNode grandPaNode = parentNode.getParentNode();
+                if (grandPaNode == null) {
+                    return;
+                }
+                List<MindNode> uncles = grandPaNode.getChildrenR();
+                index = uncles.indexOf(parentNode);
+                if (index != 0) {
+                    MindNode uncle = uncles.get(index - 1);
+                    List<MindNode> cousin = uncle.getChildrenR();
+                    if (!cousin.isEmpty()) {
+                        setSelectedNode(cousin.get(cousin.size() - 1));
+                        adjustTranslateY(selectedNode);
+                    }
+                }
+            }
+        } else {
+            List<MindNode> childrenL = parentNode.getChildrenL();
+            int index = childrenL.indexOf(selectedNode);
+            if (index != 0) {
+                setSelectedNode(childrenL.get(index - 1));
+                adjustTranslateY(selectedNode);
+            } else {
+                MindNode grandPaNode = parentNode.getParentNode();
+                if (grandPaNode == null) {
+                    return;
+                }
+                List<MindNode> uncles = grandPaNode.getChildrenL();
+                index = uncles.indexOf(parentNode);
+                if (index != 0) {
+                    MindNode uncle = uncles.get(index - 1);
+                    List<MindNode> cousin = uncle.getChildrenL();
+                    if (!cousin.isEmpty()) {
+                        setSelectedNode(cousin.get(cousin.size() - 1));
+                        adjustTranslateY(selectedNode);
+                    }
+                }
+            }
+        }
+    }
+
+    public void moveDown() {
+        if (selectedNode.getPos() == PosConstants.MIDDLE) {
+            return;
+        }
+
+        MindNode parentNode = selectedNode.getParentNode();
+        if (selectedNode.getPos() == PosConstants.RIGHT) {
+            List<MindNode> childrenR = parentNode.getChildrenR();
+            int index = childrenR.indexOf(selectedNode);
+            if (index != childrenR.size() - 1) {
+                setSelectedNode(childrenR.get(index + 1));
+                adjustTranslateY(selectedNode);
+            } else {
+                MindNode grandPaNode = parentNode.getParentNode();
+                if (grandPaNode == null) {
+                    return;
+                }
+                List<MindNode> uncles = grandPaNode.getChildrenR();
+                index = uncles.indexOf(parentNode);
+                if (index != uncles.size() - 1) {
+                    MindNode uncle = uncles.get(index + 1);
+                    List<MindNode> cousin = uncle.getChildrenR();
+                    if (!cousin.isEmpty()) {
+                        setSelectedNode(cousin.get(0));
+                        adjustTranslateY(selectedNode);
+                    }
+                }
+            }
+        } else {
+            List<MindNode> childrenL = parentNode.getChildrenL();
+            int index = childrenL.indexOf(selectedNode);
+            if (index != childrenL.size() - 1) {
+                setSelectedNode(childrenL.get(index + 1));
+                adjustTranslateY(selectedNode);
+            } else {
+                MindNode grandPaNode = parentNode.getParentNode();
+                if (grandPaNode == null) {
+                    return;
+                }
+                List<MindNode> uncles = grandPaNode.getChildrenL();
+                index = uncles.indexOf(parentNode);
+                if (index != uncles.size() - 1) {
+                    MindNode uncle = uncles.get(index + 1);
+                    List<MindNode> cousin = uncle.getChildrenL();
+                    if (!cousin.isEmpty()) {
+                        setSelectedNode(cousin.get(0));
+                        adjustTranslateY(selectedNode);
+                    }
+                }
+            }
+        }
+    }
+
+    //———————————————————————————————————————————其他———————————————————————————————————————————
 
     public void undo() {
         commandHistory.undo();
