@@ -1017,21 +1017,21 @@ public class SubjectController {
     }
 
     public void adjustChildrenSize() {
-        rootNode.adjustSize();
+        rootNode.adjustSize(true);
         adjustChildrenSizeR(rootNode);
         adjustChildrenSizeL(rootNode);
     }
 
     private void adjustChildrenSizeR(MindNode MindNode) {
         for (MindNode childNode : MindNode.getChildrenR()) {
-            childNode.adjustSize();
+            childNode.adjustSize(true);
             adjustChildrenSizeR(childNode);
         }
     }
 
     private void adjustChildrenSizeL(MindNode MindNode) {
         for (MindNode childNode : MindNode.getChildrenL()) {
-            childNode.adjustSize();
+            childNode.adjustSize(true);
             adjustChildrenSizeL(childNode);
         }
     }

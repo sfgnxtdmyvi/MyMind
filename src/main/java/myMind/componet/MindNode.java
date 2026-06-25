@@ -194,7 +194,7 @@ public class MindNode extends StackPane {
                         ratio = imageWidth / imageHeight;
                         imageName = FileUtil.saveImage(bufferedImage, imageName);
 
-                        adjust();
+                        adjust(true);
                     } catch (UnsupportedFlavorException | IOException ex) {
                         MessageUtil.showMessage("粘贴失败：" + ex.getMessage());
                     }
@@ -206,13 +206,13 @@ public class MindNode extends StackPane {
 
         // 文本变化调整节点大小
         textArea.textProperty()
-                .addListener((obs, oldText, newText) -> adjust());
+                .addListener((obs, oldText, newText) -> adjust(false));
 
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
                 // 清除选区，恢复背景色
                 textArea.deselect();
-                adjustSize();
+                adjustSize(true);
             }
         });
     }
@@ -320,7 +320,7 @@ public class MindNode extends StackPane {
             imageContainer.setManaged(false);
             FileUtil.deleteImage(imageName);
             imageName = null;
-            adjust();
+            adjust(true);
         });
 
         // 缩放
@@ -341,8 +341,7 @@ public class MindNode extends StackPane {
                 imageView.setFitWidth(imageWidth);
                 // 根据宽度的变化量，按宽高比计算高度
                 imageView.setFitHeight(imageWidth / ratio);
-
-                adjust();
+                adjust(true);
             }
         });
 
@@ -373,10 +372,10 @@ public class MindNode extends StackPane {
     /**
      * 调整尺寸和位置
      */
-    public void adjust() {
+    public void adjust(boolean exact) {
         double oldWidth = getPrefWidth();
         double oldHeight = getPrefHeight();
-        adjustSize();
+        adjustSize(exact);
         setSubjectTranslateY.accept(-(getPrefHeight() - oldHeight) * 0.5);
 
         // 调整位置
@@ -402,8 +401,9 @@ public class MindNode extends StackPane {
 
     /**
      * 根据内容调整尺寸
+     * @param exact 是否精确调整宽度，新增文本时不精准调整，使得增加微小宽度时，不改变宽度
      */
-    public void adjustSize() {
+    public void adjustSize(boolean exact) {
         String text = textArea.getText();
         boolean imageVisible = imageName != null;
         double nodeWidth;
@@ -418,9 +418,12 @@ public class MindNode extends StackPane {
             nodeWidth = NodeConstants.MIN_NODE_WIDTH;
             nodeHeight = NodeConstants.MIN_NODE_HEIGHT;
         } else {
-            // todo 增加微小宽度时，不改变宽度
             // textArea 宽度 + border + padding
-            textWidth = Math.min(MeasureTextUtil.getTextWidth(text), NodeConstants.MAX_TEXTAREA_WIDTH);
+            textWidth = MeasureTextUtil.getTextWidth(text);
+            if (!exact) {
+                textWidth = textWidth > textArea.getMaxWidth() ? textWidth + 50 : textArea.getMaxWidth();
+            }
+            textWidth = Math.min(textWidth, NodeConstants.MAX_TEXTAREA_WIDTH);
             nodeWidth = Math.max(NodeConstants.MIN_NODE_WIDTH, (textWidth + NodeConstants.BORDER_AND_PADDING) * 1.01);
             if (imageVisible) {
                 // 文本宽度 < 图片宽度时，宽度 = 图片宽度 + border + padding

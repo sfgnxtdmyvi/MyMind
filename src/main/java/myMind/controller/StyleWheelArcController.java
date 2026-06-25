@@ -78,6 +78,8 @@ public class StyleWheelArcController {
             }
         }
         textArea.setStyle(start, selection.getEnd(), styles);
+        textArea.deselect();
+        styleWheel.getParent().setVisible(false);
     }
 
     //—————————————————————————————————————————轮盘悬浮行为—————————————————————————————————————————
