@@ -9,6 +9,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.StackPane;
 import lombok.Data;
 import myMind.common.constants.SizeConstants;
 import myMind.common.util.FormatUtil;
@@ -200,8 +201,9 @@ public class MindMap extends TabPane {
         getTabs().add(tab);
 
         MindNode rootNode = subjectController.getRootNode();
+        StackPane tabHeaderArea = (StackPane) lookup(".tab-header-area");
         rootNode.setLayoutX((getWidth() - rootNode.getPrefWidth()) / 2);
-        rootNode.setLayoutY((getHeight() - rootNode.getPrefHeight()) / 2);
+        rootNode.setLayoutY((getHeight() - tabHeaderArea.getHeight() - rootNode.getPrefHeight()) / 2);
         rootNode.getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty()) {
                 tab.setText(newValue);

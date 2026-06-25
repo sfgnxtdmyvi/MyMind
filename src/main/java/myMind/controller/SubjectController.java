@@ -5,6 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.QuadCurve;
 import lombok.Data;
@@ -14,6 +15,7 @@ import myMind.common.history.CommandHistory;
 import myMind.common.history.DeleteCommand;
 import myMind.common.util.CloneNodeUtil;
 import myMind.componet.MapTextArea;
+import myMind.componet.MindMap;
 import myMind.componet.MindNode;
 import myMind.componet.Subject;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -1038,13 +1040,29 @@ public class SubjectController {
      * 调整节点与 scene 下面和上面的间距
      */
     public void adjustTranslateY(MindNode node) {
+        // 定位到 tabHeaderArea 下面的位置
+        MindMap mindMap = (MindMap) getSubject().getParent().getParent();
+        StackPane tabHeaderArea = (StackPane) mindMap.lookup(".tab-header-area");
+        Point2D mindMapPoint = mindMap.localToScene(0, tabHeaderArea.getHeight());
+
         Point2D sceneCoords = node.localToScene(0, 0);
         double nodeY = sceneCoords.getY();
-        if (nodeY < 0) {
-            setSubjectTranslateY(-nodeY);
+        if (nodeY < mindMapPoint.getY()) {
+            setSubjectTranslateY(mindMapPoint.getY() - nodeY);
         } else if (node.getScene().getHeight() < nodeY + node.getPrefHeight()) {
             double dy = nodeY + node.getPrefHeight() - node.getScene().getHeight();
             setSubjectTranslateY(-dy);
+        }
+    }
+
+    public void adjustTranslateX(MindNode node) {
+        Point2D sceneCoords = node.localToScene(0, 0);
+        double nodeX = sceneCoords.getX();
+        if (nodeX < 0) {
+            setSubjectTranslateX(-nodeX);
+        } else if (node.getScene().getWidth() < nodeX + node.getPrefWidth()) {
+            double dx = nodeX + node.getPrefWidth() - node.getScene().getWidth();
+            setSubjectTranslateX(-dx);
         }
     }
 
@@ -1171,10 +1189,12 @@ public class SubjectController {
         // 根、右边节点 -> 中间的右子节点
         if (selectedNode.getPos() == PosConstants.LEFT) {
             setSelectedNode(selectedNode.getParentNode());
+            adjustTranslateX(selectedNode);
         } else {
             List<MindNode> children = selectedNode.getChildrenR();
             if (!children.isEmpty()) {
                 setSelectedNode(children.get(children.size() / 2));
+                adjustTranslateX(selectedNode);
             }
         }
     }
@@ -1184,10 +1204,12 @@ public class SubjectController {
         // 中间的左子节点 <- 左边、根节点
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             setSelectedNode(selectedNode.getParentNode());
+            adjustTranslateX(selectedNode);
         } else {
             List<MindNode> children = selectedNode.getChildrenL();
             if (!children.isEmpty()) {
                 setSelectedNode(children.get(children.size() / 2));
+                adjustTranslateX(selectedNode);
             }
         }
     }
