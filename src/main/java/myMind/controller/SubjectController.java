@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -13,6 +14,8 @@ import myMind.common.constants.NodeConstants;
 import myMind.common.constants.PosConstants;
 import myMind.common.history.CommandHistory;
 import myMind.common.history.DeleteCommand;
+import myMind.common.manager.Quote;
+import myMind.common.manager.QuoteManager;
 import myMind.common.util.CloneNodeUtil;
 import myMind.componet.MapTextArea;
 import myMind.componet.MindMap;
@@ -24,6 +27,7 @@ import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -277,7 +281,45 @@ public class SubjectController {
     private void setOnAction(MindNode node) {
         node.setOnAction(event -> {
             switch (event) {
-                case SELECT -> setSelectedNode(node);
+                case CLICK -> {
+                    if (QuoteManager.isQuoting()) {
+                        QuoteManager.setQuoting(false);
+                        MindNode quotedNode = QuoteManager.getSrcNode();
+
+                        // 添加引用
+                        MindMap mindMap = getMindMap();
+                        quotedNode.setQuote(new Quote(mindMap.getSelectionModel().getSelectedIndex(), node));
+                        StyleClassedTextArea textArea = quotedNode.getTextArea();
+                        textArea.setStyle(0, textArea.getText().length(), Collections.singletonList("quote"));
+
+                        // 回到原位
+                        mindMap.getSelectionModel().select(QuoteManager.getSubjectIndex());
+                        subject.setTranslateX(QuoteManager.getSubjectTranslateX());
+                        subject.setTranslateY(QuoteManager.getSubjectTranslateY());
+                    } else {
+                        setSelectedNode(node);
+                    }
+                }
+                case JUMP -> {
+                    if (node.getQuote() != null) {
+                        Quote quote = node.getQuote();
+                        MindMap mindMap = getMindMap();
+
+                        // 记录当前位置
+                        QuoteManager.setSubjectIndex(mindMap.getSelectionModel().getSelectedIndex());
+                        QuoteManager.setMindMap(mindMap);
+                        Subject subject = getSubject();
+                        QuoteManager.setSubjectTranslateX(subject.getTranslateX());
+                        QuoteManager.setSubjectTranslateY(subject.getTranslateY());
+
+                        // 跳转过去
+                        mindMap.getSelectionModel().select(quote.getSubjectIndex());
+                        Tab tab = mindMap.getTabs().get(quote.getSubjectIndex());
+                        SubjectController subjectController = (SubjectController) tab.getUserData();
+                        subjectController.toCenter(quote.getMindNode());
+                        subjectController.setSelectedNode(quote.getMindNode());
+                    }
+                }
 
                 // 粘贴到选中节点上方
                 case PASTE_SIBLING -> {
@@ -334,6 +376,10 @@ public class SubjectController {
 
         node.setSetSubjectTranslateY(this::setSubjectTranslateY);
         node.setSetSubjectTranslateX(this::setSubjectTranslateX);
+    }
+
+    public MindMap getMindMap() {
+        return (MindMap) getSubject().getParent().getParent();
     }
 
     private void setOnActionChildrenR(MindNode cloneNode) {
@@ -1041,7 +1087,7 @@ public class SubjectController {
      */
     public void adjustTranslateY(MindNode node) {
         // 定位到 tabHeaderArea 下面的位置
-        MindMap mindMap = (MindMap) getSubject().getParent().getParent();
+        MindMap mindMap = getMindMap();
         StackPane tabHeaderArea = (StackPane) mindMap.lookup(".tab-header-area");
         Point2D mindMapPoint = mindMap.localToScene(0, tabHeaderArea.getHeight());
 
@@ -1063,6 +1109,28 @@ public class SubjectController {
         } else if (node.getScene().getWidth() < nodeX + node.getPrefWidth()) {
             double dx = nodeX + node.getPrefWidth() - node.getScene().getWidth();
             setSubjectTranslateX(-dx);
+        }
+    }
+
+    public void toCenter(MindNode node) {
+        Point2D sceneCoords = node.localToScene(0, 0);
+        double nodeX = sceneCoords.getX();
+        double nodeY = sceneCoords.getY();
+        MindMap mindMap = getMindMap();
+        StackPane tabHeaderArea = (StackPane) mindMap.lookup(".tab-header-area");
+        double mindMapHeight = node.getScene().getHeight() - tabHeaderArea.getHeight();
+        double centerX = (node.getScene().getWidth() - node.getPrefWidth()) / 2;
+        double centerY = (mindMapHeight - node.getPrefHeight()) / 2;
+
+        if (nodeX < centerX) {
+            setSubjectTranslateX(centerX - nodeX);
+        } else {
+            setSubjectTranslateX(-(nodeX - centerX));
+        }
+        if (nodeY < centerY) {
+            setSubjectTranslateY(centerY - nodeY);
+        } else {
+            setSubjectTranslateY(-(nodeY - centerY));
         }
     }
 

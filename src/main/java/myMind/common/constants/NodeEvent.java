@@ -1,7 +1,8 @@
 package myMind.common.constants;
 
 public enum NodeEvent {
-    SELECT,
+    CLICK,
+    JUMP,
 
     PASTE_SIBLING,
     ADD_BUTTON_R,

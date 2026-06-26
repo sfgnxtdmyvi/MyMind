@@ -5,7 +5,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import lombok.Setter;
 import myMind.common.constants.PosConstants;
+import myMind.common.manager.QuoteManager;
 import myMind.componet.MindNode;
+import myMind.componet.Subject;
 
 import java.util.List;
 
@@ -49,15 +51,6 @@ public class ContextMenuController {
         subjectController.cut();
     }
 
-    @FXML
-    public void collapseOrExpand() {
-        if (collapseOrExpandItem.getUserData().equals("collapse")) {
-            subjectController.collapse();
-        } else {
-            subjectController.expand();
-        }
-    }
-
     public void collapse() {
         subjectController.collapse();
     }
@@ -79,5 +72,24 @@ public class ContextMenuController {
     @FXML
     public void deleteEmpty() {
         subjectController.deleteEmpty();
+    }
+
+    @FXML
+    public void collapseOrExpand() {
+        if (collapseOrExpandItem.getUserData().equals("collapse")) {
+            subjectController.collapse();
+        } else {
+            subjectController.expand();
+        }
+    }
+
+    @FXML
+    public void quote() {
+        QuoteManager.setQuoting( true);
+        QuoteManager.setSrcNode(subjectController.getSelectedNode());
+        QuoteManager.setSubjectIndex(subjectController.getMindMap().getSelectionModel().getSelectedIndex());
+        Subject subject = subjectController.getSubject();
+        QuoteManager.setSubjectTranslateX(subject.getTranslateX());
+        QuoteManager.setSubjectTranslateY(subject.getTranslateY());
     }
 }

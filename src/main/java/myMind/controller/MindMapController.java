@@ -8,6 +8,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.Data;
@@ -16,7 +17,7 @@ import myMind.common.manager.ShortcutManager;
 import myMind.common.util.MessageUtil;
 import myMind.componet.MindMap;
 import myMind.componet.MindNode;
-import myMind.componet.StyleWheel;
+import myMind.common.manager.StyleWheelManager;
 import myMind.componet.Subject;
 
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class MindMapController {
 
     private ContextMenuController contextMenuController;
     private ContextMenu contextMenu;
-    private static final StyleWheel styleWheel = StyleWheel.getInstance();
+    private static final Popup styleWheel = StyleWheelManager.getStyleWheel();
 
     private static final List<String> STYLE_SHEETS = List.of(
             MindMapController.class.getResource("/css/base.css").toExternalForm(),
@@ -61,6 +62,7 @@ public class MindMapController {
 
         root = new AnchorPane(titleBar);
         scene = new Scene(root);
+        scene.setUserData(contextMenuController);
         scene.getStylesheets().addAll(STYLE_SHEETS);
         CssManager.init(root);
 

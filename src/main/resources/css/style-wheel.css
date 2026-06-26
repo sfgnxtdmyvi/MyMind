@@ -39,3 +39,11 @@
     -fx-font-weight: bold;
     -fx-font-size: 16;
 }
+
+.quote{
+    -fx-underline: true;
+}
+
+.quote:hover{
+    -fx-fill: #5375f1;
+}

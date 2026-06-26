@@ -20,6 +20,7 @@ import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.NodeEvent;
 import myMind.common.constants.PosConstants;
+import myMind.common.manager.Quote;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MeasureTextUtil;
 import myMind.common.util.MessageUtil;
@@ -48,6 +49,7 @@ public class MindNode extends StackPane {
     private MindNode parentNode;
     private final List<MindNode> childrenR = new ArrayList<>();
     private final List<MindNode> childrenL = new ArrayList<>();
+    private Quote quote;
 
     private Consumer<NodeEvent> onAction;
     private Consumer<Double> setSubjectTranslateY;
@@ -163,9 +165,13 @@ public class MindNode extends StackPane {
         // 添加 e.consume() 的话，能阻止 OnMouseClicked 的默认行为，但是 addButton 就不会触发
         // 使用 setOnMouseClicked 的话，由于 addButton 是一个独立的 Button 组件，它会消费鼠标事件，事件不会冒泡到父节点 MindNode，
         // 需要在 addButton 的事件处理逻辑中添加 setSelectedNode(model);
-        contentBox.setOnMouseClicked(e -> {
-            onAction.accept(NodeEvent.SELECT);
-            onAction.accept(NodeEvent.PASTE_SIBLING);
+        contentBox.setOnMouseClicked(event -> {
+            if (event.isShortcutDown()) {
+                onAction.accept(NodeEvent.JUMP);
+            } else {
+                onAction.accept(NodeEvent.CLICK);
+                onAction.accept(NodeEvent.PASTE_SIBLING);
+            }
         });
 
         addButtonListen();
@@ -401,6 +407,7 @@ public class MindNode extends StackPane {
 
     /**
      * 根据内容调整尺寸
+     *
      * @param exact 是否精确调整宽度，新增文本时不精准调整，使得增加微小宽度时，不改变宽度
      */
     public void adjustSize(boolean exact) {

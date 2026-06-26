@@ -29,15 +29,6 @@
                 </Label>
             </graphic>
         </MenuItem>
-        <MenuItem fx:id="collapseOrExpandItem" onAction="#collapseOrExpand" userData="collapse">
-            <graphic>
-                <Label text="收起 ▲">
-                    <tooltip>
-                        <Tooltip text="Alt + -"/>
-                    </tooltip>
-                </Label>
-            </graphic>
-        </MenuItem>
         <SeparatorMenuItem/>
 
         <MenuItem onAction="#delete">
@@ -63,6 +54,26 @@
                 <Label text="删除空白节点">
                     <tooltip>
                         <Tooltip text="Alt + Delete"/>
+                    </tooltip>
+                </Label>
+            </graphic>
+        </MenuItem>
+        <SeparatorMenuItem/>
+
+        <MenuItem fx:id="collapseOrExpandItem" onAction="#collapseOrExpand" userData="collapse">
+            <graphic>
+                <Label text="收起 ▲">
+                    <tooltip>
+                        <Tooltip text="Alt + -"/>
+                    </tooltip>
+                </Label>
+            </graphic>
+        </MenuItem>
+        <MenuItem onAction="#quote">
+            <graphic>
+                <Label text="引用">
+                    <tooltip>
+                        <Tooltip text="引用其他节点"/>
                     </tooltip>
                 </Label>
             </graphic>

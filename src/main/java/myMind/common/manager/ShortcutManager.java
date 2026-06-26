@@ -5,11 +5,13 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import myMind.common.constants.ConfigConstants;
+import myMind.common.util.MessageUtil;
 import myMind.componet.MindMap;
 import myMind.controller.ContextMenuController;
 import myMind.controller.TitleBarController;
-import myMind.common.util.MessageUtil;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -22,8 +24,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static javafx.scene.input.KeyCode.*;
-import static javafx.scene.input.KeyCombination.*;
+import static javafx.scene.input.KeyCode.BACK_SPACE;
+import static javafx.scene.input.KeyCode.C;
+import static javafx.scene.input.KeyCode.DELETE;
+import static javafx.scene.input.KeyCode.DOWN;
+import static javafx.scene.input.KeyCode.EQUALS;
+import static javafx.scene.input.KeyCode.L;
+import static javafx.scene.input.KeyCode.LEFT;
+import static javafx.scene.input.KeyCode.MINUS;
+import static javafx.scene.input.KeyCode.RIGHT;
+import static javafx.scene.input.KeyCode.UP;
+import static javafx.scene.input.KeyCode.X;
+import static javafx.scene.input.KeyCombination.ALT_DOWN;
+import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
+import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
 
 public class ShortcutManager {
     private Map<KeyCombination, ShortcutBinding> keyMap;
@@ -68,6 +82,12 @@ public class ShortcutManager {
                     keyMap.get(keyCombination).getAction().run();
                     break;
                 }
+            }
+        });
+
+        scene.addEventFilter(MouseEvent.MOUSE_CLICKED,event -> {
+            if(event.getButton()== MouseButton.BACK){
+                QuoteManager.back();
             }
         });
     }
