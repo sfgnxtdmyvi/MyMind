@@ -5,9 +5,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import lombok.Setter;
 import myMind.common.constants.PosConstants;
-import myMind.common.manager.QuoteManager;
-import myMind.componet.MindNode;
-import myMind.componet.Subject;
+import myMind.common.manager.ReferenceManager;
+import myMind.componet.MapNode;
 
 import java.util.List;
 
@@ -21,8 +20,8 @@ public class ContextMenuController {
 
     @FXML
     private void onShowing() {
-        MindNode selectedNode = subjectController.getSelectedNode();
-        List<MindNode> children;
+        MapNode selectedNode = subjectController.getSelectedNode();
+        List<MapNode> children;
         if (selectedNode.getPos() == PosConstants.LEFT) {
             children = selectedNode.getChildrenL();
         } else {
@@ -84,12 +83,13 @@ public class ContextMenuController {
     }
 
     @FXML
-    public void quote() {
-        QuoteManager.setQuoting( true);
-        QuoteManager.setSrcNode(subjectController.getSelectedNode());
-        QuoteManager.setSubjectIndex(subjectController.getMindMap().getSelectionModel().getSelectedIndex());
-        Subject subject = subjectController.getSubject();
-        QuoteManager.setSubjectTranslateX(subject.getTranslateX());
-        QuoteManager.setSubjectTranslateY(subject.getTranslateY());
+    public void reference() {
+        ReferenceManager.setSrc(subjectController.getMindMap(),
+                subjectController.getSubject(),
+                subjectController.getSelectedNode());
+    }
+
+    public void dispose() {
+        subjectController = null;
     }
 }

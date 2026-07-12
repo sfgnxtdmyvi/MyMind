@@ -20,8 +20,8 @@ import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.NodeEvent;
 import myMind.common.constants.PosConstants;
-import myMind.common.manager.Quote;
 import myMind.common.util.FileUtil;
+import myMind.common.util.IdGenerator;
 import myMind.common.util.MeasureTextUtil;
 import myMind.common.util.MessageUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -35,21 +35,23 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 @Data
 // 从 nodesLayer 中 remove 时，要用到 equals，不能依赖可变的属性
 @EqualsAndHashCode(of = "nodeId")
-public class MindNode extends StackPane {
-    private final String nodeId = UUID.randomUUID().toString();
+public class MapNode extends StackPane {
+    private final long nodeId;
+    private long subjectId;
 
     //节点之间的关系
     private byte pos;
-    private MindNode parentNode;
-    private final List<MindNode> childrenR = new ArrayList<>();
-    private final List<MindNode> childrenL = new ArrayList<>();
-    private Quote quote;
+    private MapNode parentNode;
+    private final List<MapNode> childrenR = new ArrayList<>();
+    private final List<MapNode> childrenL = new ArrayList<>();
+
+    private MapNode outgoingReference;
+    private List<MapNode> incomingReferences;
 
     private Consumer<NodeEvent> onAction;
     private Consumer<Double> setSubjectTranslateY;
@@ -70,8 +72,15 @@ public class MindNode extends StackPane {
     private double startWidth;
     private double ratio;
 
-    public MindNode(byte pos) {
+    public MapNode(byte pos, double x, double y) {
+        this(pos);
+        setLayoutX(x);
+        setLayoutY(y);
+    }
+
+    public MapNode(byte pos) {
         this.pos = pos;
+        nodeId = IdGenerator.nextId();
         StyleClassedTextArea textArea = new MapTextArea();
         textArea.setMaxWidth(NodeConstants.MIN_TEXTAREA_WIDTH);
         // 不能用 this()，它必须在第一行
@@ -79,19 +88,15 @@ public class MindNode extends StackPane {
         buildNode(textArea);
     }
 
-    public MindNode(byte pos, double x, double y) {
-        this(pos);
-        setLayoutX(x);
-        setLayoutY(y);
-    }
-
-    public MindNode(byte pos, StyleClassedTextArea textArea) {
+    public MapNode(byte pos, long id, StyleClassedTextArea textArea) {
         this.pos = pos;
+        nodeId = id;
         buildNode(textArea);
     }
 
-    public MindNode(byte pos, String imageName, double imageWidth, double imageHeight, StyleClassedTextArea textArea) {
+    public MapNode(byte pos, long id, String imageName, double imageWidth, double imageHeight, StyleClassedTextArea textArea) {
         this.pos = pos;
+        nodeId = id;
         buildNode(textArea);
         buildImageContainer();
         imageView.setImage(new Image(new File(ConfigConstants.DIR_IMAGE + imageName).toURI().toString()));
@@ -161,9 +166,9 @@ public class MindNode extends StackPane {
     }
 
     private void addListener() {
-        // 使用 addEventFilter 的话，OnMouseClicked 的默认行为会让 MindNode 获得焦点，TextArea 就会失去焦点
+        // 使用 addEventFilter 的话，OnMouseClicked 的默认行为会让 MapNode 获得焦点，TextArea 就会失去焦点
         // 添加 e.consume() 的话，能阻止 OnMouseClicked 的默认行为，但是 addButton 就不会触发
-        // 使用 setOnMouseClicked 的话，由于 addButton 是一个独立的 Button 组件，它会消费鼠标事件，事件不会冒泡到父节点 MindNode，
+        // 使用 setOnMouseClicked 的话，由于 addButton 是一个独立的 Button 组件，它会消费鼠标事件，事件不会冒泡到父节点 MapNode，
         // 需要在 addButton 的事件处理逻辑中添加 setSelectedNode(model);
         contentBox.setOnMouseClicked(event -> {
             if (event.isShortcutDown()) {
@@ -461,43 +466,43 @@ public class MindNode extends StackPane {
     }
 
     //—————————————————————————————————————————增—————————————————————————————————————————
-    public void addChildR(MindNode child) {
+    public void addChildR(MapNode child) {
         childrenR.add(child);
         child.setParentNode(this);
     }
 
-    public void addChildL(MindNode child) {
+    public void addChildL(MapNode child) {
         childrenL.add(child);
         child.setParentNode(this);
     }
 
-    public void addChildRAt(int index, MindNode child) {
+    public void addChildRAt(int index, MapNode child) {
         childrenR.add(index, child);
         child.setParentNode(this);
     }
 
-    public void addChildLAt(int index, MindNode child) {
+    public void addChildLAt(int index, MapNode child) {
         childrenL.add(index, child);
         child.setParentNode(this);
     }
 
     //—————————————————————————————————————————删—————————————————————————————————————————
-    public void removeChildR(MindNode child) {
+    public void removeChildR(MapNode child) {
         childrenR.remove(child);
         child.setParentNode(null);
     }
 
-    public void removeChildL(MindNode child) {
+    public void removeChildL(MapNode child) {
         childrenL.remove(child);
         child.setParentNode(null);
     }
 
-    public void undoR(MindNode child, MindNode parentNode) {
+    public void undoR(MapNode child, MapNode parentNode) {
         childrenR.remove(child);
         child.setParentNode(parentNode);
     }
 
-    public void undoL(MindNode child, MindNode parentNode) {
+    public void undoL(MapNode child, MapNode parentNode) {
         childrenL.remove(child);
         child.setParentNode(parentNode);
     }
@@ -511,7 +516,7 @@ public class MindNode extends StackPane {
     public double getChildrenHeightR() {
         double totalHeight = 0;
         int size = 0;
-        for (MindNode child : childrenR) {
+        for (MapNode child : childrenR) {
             if (child.isVisible()) {
                 totalHeight += child.getHeightR();
                 size++;
@@ -524,7 +529,7 @@ public class MindNode extends StackPane {
     public double getChildrenHeightL() {
         double totalHeight = 0;
         int size = 0;
-        for (MindNode child : childrenL) {
+        for (MapNode child : childrenL) {
             if (child.isVisible()) {
                 totalHeight += child.getHeightL();
                 size++;
@@ -556,7 +561,7 @@ public class MindNode extends StackPane {
     //———————————————————————————————————————————位置计算———————————————————————————————————————————
     public double getStartYR() {
         // 找到第一个可见的子节点
-        MindNode fistNode = childrenR.get(0);
+        MapNode fistNode = childrenR.get(0);
         for (int i = 1; i < childrenR.size() && !fistNode.isVisible(); i++) {
             fistNode = childrenR.get(i);
         }
@@ -574,7 +579,7 @@ public class MindNode extends StackPane {
     }
 
     public double getStartYL() {
-        MindNode fistNode = childrenL.get(0);
+        MapNode fistNode = childrenL.get(0);
         for (int i = 1; i < childrenL.size() && !fistNode.isVisible(); i++) {
             fistNode = childrenL.get(i);
         }
@@ -589,7 +594,7 @@ public class MindNode extends StackPane {
     }
 
     public double getEndYR() {
-        MindNode lastNode = childrenR.get(childrenR.size() - 1);
+        MapNode lastNode = childrenR.get(childrenR.size() - 1);
         for (int i = childrenR.size() - 2; i >= 0 && !lastNode.isVisible(); i--) {
             lastNode = childrenR.get(i);
         }
@@ -605,7 +610,7 @@ public class MindNode extends StackPane {
     }
 
     public double getEndYL() {
-        MindNode lastNode = childrenL.get(childrenL.size() - 1);
+        MapNode lastNode = childrenL.get(childrenL.size() - 1);
         for (int i = childrenL.size() - 2; i >= 0 && !lastNode.isVisible(); i--) {
             lastNode = childrenL.get(i);
         }
@@ -620,11 +625,11 @@ public class MindNode extends StackPane {
         }
     }
 
-    public MindNode getLastChildR() {
+    public MapNode getLastChildR() {
         return childrenR.get(childrenR.size() - 1);
     }
 
-    public MindNode getLastChildL() {
+    public MapNode getLastChildL() {
         return childrenL.get(childrenL.size() - 1);
     }
 
@@ -636,5 +641,12 @@ public class MindNode extends StackPane {
     @Override
     public String toString() {
         return textArea.getText();
+    }
+
+    public void addIncomingReference(MapNode node) {
+        if (incomingReferences == null) {
+            incomingReferences = new ArrayList<>();
+        }
+        incomingReferences.add(node);
     }
 }

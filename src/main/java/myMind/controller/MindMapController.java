@@ -1,9 +1,16 @@
 package myMind.controller;
 
+import javafx.beans.value.ChangeListener;
+import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Tab;
 import javafx.scene.image.Image;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
@@ -13,13 +20,16 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.Data;
 import myMind.common.manager.CssManager;
-import myMind.common.manager.ShortcutManager;
-import myMind.common.util.MessageUtil;
-import myMind.componet.MindMap;
-import myMind.componet.MindNode;
+import myMind.common.manager.shortcut.ShortcutManager;
 import myMind.common.manager.StyleWheelManager;
+import myMind.common.util.FileUtil;
+import myMind.common.util.MessageUtil;
+import myMind.common.util.ScheduleUtil;
+import myMind.componet.MapNode;
+import myMind.componet.MindMap;
 import myMind.componet.Subject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -44,6 +54,10 @@ public class MindMapController {
             MindMapController.class.getResource("/css/style-wheel.css").toExternalForm(),
             MindMapController.class.getResource("/css/title-bar.css").toExternalForm()
     );
+    private ShortcutManager shortcutManager;
+    private EventHandler<ContextMenuEvent> contextMenuEventEventHandler;
+    private ChangeListener<Tab> tabChangeListener;
+    private ChangeListener<Boolean> stageChangeListener;
 
     public void createMindMap(Stage stage, Boolean addSubject) {
         this.stage = stage;
@@ -62,7 +76,6 @@ public class MindMapController {
 
         root = new AnchorPane(titleBar);
         scene = new Scene(root);
-        scene.setUserData(contextMenuController);
         scene.getStylesheets().addAll(STYLE_SHEETS);
         CssManager.init(root);
 
@@ -100,28 +113,30 @@ public class MindMapController {
     }
 
     private void addListener() {
-        stage.setUserData(new ShortcutManager(scene, mindMap, contextMenuController, titleBarController));
+        shortcutManager = new ShortcutManager(scene, mindMap, contextMenuController, titleBarController);
+        stage.setUserData(shortcutManager);
 
         // 防止被 StyleClassedTextArea 阻止事件
-        root.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> {
+        contextMenuEventEventHandler = event -> {
             event.consume();
-            MindNode selectedNode = mindMap.getSubjectController().getSelectedNode();
+            MapNode selectedNode = mindMap.getSubjectController().getSelectedNode();
             if (selectedNode == null) {
                 return;
             }
-
+//
             if (selectedNode.getTextArea().getSelection().getLength() != 0) {
                 // 默认将 content 的左上角放到 (x, y) 处，所以加上偏移，使轮盘居中
                 styleWheel.show(stage, event.getScreenX() - 125, event.getScreenY() - 125);
             }
-            // 得到当前被点中的实际节点，再向上查找是否属于 MindNode
-            else if (isMindNode(event.getPickResult().getIntersectedNode())) {
+            // 得到当前被点中的实际节点，再向上查找是否属于 MapNode
+            else if (isMapNode(event.getPickResult().getIntersectedNode())) {
                 contextMenu.show(stage, event.getScreenX(), event.getScreenY());
             }
-        });
+        };
+        root.addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, contextMenuEventEventHandler);
 
         // 切换主题
-        mindMap.getSelectionModel().selectedItemProperty().addListener((observable, oldtab, newTab) -> {
+        tabChangeListener = (observable, oldtab, newTab) -> {
             if (newTab == null) {
                 return;
             }
@@ -132,22 +147,108 @@ public class MindMapController {
             titleBarController.setSubjectController(subjectController);
             contextMenuController.setSubjectController(subjectController);
             StyleWheelArcController.setSubjectController(subjectController);
-        });
+        };
+        mindMap.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
         // 切换导图
-        stage.focusedProperty().addListener((obs, oldVal, newVal) -> {
+        stageChangeListener = (obs, oldVal, newVal) -> {
             if (newVal) {
                 StyleWheelArcController.setSubjectController(mindMap.getSubjectController());
             }
-        });
+        };
+        stage.focusedProperty().addListener(stageChangeListener);
 
-        // 通过任务栏关闭时，也执行关闭逻辑
-        stage.setOnCloseRequest(event -> titleBarController.close());
+        stage.setOnCloseRequest(event -> {
+            if (mindMap.getFilePath() != null) {
+                FileUtil.saveFileSilence(new File(mindMap.getFilePath()), mindMap);
+            }
+            // 未保存且不为空
+            else if (!mindMap.isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("保存导图");
+                alert.setHeaderText(null);
+                alert.setContentText("是否保存当前导图？");
+                alert.getButtonTypes().setAll(new ButtonType("保存", ButtonBar.ButtonData.YES),
+                        new ButtonType("不保存", ButtonBar.ButtonData.NO),
+                        new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE));
+                ButtonBar.ButtonData buttonData = alert.showAndWait().get().getButtonData();
+                switch (buttonData) {
+                    case YES -> titleBarController.saveAs();
+                    case NO -> {
+                        for (Tab tab : mindMap.getTabs()) {
+                            ObservableList<Node> children = ((Subject) tab.getContent()).getNodesLayer().getChildren();
+                            for (Node child : children) {
+                                MapNode node = (MapNode) child;
+                                FileUtil.deleteImage(node.getImageName());
+                            }
+                        }
+                    }
+                    default -> {
+                        event.consume();
+                        return;
+                    }
+                }
+            }
+            if (Stage.getWindows().size() <= 1) {
+                ScheduleUtil.cancelSchedule();
+            } else {
+                if (mindMap.getFilePath() != null) {
+                    ScheduleUtil.cancelSchedule(mindMap.getFilePath());
+                }
+            }
+
+            styleWheel.hide();
+            contextMenu.hide();
+
+            root.removeEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, contextMenuEventEventHandler);
+            mindMap.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+            stage.focusedProperty().removeListener(stageChangeListener);
+            stage.setOnCloseRequest(null);
+            contextMenuEventEventHandler = null;
+            tabChangeListener = null;
+            stageChangeListener = null;
+            MessageUtil.dispose(stage);
+
+            stage.setUserData(null);
+            shortcutManager.dispose();
+            shortcutManager = null;
+
+            titleBarController.dispose();
+            titleBarController = null;
+            contextMenu = null;
+            contextMenuController.dispose();
+            contextMenuController = null;
+            titleBar = null;
+
+            mindMap.setSubject(null);
+            mindMap.setSubjectController(null);
+            ObservableList<Tab> tabs = mindMap.getTabs();
+            for (Tab tab : tabs) {
+                SubjectController subjectController = (SubjectController) tab.getUserData();
+                ObservableList<Node> children = subjectController.getSubject().getNodesLayer().getChildren();
+                for (Node child : children) {
+                    MapNode node = (MapNode) child;
+                    node.getTextArea().clear();
+                    node.getTextArea().dispose();
+                }
+                subjectController.getSubject().getNodesLayer().getChildren().removeAll();
+                subjectController.getSubject().getLinesLayerR().getChildren().removeAll();
+                subjectController.getSubject().getLinesLayerL().getChildren().removeAll();
+            }
+            tabs.clear();
+            mindMap = null;
+            root = null;
+            scene = null;
+            stage.setScene(null);
+            stage = null;
+            System.gc();
+            System.runFinalization();
+        });
     }
 
-    private boolean isMindNode(Node node) {
+    private boolean isMapNode(Node node) {
         while (node != null) {
-            if (node instanceof MindNode) {
+            if (node instanceof MapNode) {
                 return true;
             }
             node = node.getParent();

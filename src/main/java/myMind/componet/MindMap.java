@@ -9,7 +9,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.StackPane;
 import lombok.Data;
 import myMind.common.constants.SizeConstants;
 import myMind.common.util.FormatUtil;
@@ -178,8 +177,8 @@ public class MindMap extends TabPane {
     /**
      * 打开导图时用
      */
-    public void addSubject(MindNode node) {
-        subjectController = new SubjectController(node);
+    public void addSubject(MapNode node, long id) {
+        subjectController = new SubjectController(node, id);
         String subjectName = "主题-" + (getTabs().size() + 1);
         Tab tab = addTab(subjectName);
 
@@ -200,10 +199,10 @@ public class MindMap extends TabPane {
         tab.setUserData(subjectController);
         getTabs().add(tab);
 
-        MindNode rootNode = subjectController.getRootNode();
-        StackPane tabHeaderArea = (StackPane) lookup(".tab-header-area");
+        MapNode rootNode = subjectController.getRootNode();
+//        StackPane tabHeaderArea = (StackPane) lookup(".tab-header-area");
         rootNode.setLayoutX((getWidth() - rootNode.getPrefWidth()) / 2);
-        rootNode.setLayoutY((getHeight() - tabHeaderArea.getHeight() - rootNode.getPrefHeight()) / 2);
+        rootNode.setLayoutY((getHeight() - rootNode.getPrefHeight()) / 2);
         rootNode.getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty()) {
                 tab.setText(newValue);
@@ -213,6 +212,17 @@ public class MindMap extends TabPane {
         });
 
         return tab;
+    }
+
+    public Tab jumpToSubject(long subjectId) {
+        for (Tab tab : getTabs()) {
+            Subject subject = (Subject) tab.getContent();
+            if (subject.getSubjectId() == subjectId) {
+                getSelectionModel().select(tab);
+                return tab;
+            }
+        }
+        return null;
     }
 
     public boolean isEmpty() {

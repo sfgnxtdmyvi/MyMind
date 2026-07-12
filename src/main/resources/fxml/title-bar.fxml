@@ -38,6 +38,7 @@
 
             <MenuItem onAction="#deleteUnusefulImage" text="清除无用图片"/>
             <MenuItem onAction="#deletePeriod" text="删除节点末尾句号"/>
+            <MenuItem onAction="#updateMap" text="更新导图文件结构"/>
         </Menu>
 
         <Menu text="编辑">

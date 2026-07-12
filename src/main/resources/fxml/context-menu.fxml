@@ -69,7 +69,7 @@
                 </Label>
             </graphic>
         </MenuItem>
-        <MenuItem onAction="#quote">
+        <MenuItem onAction="#reference">
             <graphic>
                 <Label text="引用">
                     <tooltip>

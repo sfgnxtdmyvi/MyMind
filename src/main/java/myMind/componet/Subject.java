@@ -13,6 +13,7 @@ import myMind.common.util.MessageUtil;
 
 @Data
 public class Subject extends StackPane {
+    private final long subjectId;
     /**
      * 节点层
      */
@@ -26,7 +27,8 @@ public class Subject extends StackPane {
     private double dragStartX;
     private double dragStartY;
 
-    public Subject() {
+    public Subject(long id) {
+        subjectId = id;
         // 让连线不干扰鼠标事件
         linesLayerL.setMouseTransparent(true);
         linesLayerR.setMouseTransparent(true);
@@ -107,33 +109,33 @@ public class Subject extends StackPane {
     }
 
     //———————————————————————————————————————————节点———————————————————————————————————————————
-    public void addNode(MindNode node) {
+    public void addNode(MapNode node) {
         nodesLayer.getChildren().add(node);
     }
 
-    public void addClone(MindNode CloneNode) {
+    public void addClone(MapNode CloneNode) {
         addNode(CloneNode);
         addCloneChildrenR(CloneNode);
         addCloneChildrenL(CloneNode);
     }
 
-    public void addCloneChildrenR(MindNode CloneNode) {
+    public void addCloneChildrenR(MapNode CloneNode) {
         ObservableList<Node> children = nodesLayer.getChildren();
-        for (MindNode node : CloneNode.getChildrenR()) {
+        for (MapNode node : CloneNode.getChildrenR()) {
             children.add(node);
             addCloneChildrenR(node);
         }
     }
 
-    public void addCloneChildrenL(MindNode CloneNode) {
+    public void addCloneChildrenL(MapNode CloneNode) {
         ObservableList<Node> children = nodesLayer.getChildren();
-        for (MindNode node : CloneNode.getChildrenL()) {
+        for (MapNode node : CloneNode.getChildrenL()) {
             children.add(node);
             addCloneChildrenL(node);
         }
     }
 
-    public void remove(MindNode node) {
+    public void remove(MapNode node) {
         nodesLayer.getChildren().remove(node);
     }
 

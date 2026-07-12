@@ -1,10 +1,14 @@
 package myMind.common.util;
 
 import javafx.animation.PauseTransition;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 消息提示标签
@@ -13,6 +17,8 @@ public class MessageUtil {
     private static Label label;
     private static PauseTransition hideTimer;
     private static double parentPaneWidth;
+
+    private static final Map<Stage, ChangeListener<Boolean>> stageChangeListenerMap = new HashMap<>();
 
     /**
      * 初始化并添加到父容器
@@ -32,13 +38,20 @@ public class MessageUtil {
         MessageUtil.label = label;
         MessageUtil.hideTimer = hideTimer;
         MessageUtil.parentPaneWidth = parentPane.getWidth();
-        stage.focusedProperty().addListener((obs, oldVal, newVal) -> {
+        ChangeListener<Boolean> stageChangeListener = (obs, oldVal, newVal) -> {
             if (newVal) {
                 MessageUtil.label = label;
                 MessageUtil.hideTimer = hideTimer;
                 MessageUtil.parentPaneWidth = parentPane.getWidth();
             }
-        });
+        };
+        stage.focusedProperty().addListener(stageChangeListener);
+        stageChangeListenerMap.put(stage, stageChangeListener);
+    }
+
+    public static void dispose(Stage stage) {
+        ChangeListener<Boolean> listener = stageChangeListenerMap.remove(stage);
+        stage.focusedProperty().removeListener(listener);
     }
 
     /**

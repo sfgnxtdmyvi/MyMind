@@ -1,5 +1,6 @@
-package myMind.common.manager;
+package myMind.common.manager.shortcut;
 
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -8,6 +9,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import myMind.common.constants.ConfigConstants;
+import myMind.common.manager.ReferenceManager;
 import myMind.common.util.MessageUtil;
 import myMind.componet.MindMap;
 import myMind.controller.ContextMenuController;
@@ -40,9 +42,14 @@ import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
 import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
 
 public class ShortcutManager {
+    private Scene scene;
+
     private Map<KeyCombination, ShortcutBinding> keyMap;
+    private EventHandler<KeyEvent> keyEventHandler;
+    private EventHandler<MouseEvent> mouseEventHandler;
 
     public ShortcutManager(Scene scene, MindMap mindMap, ContextMenuController contextMenuController, TitleBarController titleBarController) {
+        this.scene = scene;
         keyMap = new HashMap<>();
         keyMap.put(new KeyCodeCombination(C, SHORTCUT_DOWN, SHIFT_DOWN),
                 new ShortcutBinding(contextMenuController::copy, "复制"));
@@ -74,8 +81,7 @@ public class ShortcutManager {
                 new ShortcutBinding(mindMap::format, "格式化"));
         load();
 
-        // getAccelerators 在目标节点处理完之后，且不消费事件时才触发
-        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+        keyEventHandler = event -> {
             for (KeyCombination keyCombination : keyMap.keySet()) {
                 if (keyCombination.match(event)) {
                     event.consume();
@@ -83,13 +89,24 @@ public class ShortcutManager {
                     break;
                 }
             }
-        });
-
-        scene.addEventFilter(MouseEvent.MOUSE_CLICKED,event -> {
-            if(event.getButton()== MouseButton.BACK){
-                QuoteManager.back();
+        };
+        mouseEventHandler = event -> {
+            if (event.getButton() == MouseButton.BACK) {
+                ReferenceManager.back();
             }
-        });
+        };
+        // getAccelerators 在目标节点处理完之后，且不消费事件时才触发
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
+        scene.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEventHandler);
+    }
+
+    public void dispose() {
+        scene.removeEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
+        scene.removeEventFilter(MouseEvent.MOUSE_CLICKED, mouseEventHandler);
+        keyEventHandler = null;
+        mouseEventHandler = null;
+        keyMap.clear();
+        keyMap = null;
     }
 
     public void disable(KeyCombination keyCombination) {

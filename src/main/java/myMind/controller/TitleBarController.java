@@ -4,12 +4,9 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -22,6 +19,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import lombok.Getter;
 import lombok.Setter;
 import myMind.common.constants.CssStyle;
@@ -32,7 +30,6 @@ import myMind.common.util.FileUtil;
 import myMind.common.util.MessageUtil;
 import myMind.common.util.ScheduleUtil;
 import myMind.componet.MindMap;
-import myMind.componet.MindNode;
 import myMind.componet.Subject;
 
 import java.io.File;
@@ -83,7 +80,7 @@ public class TitleBarController {
     @FXML
     public void openNote() {
         if (mindMap.isEmpty()) {
-            stage.hide();
+            Event.fireEvent(stage, new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
         }
         NoteController.createNote(new Stage());
     }
@@ -180,6 +177,11 @@ public class TitleBarController {
     @FXML
     public void deletePeriod() {
         FileUtil.deletePeriod();
+    }
+
+    @FXML
+    public void updateMap() {
+        FileUtil.updateMap(mindMap);
     }
 
     //—————————————————————————————————————————添加—————————————————————————————————————————
@@ -316,44 +318,18 @@ public class TitleBarController {
 
     @FXML
     public void close() {
-        if (mindMap.getFilePath() != null) {
-            FileUtil.saveFileSilence(new File(mindMap.getFilePath()), mindMap);
-        }
-        // 未保存且不为空
-        else if (!mindMap.isEmpty()) {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("保存导图");
-            alert.setHeaderText(null);
-            alert.setContentText("是否保存当前导图？");
-            alert.getButtonTypes().setAll(new ButtonType("保存", ButtonBar.ButtonData.YES),
-                    new ButtonType("不保存", ButtonBar.ButtonData.NO),
-                    new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE));
-            ButtonBar.ButtonData buttonData = alert.showAndWait().get().getButtonData();
-            switch (buttonData) {
-                case YES -> saveAs();
-                case NO -> {
-                    for (Tab tab : mindMap.getTabs()) {
-                        ObservableList<Node> children = ((Subject) tab.getContent()).getNodesLayer().getChildren();
-                        for (Node child : children) {
-                            MindNode node = (MindNode) child;
-                            FileUtil.deleteImage(node.getImageName());
-                        }
-                    }
-                }
-                default -> {
-                    return;
-                }
-            }
-        }
-
-        if (Stage.getWindows().size() <= 1) {
-            ScheduleUtil.cancelSchedule();
-        } else {
-            if (mindMap.getFilePath() != null) {
-                ScheduleUtil.cancelSchedule(mindMap.getFilePath());
-            }
-        }
-        stage.close();
+        Event.fireEvent(stage, new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 
+    public void dispose() {
+        recentFilesMenu.getItems().clear();
+        collapseOrExpandItem.setOnAction(null);
+        title.textProperty().unbind();
+        titleProperty().unbind();
+
+        this.stage = null;
+        this.root = null;
+        this.mindMap = null;
+        this.subjectController = null;
+    }
 }

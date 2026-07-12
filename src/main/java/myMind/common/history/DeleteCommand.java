@@ -2,7 +2,7 @@ package myMind.common.history;
 
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.PosConstants;
-import myMind.componet.MindNode;
+import myMind.componet.MapNode;
 import myMind.componet.Subject;
 import myMind.controller.SubjectController;
 
@@ -11,15 +11,15 @@ import java.util.List;
 public class DeleteCommand implements Command {
     private final SubjectController subjectController;
     private final Subject subject;
-    private final MindNode parentNode;
-    private final MindNode deletedNode;
+    private final MapNode parentNode;
+    private final MapNode deletedNode;
 
     private boolean keepChildren;
     private final double translateY;
     private final byte pos;
     private final int index;
 
-    public DeleteCommand(SubjectController subjectController, MindNode deletedNode, boolean keepChildren) {
+    public DeleteCommand(SubjectController subjectController, MapNode deletedNode, boolean keepChildren) {
         this.subjectController = subjectController;
         this.subject = subjectController.getSubject();
         this.parentNode = deletedNode.getParentNode();
@@ -37,7 +37,7 @@ public class DeleteCommand implements Command {
         if (keepChildren) {
             double selfHeight = deletedNode.getPrefHeight();
             if (pos == PosConstants.RIGHT) {
-                List<MindNode> childrenR = deletedNode.getChildrenR();
+                List<MapNode> childrenR = deletedNode.getChildrenR();
                 if (childrenR.isEmpty()) {
                     deleteNotRemain();
                     keepChildren = false;
@@ -46,7 +46,7 @@ public class DeleteCommand implements Command {
 
                 // 删除节点，子节点成为父节点的子节点
                 int i = index;
-                for (MindNode childNode : childrenR) {
+                for (MapNode childNode : childrenR) {
                     parentNode.addChildRAt(i, childNode);
                     i++;
                 }
@@ -63,11 +63,11 @@ public class DeleteCommand implements Command {
                     subjectController.adjustChildrenYR();
                 }
                 subjectController.refreshLinesR();
-                MindNode lastChildR = deletedNode.getLastChildR();
+                MapNode lastChildR = deletedNode.getLastChildR();
                 subjectController.setSelectedNode(lastChildR);
                 subjectController.adjustTranslateY(lastChildR);
             } else {
-                List<MindNode> childrenL = deletedNode.getChildrenL();
+                List<MapNode> childrenL = deletedNode.getChildrenL();
                 subjectController.deleteL(deletedNode);
                 if (childrenL.isEmpty()) {
                     deleteNotRemain();
@@ -76,7 +76,7 @@ public class DeleteCommand implements Command {
                 }
 
                 int i = index;
-                for (MindNode childNode : childrenL) {
+                for (MapNode childNode : childrenL) {
                     parentNode.addChildLAt(i, childNode);
                     i++;
                 }
@@ -90,7 +90,7 @@ public class DeleteCommand implements Command {
                     subjectController.adjustChildrenYL();
                 }
                 subjectController.refreshLinesL();
-                MindNode lastChildL = deletedNode.getLastChildL();
+                MapNode lastChildL = deletedNode.getLastChildL();
                 subjectController.setSelectedNode(lastChildL);
                 subjectController.adjustTranslateY(lastChildL);
             }
@@ -127,13 +127,13 @@ public class DeleteCommand implements Command {
         if (keepChildren) {
             double selfHeight = deletedNode.getPrefHeight();
             if (pos == PosConstants.RIGHT) {
-                List<MindNode> childrenR = deletedNode.getChildrenR();
+                List<MapNode> childrenR = deletedNode.getChildrenR();
                 if (childrenR.isEmpty()) {
                     return;
                 }
 
                 // 删除节点重新插入，该节点在父节点中的子节点删除
-                for (MindNode childNode : childrenR) {
+                for (MapNode childNode : childrenR) {
                     parentNode.undoR(childNode, deletedNode);
                 }
                 parentNode.addChildRAt(index, deletedNode);
@@ -146,12 +146,12 @@ public class DeleteCommand implements Command {
                 }
                 subjectController.refreshLinesR();
             } else {
-                List<MindNode> childrenL = deletedNode.getChildrenL();
+                List<MapNode> childrenL = deletedNode.getChildrenL();
                 if (childrenL.isEmpty()) {
                     return;
                 }
 
-                for (MindNode childNode : childrenL) {
+                for (MapNode childNode : childrenL) {
                     parentNode.undoL(childNode, deletedNode);
                 }
                 parentNode.addChildLAt(index, deletedNode);
@@ -187,16 +187,16 @@ public class DeleteCommand implements Command {
         subject.setTranslateY(translateY);
     }
 
-    private void undoR(MindNode parentNode) {
+    private void undoR(MapNode parentNode) {
         subject.addNode(parentNode);
-        for (MindNode childNode : parentNode.getChildrenR()) {
+        for (MapNode childNode : parentNode.getChildrenR()) {
             undoR(childNode);
         }
     }
 
-    private void undoL(MindNode parentNode) {
+    private void undoL(MapNode parentNode) {
         subject.addNode(parentNode);
-        for (MindNode childNode : parentNode.getChildrenL()) {
+        for (MapNode childNode : parentNode.getChildrenL()) {
             undoL(childNode);
         }
     }

@@ -1,17 +1,17 @@
 package myMind.common.util;
 
-import myMind.componet.MindNode;
+import myMind.componet.MapNode;
 
 public class CloneNodeUtil {
-    private static final ThreadLocal<MindNode> nodeHolder = new ThreadLocal<>();
+    private static final ThreadLocal<MapNode> nodeHolder = new ThreadLocal<>();
 
-    public static void setNode(MindNode node) {
+    public static void setNode(MapNode node) {
         nodeHolder.set(node);
     }
 
-    public static MindNode getNode() {
-        MindNode mindNode = nodeHolder.get();
+    public static MapNode getNode() {
+        MapNode mapNode = nodeHolder.get();
         nodeHolder.remove();
-        return mindNode;
+        return mapNode;
     }
 }
