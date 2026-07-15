@@ -191,6 +191,7 @@ public class MindMapController {
             }
             if (Stage.getWindows().size() <= 1) {
                 ScheduleUtil.cancelSchedule();
+                FileUtil.addRecentFile(new File(mindMap.getFilePath()));
             } else {
                 if (mindMap.getFilePath() != null) {
                     ScheduleUtil.cancelSchedule(mindMap.getFilePath());

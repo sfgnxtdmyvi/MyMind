@@ -94,37 +94,6 @@ public class MapNode extends StackPane {
         buildNode(textArea);
     }
 
-    public MapNode(byte pos, long id, String imageName, double imageWidth, double imageHeight, StyleClassedTextArea textArea) {
-        this.pos = pos;
-        nodeId = id;
-        buildNode(textArea);
-        buildImageContainer();
-        imageView.setImage(new Image(new File(ConfigConstants.DIR_IMAGE + imageName).toURI().toString()));
-        imageView.setFitWidth(imageWidth);
-        imageView.setFitHeight(imageHeight);
-        ratio = imageWidth / imageHeight;
-        this.imageName = imageName;
-    }
-
-    private void buildImageContainer() {
-        imageView = new ImageView();
-        imageView.setSmooth(true);
-
-        closeButton = new Button(NodeConstants.CLOSE);
-        closeButton.getStyleClass().add("close-button");
-        closeButton.setVisible(false);
-        StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
-
-        // StackPane 负责显示边框
-        // 只有 Region 及其子类才能通过 CSS 设置边框和背景
-        imageContainer = new StackPane(imageView, closeButton);
-        // 在一个会拉伸子节点的布局容器中，如果子节点没有设置最大尺寸限制，它会填满可用空间
-        imageContainer.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-
-        addImageListener();
-        contentBox.getChildren().add(0, imageContainer);
-    }
-
     private void buildNode(StyleClassedTextArea textArea) {
         this.textArea = textArea;
 
@@ -163,6 +132,34 @@ public class MapNode extends StackPane {
         addButtonL.setVisible(false);
         StackPane.setAlignment(addButtonL, Pos.CENTER_LEFT);
         children.add(addButtonL);
+    }
+
+    public void setImage(String imageName, double imageWidth, double imageHeight) {
+        buildImageContainer();
+        imageView.setImage(new Image(new File(ConfigConstants.DIR_IMAGE + imageName).toURI().toString()));
+        imageView.setFitWidth(imageWidth);
+        imageView.setFitHeight(imageHeight);
+        ratio = imageWidth / imageHeight;
+        this.imageName = imageName;
+    }
+
+    private void buildImageContainer() {
+        imageView = new ImageView();
+        imageView.setSmooth(true);
+
+        closeButton = new Button(NodeConstants.CLOSE);
+        closeButton.getStyleClass().add("close-button");
+        closeButton.setVisible(false);
+        StackPane.setAlignment(closeButton, Pos.TOP_RIGHT);
+
+        // StackPane 负责显示边框
+        // 只有 Region 及其子类才能通过 CSS 设置边框和背景
+        imageContainer = new StackPane(imageView, closeButton);
+        // 在一个会拉伸子节点的布局容器中，如果子节点没有设置最大尺寸限制，它会填满可用空间
+        imageContainer.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+
+        addImageListener();
+        contentBox.getChildren().add(0, imageContainer);
     }
 
     private void addListener() {
@@ -223,7 +220,7 @@ public class MapNode extends StackPane {
             if (!newVal) {
                 // 清除选区，恢复背景色
                 textArea.deselect();
-                adjustSize(true);
+                adjust(true);
             }
         });
     }

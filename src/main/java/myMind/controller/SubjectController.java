@@ -414,14 +414,12 @@ public class SubjectController {
     private MapNode clone(MapNode originalNode) {
         byte pos = originalNode.getPos();
 
-        MapNode cloneNode;
+        MapNode cloneNode = new MapNode(pos, IdGenerator.nextId(), buildTextArea(originalNode.getTextArea()));
         String imageName = originalNode.getImageName();
         if (imageName != null) {
             ImageView image = originalNode.getImageView();
-            cloneNode = new MapNode(pos, IdGenerator.nextId(), imageName, image.getFitWidth(), image.getFitHeight(), buildTextArea(originalNode.getTextArea()));
+            cloneNode.setImage(imageName, image.getFitWidth(), image.getFitHeight());
             cloneNode.getTextArea().setVisible(originalNode.getTextArea().isVisible());
-        } else {
-            cloneNode = new MapNode(pos, IdGenerator.nextId(), buildTextArea(originalNode.getTextArea()));
         }
 
         cloneNode.setPrefWidth(originalNode.getPrefWidth());
@@ -672,7 +670,6 @@ public class SubjectController {
     /**
      * 移动按钮
      */
-
     private static void transBtnToL(MapNode cloneNode) {
         ObservableList<Node> children = cloneNode.getChildren();
 
