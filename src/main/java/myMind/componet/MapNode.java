@@ -1,12 +1,10 @@
 package myMind.componet;
 
-import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -82,7 +80,7 @@ public class MapNode extends StackPane {
         this.pos = pos;
         nodeId = IdGenerator.nextId();
         StyleClassedTextArea textArea = new MapTextArea();
-        textArea.setMaxWidth(NodeConstants.MIN_TEXTAREA_WIDTH);
+        textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
         // 不能用 this()，它必须在第一行
         // 用 this() 或 super() 时，不能使用任何实例字段
         buildNode(textArea);
@@ -100,15 +98,14 @@ public class MapNode extends StackPane {
         contentBox = new VBox(textArea);
         contentBox.setAlignment(Pos.CENTER);
         contentBox.setPadding(new Insets(NodeConstants.PADDING));
-        ObservableList<Node> children = getChildren();
-        children.add(contentBox);
+        getChildren().add(contentBox);
 
         // 中间节点会添加两个按钮
         if (pos != PosConstants.LEFT) {
-            addButtonR(children);
+            addButtonR();
         }
         if (pos != PosConstants.RIGHT) {
-            addButtonL(children);
+            addButtonL();
         }
 
         getStyleClass().add("node");
@@ -118,20 +115,32 @@ public class MapNode extends StackPane {
         addListener();
     }
 
-    public void addButtonR(ObservableList<Node> children) {
+    public void addButtonR() {
         addButtonR = new Button(NodeConstants.ADD);
         addButtonR.getStyleClass().addAll("add-button", "add-button-r");
         addButtonR.setVisible(false);
         StackPane.setAlignment(addButtonR, Pos.CENTER_RIGHT);
-        children.add(addButtonR);
+        getChildren().add(addButtonR);
     }
 
-    public void addButtonL(ObservableList<Node> children) {
+    public void addButtonL() {
         addButtonL = new Button(NodeConstants.ADD);
         addButtonL.getStyleClass().addAll("add-button", "add-button-l");
         addButtonL.setVisible(false);
         StackPane.setAlignment(addButtonL, Pos.CENTER_LEFT);
-        children.add(addButtonL);
+        getChildren().add(addButtonL);
+    }
+
+    public void removeAddButtonR() {
+        getChildren().remove(addButtonR);
+        addButtonR.setOnAction(null);
+        addButtonR = null;
+    }
+
+    public void removeAddButtonL() {
+        getChildren().remove(addButtonL);
+        addButtonL.setOnAction(null);
+        addButtonL = null;
     }
 
     public void setImage(String imageName, double imageWidth, double imageHeight) {
@@ -362,7 +371,7 @@ public class MapNode extends StackPane {
         imageContainer.setOnMouseClicked(e -> {
             if (!textArea.isVisible()) {
                 // setVisible(false) 后，maxWidth 就变成0了
-                textArea.setMaxWidth(NodeConstants.MIN_TEXTAREA_WIDTH);
+                textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
                 textArea.setVisible(true);
                 textArea.requestFocus();
                 setPrefHeight(getPrefHeight() + NodeConstants.MIN_TEXTAREA_HEIGHT);
@@ -422,14 +431,15 @@ public class MapNode extends StackPane {
 
         boolean textEmpty = text.isEmpty();
         if (!imageVisible && textEmpty) {
-            textWidth = NodeConstants.MIN_TEXTAREA_WIDTH;
+            textWidth = NodeConstants.EMPTY_TEXTAREA_WIDTH;
             textHeight = NodeConstants.MIN_TEXTAREA_HEIGHT;
             nodeWidth = NodeConstants.MIN_NODE_WIDTH;
             nodeHeight = NodeConstants.MIN_NODE_HEIGHT;
         } else {
             // textArea 宽度 + border + padding
             textWidth = MeasureTextUtil.getTextWidth(text);
-            if (!exact) {
+            // 节点在最小宽度时，文本保持居中
+            if (!exact && textArea.getMaxWidth() > NodeConstants.MIN_TEXTAREA_WIDTH) {
                 textWidth = textWidth > textArea.getMaxWidth() ? textWidth + 50 : textArea.getMaxWidth();
             }
             textWidth = Math.min(textWidth, NodeConstants.MAX_TEXTAREA_WIDTH);

@@ -7,9 +7,10 @@ import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.QuadCurve;
 import lombok.Data;
+import myMind.common.constants.LineColorConstants;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.PosConstants;
 import myMind.common.history.CommandHistory;
@@ -30,6 +31,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 @Data
 public class SubjectController {
@@ -137,15 +139,11 @@ public class SubjectController {
     }
 
     public void addSibling() {
-        if (selectedNode == null) {
-            return;
-        }
-        // 根节点无法添加兄弟节点
-        MapNode parentNode = selectedNode.getParentNode();
-        if (parentNode == null) {
+        if (selectedNode == null || selectedNode == rootNode) {
             return;
         }
 
+        MapNode parentNode = selectedNode.getParentNode();
         MapNode siblingNode;
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             siblingNode = new MapNode(PosConstants.RIGHT, selectedNode.getLayoutX(), 0);
@@ -197,7 +195,7 @@ public class SubjectController {
             return;
         }
 
-        if (selectedNode.getChildrenR().isEmpty()) {
+        if (selectedNode.getChildrenL().isEmpty()) {
             setSubjectTranslateY(-NodeConstants.FOUR_NODE_TRANSLATE);
         } else {
             setSubjectTranslateY(-NodeConstants.FIVE_NODE_TRANSLATE);
@@ -214,15 +212,11 @@ public class SubjectController {
     }
 
     public void batchAddSibling() {
-        if (selectedNode == null) {
-            return;
-        }
-        // 根节点无法添加兄弟节点
-        MapNode parentNode = selectedNode.getParentNode();
-        if (parentNode == null) {
+        if (selectedNode == null || selectedNode == rootNode) {
             return;
         }
 
+        MapNode parentNode = selectedNode.getParentNode();
         setSubjectTranslateY(-NodeConstants.FIVE_NODE_TRANSLATE);
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             MapNode firstNode = new MapNode(PosConstants.RIGHT, selectedNode.getLayoutX(), 0);
@@ -460,7 +454,7 @@ public class SubjectController {
         int length = originalDoc.getLength();
         if (length == 0) {
             StyleClassedTextArea textArea = new MapTextArea(true);
-            textArea.setMaxWidth(NodeConstants.MIN_TEXTAREA_WIDTH);
+            textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
             return textArea;
         }
 
@@ -671,17 +665,14 @@ public class SubjectController {
      * 移动按钮
      */
     private static void transBtnToL(MapNode cloneNode) {
-        ObservableList<Node> children = cloneNode.getChildren();
-
-        children.remove(cloneNode.getAddButtonR());
-        cloneNode.addButtonL(children);
+        cloneNode.removeAddButtonR();
+        cloneNode.addButtonL();
         cloneNode.addButtonListenL();
     }
 
     private static void transBtnToR(MapNode cloneNode) {
-        ObservableList<Node> children = cloneNode.getChildren();
-        children.remove(cloneNode.getAddButtonL());
-        cloneNode.addButtonR(children);
+        cloneNode.removeAddButtonL();
+        cloneNode.addButtonR();
         cloneNode.addButtonListenR();
     }
 
@@ -702,6 +693,7 @@ public class SubjectController {
 
     private void collapseR(MapNode parentNode) {
         for (MapNode childNode : parentNode.getChildrenR()) {
+            childNode.getAddButtonR().setText(NodeConstants.EXPAND_R);
             childNode.setVisible(false);
             collapseR(childNode);
         }
@@ -709,6 +701,7 @@ public class SubjectController {
 
     private void collapseL(MapNode parentNode) {
         for (MapNode childNode : parentNode.getChildrenL()) {
+            childNode.getAddButtonL().setText(NodeConstants.EXPAND_L);
             childNode.setVisible(false);
             collapseL(childNode);
         }
@@ -728,6 +721,7 @@ public class SubjectController {
 
     private void expandR(MapNode parentNode) {
         for (MapNode childNode : parentNode.getChildrenR()) {
+            childNode.getAddButtonR().setText(NodeConstants.ADD);
             childNode.setVisible(true);
             expandR(childNode);
         }
@@ -735,6 +729,7 @@ public class SubjectController {
 
     private void expandL(MapNode parentNode) {
         for (MapNode childNode : parentNode.getChildrenL()) {
+            childNode.getAddButtonL().setText(NodeConstants.ADD);
             childNode.setVisible(true);
             expandL(childNode);
         }
@@ -746,6 +741,8 @@ public class SubjectController {
     public void collapseLeaf() {
         collapseLeafR(rootNode);
         collapseLeafL(rootNode);
+        subject.setTranslateX(0);
+        subject.setTranslateY(0);
         adjustChildrenY();
         refreshLines();
     }
@@ -774,7 +771,14 @@ public class SubjectController {
 
     public void expandLeaf() {
         for (Node node : subject.getNodesLayer().getChildren()) {
-            node.setVisible(true);
+            MapNode mapNode = (MapNode) node;
+            if (mapNode.getAddButtonR() != null) {
+                mapNode.getAddButtonR().setText(NodeConstants.ADD);
+            }
+            if (mapNode.getAddButtonL() != null) {
+                mapNode.getAddButtonL().setText(NodeConstants.ADD);
+            }
+            mapNode.setVisible(true);
         }
         adjustChildrenY();
         refreshLines();
@@ -1143,47 +1147,61 @@ public class SubjectController {
 
     public void refreshLinesR() {
         subject.clearLineR();
-        refreshLinesR(rootNode);
+        // 根节点的子结点：颜色根据索引从 LineColorConstants 获取
+        refreshLinesR(rootNode, LineColorConstants::getColor);
     }
 
     public void refreshLinesL() {
         subject.clearLineL();
-        refreshLinesL(rootNode);
+        refreshLinesL(rootNode, LineColorConstants::getColor);
     }
 
-    private void refreshLinesR(MapNode parentNode) {
+    private void refreshLinesR(MapNode parentNode, Function<Integer, Paint> paintSupplier) {
         List<MapNode> childrenR = parentNode.getChildrenR();
         int size = childrenR.size();
         int maxIndex = size - 1;
 
-        for (MapNode childNode : childrenR) {
+        for (int i = 0; i < size; i++) {
+            MapNode childNode = childrenR.get(i);
             // 收起的节点不绘制
             if (!childNode.isVisible()) {
                 continue;
             }
+
+            Paint color = paintSupplier.apply(i);
             // todo 根据高度优化
-            QuadCurve curve = getQuadCurve(getStartR(parentNode, childrenR.indexOf(childNode), maxIndex),
-                    getEndR(childNode));
+            QuadCurve curve = getQuadCurve(
+                    getStartR(parentNode, i, maxIndex),
+                    getEndR(childNode),
+                    color
+            );
             subject.addLineR(curve);
 
-            refreshLinesR(childNode);
+            // 非根节点的子结点：使用同一个颜色
+            refreshLinesR(childNode, index -> color);
         }
     }
 
-    private void refreshLinesL(MapNode parentNode) {
+    private void refreshLinesL(MapNode parentNode, Function<Integer, Paint> paintSupplier) {
         List<MapNode> childrenL = parentNode.getChildrenL();
         int size = childrenL.size();
         int maxIndex = size - 1;
 
-        for (MapNode childNode : childrenL) {
+        for (int i = 0; i < size; i++) {
+            MapNode childNode = childrenL.get(i);
             if (!childNode.isVisible()) {
                 continue;
             }
-            QuadCurve curve = getQuadCurve(getStartL(parentNode, childrenL.indexOf(childNode), maxIndex),
-                    getEndL(childNode));
+
+            Paint color = paintSupplier.apply(i);
+            QuadCurve curve = getQuadCurve(
+                    getStartL(parentNode, i, maxIndex),
+                    getEndL(childNode),
+                    color
+            );
             subject.addLineL(curve);
 
-            refreshLinesL(childNode);
+            refreshLinesL(childNode, index -> color);
         }
     }
 
@@ -1223,15 +1241,15 @@ public class SubjectController {
         }
     }
 
-    private static QuadCurve getQuadCurve(Point2D start, Point2D end) {
+    private static QuadCurve getQuadCurve(Point2D start, Point2D end, Paint paint) {
         QuadCurve curve = new QuadCurve(
                 start.getX(), start.getY(),
                 start.getX(),
                 end.getY(),
                 end.getX(), end.getY()
         );
-        curve.setStroke(Color.rgb(100, 100, 100));
-        curve.setStrokeWidth(2.5);
+        curve.setStroke(paint);
+        curve.setStrokeWidth(2.8);
         curve.setFill(null);
 
         return curve;
