@@ -9,7 +9,7 @@ public class CloneNodeUtil {
         nodeHolder.set(node);
     }
 
-    public static MapNode getNode() {
+    public static MapNode getCloneNode() {
         MapNode mapNode = nodeHolder.get();
         nodeHolder.remove();
         return mapNode;

@@ -35,7 +35,6 @@ public class DeleteCommand implements Command {
     @Override
     public void execute() {
         if (keepChildren) {
-            double selfHeight = deletedNode.getPrefHeight();
             if (pos == PosConstants.RIGHT) {
                 List<MapNode> childrenR = deletedNode.getChildrenR();
                 if (childrenR.isEmpty()) {
@@ -54,14 +53,10 @@ public class DeleteCommand implements Command {
                 subjectController.deleteR(deletedNode);
 
                 subjectController.adjustChildrenXR(parentNode);
-                // 删除节点比它的子节点高，才有必要调整 Y
-                double childrenHeight = deletedNode.getChildrenHeightR();
-                if (selfHeight > childrenHeight) {
-                    if (parentNode.getChildrenR().size() != 1) {
-                        subjectController.setSubjectTranslateY(selfHeight * NodeConstants.TRANSLATE_RATE);
-                    }
-                    subjectController.adjustChildrenYR();
-                }
+                // 删除前会改变选中节点 -> 失焦事件 -> adjust -> adjustChildrenY
+                // 此时 deletedNode 还没删除，但是它的子节点都已经添加到 parentNode 中，子节点有2份，
+                // 因此 adjustChildrenY 的结果是错误的，需要再调整一遍
+                subjectController.adjustChildrenYR();
                 subjectController.refreshLinesR();
                 MapNode lastChildR = deletedNode.getLastChildR();
                 subjectController.setSelectedNode(lastChildR);
@@ -82,13 +77,7 @@ public class DeleteCommand implements Command {
                 }
 
                 subjectController.adjustChildrenXL(parentNode);
-                double childrenHeight = deletedNode.getChildrenHeightL();
-                if (selfHeight > childrenHeight) {
-                    if (parentNode.getChildrenL().size() != 1) {
-                        subjectController.setSubjectTranslateY(selfHeight * NodeConstants.TRANSLATE_RATE);
-                    }
-                    subjectController.adjustChildrenYL();
-                }
+                subjectController.adjustChildrenYL();
                 subjectController.refreshLinesL();
                 MapNode lastChildL = deletedNode.getLastChildL();
                 subjectController.setSelectedNode(lastChildL);

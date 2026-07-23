@@ -445,8 +445,8 @@ public class FileUtil {
             } else {
                 // 把一个导图的所有图片添加到 fileNameSet 中
                 JSONObject json = readFile(f);
-                for (int i = 0; i < json.size(); i++) {
-                    JSONObject rootNode = json.getJSONObject(Integer.toString(i));
+                for (Object value : json.values()) {
+                    JSONObject rootNode = (JSONObject) value;
                     addImage(fileNameSet, rootNode);
                     addImageR(rootNode.getJSONObject(FileConstants.CHILDREN_R), fileNameSet);
                     addImageL(rootNode.getJSONObject(FileConstants.CHILDREN_L), fileNameSet);
@@ -459,8 +459,8 @@ public class FileUtil {
         if (childrenR == null) {
             return;
         }
-        for (int i = 0; i < childrenR.size(); i++) {
-            JSONObject node = childrenR.getJSONObject(Integer.toString(i));
+        for (Object value : childrenR.values()) {
+            JSONObject node = (JSONObject) value;
             addImage(fileNameSet, node);
             addImageR(node.getJSONObject(FileConstants.CHILDREN_R), fileNameSet);
         }
@@ -470,8 +470,8 @@ public class FileUtil {
         if (childrenL == null) {
             return;
         }
-        for (int i = 0; i < childrenL.size(); i++) {
-            JSONObject node = childrenL.getJSONObject(Integer.toString(i));
+        for (Object value : childrenL.values()) {
+            JSONObject node = (JSONObject) value;
             addImage(fileNameSet, node);
             addImageL(node.getJSONObject(FileConstants.CHILDREN_L), fileNameSet);
         }

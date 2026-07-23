@@ -1,5 +1,6 @@
 package myMind.componet;
 
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
@@ -9,6 +10,7 @@ import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -172,16 +174,16 @@ public class MapNode extends StackPane {
     }
 
     private void addListener() {
-        // 使用 addEventFilter 的话，OnMouseClicked 的默认行为会让 MapNode 获得焦点，TextArea 就会失去焦点
-        // 添加 e.consume() 的话，能阻止 OnMouseClicked 的默认行为，但是 addButton 就不会触发
-        // 使用 setOnMouseClicked 的话，由于 addButton 是一个独立的 Button 组件，它会消费鼠标事件，事件不会冒泡到父节点 MapNode，
-        // 需要在 addButton 的事件处理逻辑中添加 setSelectedNode(model);
-        contentBox.setOnMouseClicked(event -> {
+        // 由于 addButton 是一个独立的 Button 组件，它会消费鼠标事件，事件不会冒泡到父节点 MapNode，
+        // 需要在 addButton 的事件处理逻辑中添加 setSelectedNode(model)
+        // 如果在选中文本时，拖到节点外面，不会触发点击事件，因为“按下”一个节点后，拖到到其他地方再“释放”，不会触发 MOUSE_CLICKED
+        // MOUSE_PRESSED 保证在按下时，就切换选中节点
+        contentBox.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
             if (event.isShortcutDown()) {
                 onAction.accept(NodeEvent.JUMP);
             } else {
-                onAction.accept(NodeEvent.CLICK);
-                onAction.accept(NodeEvent.PASTE_SIBLING);
+                // 让光标定位先执行，避免样式切换导致后续算出来的字符索引比实际点击位置靠后
+                Platform.runLater(() -> onAction.accept(NodeEvent.CLICK));
             }
         });
 
@@ -232,6 +234,10 @@ public class MapNode extends StackPane {
                 adjust(true);
             }
         });
+
+//        textArea.selectedTextProperty().addListener((obs, oldVal, newVal) -> {
+//            onAction.accept(NodeEvent.CLICK);
+//        });
     }
 
     /**
@@ -639,6 +645,8 @@ public class MapNode extends StackPane {
     public MapNode getLastChildL() {
         return childrenL.get(childrenL.size() - 1);
     }
+
+    //———————————————————————————————————————————其他———————————————————————————————————————————
 
     public boolean isEmpty() {
         return childrenR.isEmpty() && childrenL.isEmpty() &&

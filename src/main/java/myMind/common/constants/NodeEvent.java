@@ -4,7 +4,6 @@ public enum NodeEvent {
     CLICK,
     JUMP,
 
-    PASTE_SIBLING,
     ADD_BUTTON_R,
     ADD_BUTTON_L,
 

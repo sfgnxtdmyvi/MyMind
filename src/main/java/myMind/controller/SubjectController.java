@@ -293,6 +293,10 @@ public class SubjectController {
                         ReferenceManager.back();
                     } else {
                         setSelectedNode(node);
+                        MapNode cloneNode = CloneNodeUtil.getCloneNode();
+                        if (cloneNode != null) {
+                            pasteSibling(cloneNode, node.getPos());
+                        }
                     }
                 }
                 case JUMP -> {
@@ -311,13 +315,6 @@ public class SubjectController {
                     }
                 }
 
-                // 粘贴到选中节点上方
-                case PASTE_SIBLING -> {
-                    MapNode cloneNode = CloneNodeUtil.getNode();
-                    if (cloneNode != null) {
-                        pasteSibling(cloneNode, node.getPos());
-                    }
-                }
                 case ADD_BUTTON_R -> {
                     setSelectedNode(node);
                     if (node.getAddButtonR().getText().equals(NodeConstants.EXPAND_R)) {
@@ -326,7 +323,7 @@ public class SubjectController {
                         adjustChildrenYR();
                         refreshLinesR();
                     } else {
-                        MapNode cloneNode = CloneNodeUtil.getNode();
+                        MapNode cloneNode = CloneNodeUtil.getCloneNode();
                         if (cloneNode == null) {
                             addChildR();
                         } else {
@@ -342,7 +339,7 @@ public class SubjectController {
                         adjustChildrenYL();
                         refreshLinesL();
                     } else {
-                        MapNode cloneNode = CloneNodeUtil.getNode();
+                        MapNode cloneNode = CloneNodeUtil.getCloneNode();
                         if (cloneNode == null) {
                             addChildL();
                         } else {
@@ -1260,6 +1257,7 @@ public class SubjectController {
         selectedNode.getStyleClass().remove("selected-node");
         selectedNode = node;
         selectedNode.getStyleClass().add("selected-node");
+        // 保证在通过快捷键切换选中节点后，文本框获得焦点
         selectedNode.getTextArea().requestFocus();
     }
 
