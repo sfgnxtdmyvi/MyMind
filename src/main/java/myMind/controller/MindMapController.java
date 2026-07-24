@@ -160,7 +160,7 @@ public class MindMapController {
 
         stage.setOnCloseRequest(event -> {
             if (mindMap.getFilePath() != null) {
-                FileUtil.saveFileSilence(new File(mindMap.getFilePath()), mindMap);
+                FileUtil.saveFile(new File(mindMap.getFilePath()), mindMap, false);
             }
             // 未保存且不为空
             else if (!mindMap.isEmpty()) {

@@ -181,7 +181,7 @@ public class TitleBarController {
 
     @FXML
     public void updateMap() {
-        FileUtil.updateMap(mindMap);
+        FileUtil.updateMap();
     }
 
     //—————————————————————————————————————————添加—————————————————————————————————————————

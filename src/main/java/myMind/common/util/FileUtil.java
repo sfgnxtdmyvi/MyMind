@@ -83,8 +83,8 @@ public class FileUtil {
             SubjectController subjectController = mindMap.getSubjectController();
 
             // 加载子节点
-            loadChildR(subject.getJSONObject(FileConstants.CHILDREN_R), rootNode, subjectController);
-            loadChildL(subject.getJSONObject(FileConstants.CHILDREN_L), rootNode, subjectController);
+            loadChildR(subject.getJSONArray(FileConstants.CHILDREN_R), rootNode, subjectController);
+            loadChildL(subject.getJSONArray(FileConstants.CHILDREN_L), rootNode, subjectController);
 
             subjectController.adjustChildrenSize();
             subjectController.adjustXY();
@@ -97,42 +97,40 @@ public class FileUtil {
         addRecentFile(file);
     }
 
-    private static void loadChildR(JSONObject json, MapNode parentNode, SubjectController subjectController) {
-        if (json == null) {
+    private static void loadChildR(JSONArray childrenJsonArray, MapNode parentNode, SubjectController subjectController) {
+        if (childrenJsonArray == null) {
             return;
         }
 
-        for (int i = 0; i < json.size(); i++) {
-            JSONObject childrenJson = json.getJSONObject(Integer.toString(i));
-
+        for (Object o : childrenJsonArray) {
+            JSONObject childrenJson = (JSONObject) o;
             MapNode node = buildNode(childrenJson, PosConstants.RIGHT);
             parentNode.addChildR(node);
             subjectController.addNode(node);
 
-            loadChildR(childrenJson.getJSONObject(FileConstants.CHILDREN_R), node, subjectController);
+            loadChildR(childrenJson.getJSONArray(FileConstants.CHILDREN), node, subjectController);
         }
     }
 
-    private static void loadChildL(JSONObject json, MapNode parentNode, SubjectController subjectController) {
-        if (json == null) {
+    private static void loadChildL(JSONArray childrenJsonArray, MapNode parentNode, SubjectController subjectController) {
+        if (childrenJsonArray == null) {
             return;
         }
 
-        for (int i = 0; i < json.size(); i++) {
-            JSONObject childrenJson = json.getJSONObject(Integer.toString(i));
-
+        for (Object o : childrenJsonArray) {
+            JSONObject childrenJson = (JSONObject) o;
             MapNode node = buildNode(childrenJson, PosConstants.LEFT);
             parentNode.addChildL(node);
             subjectController.addNode(node);
 
-            loadChildL(childrenJson.getJSONObject(FileConstants.CHILDREN_L), node, subjectController);
+            loadChildL(childrenJson.getJSONArray(FileConstants.CHILDREN), node, subjectController);
         }
     }
 
     private static MapNode buildNode(JSONObject json, byte pos) {
-        String imageName = json.getString(FileConstants.IMAGE_NAME);
         MapNode node = new MapNode(pos, json.getLong(FileConstants.ID), buildTextArea(json));
 
+        String imageName = json.getString(FileConstants.IMAGE_NAME);
         if (imageName != null) {
             node.setImage(imageName, json.getDouble(FileConstants.IMAGE_WIDTH), json.getDouble(FileConstants.IMAGE_HEIGHT));
         }
@@ -190,7 +188,7 @@ public class FileUtil {
         if (mindMap.getFilePath() == null) {
             saveAs(mindMap);
         } else {
-            saveFile(new File(mindMap.getFilePath()), mindMap);
+            saveFile(new File(mindMap.getFilePath()), mindMap, true);
         }
     }
 
@@ -201,7 +199,7 @@ public class FileUtil {
         File file = openFileChooser(FileConstants.SAVE_TYPE, mindMap);
         // 取消时，file 为 null
         if (file != null) {
-            saveFile(file, mindMap);
+            saveFile(file, mindMap, true);
 
             if (mindMap.getFilePath() != null) {
                 ScheduleUtil.cancelSchedule(mindMap.getFilePath());
@@ -216,24 +214,16 @@ public class FileUtil {
         }
     }
 
-    public static void saveFile(File file, MindMap mindMap) {
+    public static void saveFile(File file, MindMap mindMap, boolean showMessage) {
         JSONObject subjects = saveSubjects(mindMap);
 
         try (FileWriter fw = new FileWriter(file)) {
             fw.write(subjects.toString());
-            MessageUtil.showMessage("保存成功");
+            if (showMessage) {
+                MessageUtil.showMessage("保存成功");
+            }
         } catch (IOException e) {
             MessageUtil.showMessage("保存失败：" + e.getMessage());
-        }
-    }
-
-    public static void saveFileSilence(File file, MindMap mindMap) {
-        JSONObject subjects = saveSubjects(mindMap);
-
-        try (FileWriter fw = new FileWriter(file)) {
-            fw.write(subjects.toString());
-        } catch (IOException e) {
-            MessageUtil.showMessage("自动保存失败：" + e.getMessage());
         }
     }
 
@@ -245,39 +235,35 @@ public class FileUtil {
             MapNode rootNode = subjectController.getRootNode();
 
             JSONObject subjectJson = saveNode(rootNode);
-            saveChildrenR(subjectJson, rootNode.getChildrenR());
-            saveChildrenL(subjectJson, rootNode.getChildrenL());
+            saveChildrenR(subjectJson, rootNode.getChildrenR(), FileConstants.CHILDREN_R);
+            saveChildrenL(subjectJson, rootNode.getChildrenL(), FileConstants.CHILDREN_L);
 
             subjects.put(String.valueOf(subjectController.getSubject().getSubjectId()), subjectJson);
         }
         return subjects;
     }
 
-    private static void saveChildrenR(JSONObject parentJson, List<MapNode> childrenR) {
+    private static void saveChildrenR(JSONObject parentJson, List<MapNode> childrenR, String key) {
         if (!childrenR.isEmpty()) {
-            JSONObject childrenRJson = new JSONObject();
-            for (int i = 0; i < childrenR.size(); i++) {
-                MapNode node = childrenR.get(i);
+            JSONArray childrenRJson = parentJson.putArray(key);
+            for (MapNode node : childrenR) {
                 JSONObject childJson = saveNode(node);
-                childrenRJson.put(Integer.toString(i), childJson);
+                childrenRJson.add(childJson);
 
-                saveChildrenR(childJson, node.getChildrenR());
+                saveChildrenR(childJson, node.getChildrenR(), FileConstants.CHILDREN);
             }
-            parentJson.put(FileConstants.CHILDREN_R, childrenRJson);
         }
     }
 
-    private static void saveChildrenL(JSONObject parentJson, List<MapNode> childrenL) {
+    private static void saveChildrenL(JSONObject parentJson, List<MapNode> childrenL, String key) {
         if (!childrenL.isEmpty()) {
-            JSONObject childrenLJson = new JSONObject();
-            for (int i = 0; i < childrenL.size(); i++) {
-                MapNode node = childrenL.get(i);
+            JSONArray childrenLJson = parentJson.putArray(key);
+            for (MapNode node : childrenL) {
                 JSONObject childJson = saveNode(node);
-                childrenLJson.put(Integer.toString(i), childJson);
+                childrenLJson.add(childJson);
 
-                saveChildrenL(childJson, node.getChildrenL());
+                saveChildrenL(childJson, node.getChildrenL(), FileConstants.CHILDREN);
             }
-            parentJson.put(FileConstants.CHILDREN_L, childrenLJson);
         }
     }
 
@@ -541,9 +527,10 @@ public class FileUtil {
     /**
      * 更新导图文件结构
      */
-    public static void updateMap(MindMap mindMap) {
+    public static void updateMap() {
         File dir = new File(ConfigConstants.DIR_FILES);
         updateFile(dir);
+        MessageUtil.showMessage("更新完成");
     }
 
     private static void updateFile(File dir) {
@@ -552,16 +539,47 @@ public class FileUtil {
                 updateFile(file);
             } else {
                 JSONObject mindMap = readFile(file);
-                JSONObject newFormat = new JSONObject();
+
                 for (String key : mindMap.keySet()) {
-                    newFormat.put(String.valueOf(IdGenerator.nextId()), mindMap.get(key));
+                    JSONObject subject = (JSONObject) mindMap.get(key);
+                    updateFileR(subject, FileConstants.CHILDREN_R);
+                    updateFileL(subject, FileConstants.CHILDREN_L);
                 }
+
                 try (FileWriter fw = new FileWriter(file)) {
-                    fw.write(newFormat.toString());
+                    fw.write(mindMap.toString());
                 } catch (IOException e) {
                     MessageUtil.showMessage("更新失败：" + e.getMessage());
                 }
             }
+        }
+    }
+
+    private static void updateFileR(JSONObject parentJson, String key) {
+        JSONObject childrenR = parentJson.getJSONObject(key);
+        if (childrenR == null) {
+            return;
+        }
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.addAll(childrenR.values());
+        parentJson.put(key, jsonArray);
+
+        for (Object value : childrenR.values()) {
+            updateFileR((JSONObject) value, FileConstants.CHILDREN);
+        }
+    }
+
+    private static void updateFileL(JSONObject parentJson, String key) {
+        JSONObject childrenL = parentJson.getJSONObject(key);
+        if (childrenL == null) {
+            return;
+        }
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.addAll(childrenL.values());
+        parentJson.put(key, jsonArray);
+
+        for (Object value : childrenL.values()) {
+            updateFileL((JSONObject) value, FileConstants.CHILDREN);
         }
     }
 }

@@ -27,9 +27,8 @@ public class ScheduleUtil {
 
         WeakReference<MindMap> weakReference = new WeakReference<>(mindMap);
         // scheduleAtFixedRate + 匿名类创建 Runnable 任务 + 传递强引用 = 内存泄漏
-        ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
-                    FileUtil.saveFileSilence(new File(filePath), weakReference.get());
-                },
+        ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() ->
+                        FileUtil.saveFile(new File(filePath), weakReference.get(), false),
                 60, 60, TimeUnit.SECONDS);
         fileSaveFutures.put(filePath, future);
     }

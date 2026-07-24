@@ -11,6 +11,7 @@ public class FileConstants {
 
     public static final String CHILDREN_R = "childrenR";
     public static final String CHILDREN_L = "childrenL";
+    public static final String CHILDREN = "children";
 
     public static final String IMAGE_NAME = "imageName";
     public static final String IMAGE_WIDTH = "imageWidth";
