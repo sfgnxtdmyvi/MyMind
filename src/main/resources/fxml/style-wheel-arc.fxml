@@ -22,9 +22,9 @@
                 <Arc type="ROUND" styleClass="arc,yellow-text"
                      startAngle="120" length="60" radiusX="40" radiusY="40" centerX="125" centerY="125"
                      userData="yellow-text"/>
-                <Arc type="ROUND" styleClass="arc,purple-text"
+                <Arc type="ROUND" styleClass="arc,gray-text"
                      startAngle="180" length="60" radiusX="40" radiusY="40" centerX="125" centerY="125"
-                     userData="purple-text"/>
+                     userData="gray-text"/>
                 <Arc type="ROUND" styleClass="arc,blue-text"
                      startAngle="240" length="60" radiusX="40" radiusY="40" centerX="125" centerY="125"
                      userData="blue-text"/>

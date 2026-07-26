@@ -19,9 +19,6 @@ public class NodeConstants {
     public static final double ADD_LEFT_NODE_GAP_X = GAP_X + MIN_NODE_WIDTH;
 
     public static final double TRANSLATE_RATE = 0.7453;
-    public static final double NODE_TRANSLATE = MIN_NODE_HEIGHT * TRANSLATE_RATE;
-    public static final double FIVE_NODE_TRANSLATE = NODE_TRANSLATE * 5;
-    public static final double FOUR_NODE_TRANSLATE = NODE_TRANSLATE * 4;
 
     public static final int FONT_SIZE = 20;
 

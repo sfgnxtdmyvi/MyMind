@@ -479,44 +479,44 @@ public class MapNode extends StackPane {
     }
 
     //—————————————————————————————————————————增—————————————————————————————————————————
-    public void addChildR(MapNode child) {
-        childrenR.add(child);
+    public void addChild(MapNode child, byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            childrenR.add(child);
+        } else {
+            childrenL.add(child);
+        }
         child.setParentNode(this);
     }
 
-    public void addChildL(MapNode child) {
-        childrenL.add(child);
-        child.setParentNode(this);
-    }
-
-    public void addChildRAt(int index, MapNode child) {
-        childrenR.add(index, child);
-        child.setParentNode(this);
-    }
-
-    public void addChildLAt(int index, MapNode child) {
-        childrenL.add(index, child);
+    public void addChildAt(int index, MapNode child, byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            childrenR.add(index, child);
+        } else {
+            childrenL.add(index, child);
+        }
         child.setParentNode(this);
     }
 
     //—————————————————————————————————————————删—————————————————————————————————————————
-    public void removeChildR(MapNode child) {
-        childrenR.remove(child);
-        child.setParentNode(null);
+
+    /**
+     * 在子节点 List 中删除 child，设置 child 的 parentNode 为 null
+     *
+     */
+    public void removeChild(MapNode child, byte pos) {
+        removeChild(child, null, pos);
     }
 
-    public void removeChildL(MapNode child) {
-        childrenL.remove(child);
-        child.setParentNode(null);
-    }
-
-    public void undoR(MapNode child, MapNode parentNode) {
-        childrenR.remove(child);
-        child.setParentNode(parentNode);
-    }
-
-    public void undoL(MapNode child, MapNode parentNode) {
-        childrenL.remove(child);
+    /**
+     * 在子节点 List 中删除 child，设置 child 的 parentNode
+     *
+     */
+    public void removeChild(MapNode child, MapNode parentNode, byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            childrenR.remove(child);
+        } else {
+            childrenL.remove(child);
+        }
         child.setParentNode(parentNode);
     }
 
@@ -525,6 +525,7 @@ public class MapNode extends StackPane {
     /**
      * 子节点的总高度
      * 所有子节点的高度 + 间隔
+     *
      */
     public double getChildrenHeightR() {
         double totalHeight = 0;
@@ -555,6 +556,7 @@ public class MapNode extends StackPane {
     /**
      * 节点的高度
      * Math.max（当前节点的高度，子节点的总高度）
+     *
      */
     public double getHeightR() {
         // 每个调用的地方都可见，不用判断 isVisible

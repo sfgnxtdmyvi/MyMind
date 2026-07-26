@@ -81,9 +81,9 @@ public class SubjectController {
             while (iterator.hasNext()) {
                 MapNode node = iterator.next();
                 iterator.remove();
-                childNode.addChildL(node);
+                childNode.addChild(node, PosConstants.LEFT);
             }
-            selectedNode.addChildL(childNode);
+            selectedNode.addChild(childNode, PosConstants.LEFT);
             addNodeAndSelect(childNode);
 
             adjustChildrenXL(selectedNode);
@@ -94,9 +94,9 @@ public class SubjectController {
             while (iterator.hasNext()) {
                 MapNode node = iterator.next();
                 iterator.remove();
-                childNode.addChildR(node);
+                childNode.addChild(node, PosConstants.RIGHT);
             }
-            selectedNode.addChildR(childNode);
+            selectedNode.addChild(childNode, PosConstants.RIGHT);
             addNodeAndSelect(childNode);
 
             adjustChildrenXR(selectedNode);
@@ -109,11 +109,8 @@ public class SubjectController {
             return;
         }
 
-        if (!selectedNode.getChildrenR().isEmpty()) {
-            setSubjectTranslateY(-NodeConstants.NODE_TRANSLATE);
-        }
         MapNode childNode = new MapNode(PosConstants.RIGHT, calculateChildXR(selectedNode), 0);
-        selectedNode.addChildR(childNode);
+        selectedNode.addChild(childNode, PosConstants.RIGHT);
         addNodeAndSelect(childNode);
 
         adjustChildrenYR();
@@ -126,11 +123,8 @@ public class SubjectController {
             return;
         }
 
-        if (!selectedNode.getChildrenL().isEmpty()) {
-            setSubjectTranslateY(-NodeConstants.NODE_TRANSLATE);
-        }
         MapNode childNode = new MapNode(PosConstants.LEFT, calculateChildXL(selectedNode), 0);
-        selectedNode.addChildL(childNode);
+        selectedNode.addChild(childNode, PosConstants.LEFT);
         addNodeAndSelect(childNode);
 
         adjustChildrenYL();
@@ -147,7 +141,7 @@ public class SubjectController {
         MapNode siblingNode;
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             siblingNode = new MapNode(PosConstants.RIGHT, selectedNode.getLayoutX(), 0);
-            parentNode.addChildRAt(parentNode.getChildrenR().indexOf(selectedNode) + 1, siblingNode);
+            parentNode.addChildAt(parentNode.getChildrenR().indexOf(selectedNode) + 1, siblingNode, PosConstants.RIGHT);
             addNodeAndSelect(siblingNode);
 
             adjustChildrenYR();
@@ -155,14 +149,13 @@ public class SubjectController {
         } else {
             // 父节点 X 轴 - 节点间隔 - 节点最小宽度
             siblingNode = new MapNode(PosConstants.LEFT, parentNode.getLayoutX() - NodeConstants.ADD_LEFT_NODE_GAP_X, 0);
-            parentNode.addChildLAt(parentNode.getChildrenL().indexOf(selectedNode) + 1, siblingNode);
+            parentNode.addChildAt(parentNode.getChildrenL().indexOf(selectedNode) + 1, siblingNode, PosConstants.LEFT);
             addNodeAndSelect(siblingNode);
 
             adjustChildrenYL();
             refreshLinesL();
         }
 
-        setSubjectTranslateY(-NodeConstants.NODE_TRANSLATE);
         adjustTranslateY(siblingNode);
     }
 
@@ -174,20 +167,16 @@ public class SubjectController {
             return;
         }
 
-        if (selectedNode.getChildrenR().isEmpty()) {
-            setSubjectTranslateY(-NodeConstants.FOUR_NODE_TRANSLATE);
-        } else {
-            setSubjectTranslateY(-NodeConstants.FIVE_NODE_TRANSLATE);
-        }
         MapNode firstNode = new MapNode(PosConstants.RIGHT, calculateChildXR(selectedNode), 0);
-        addNodeR(firstNode);
+        addNode(firstNode, PosConstants.RIGHT);
         for (int i = 0; i < 4; i++) {
-            addNodeR(new MapNode(PosConstants.RIGHT, calculateChildXR(selectedNode), 0));
+            addNode(new MapNode(PosConstants.RIGHT, calculateChildXR(selectedNode), 0), PosConstants.RIGHT);
         }
         setSelectedNode(firstNode);
 
         adjustChildrenYR();
         refreshLinesR();
+        adjustTranslateY(firstNode.getParentNode().getLastChildR());
     }
 
     public void batchAddChildL() {
@@ -195,20 +184,16 @@ public class SubjectController {
             return;
         }
 
-        if (selectedNode.getChildrenL().isEmpty()) {
-            setSubjectTranslateY(-NodeConstants.FOUR_NODE_TRANSLATE);
-        } else {
-            setSubjectTranslateY(-NodeConstants.FIVE_NODE_TRANSLATE);
-        }
         MapNode firstNode = new MapNode(PosConstants.LEFT, calculateChildXL(selectedNode), 0);
-        addNodeL(firstNode);
+        addNode(firstNode, PosConstants.LEFT);
         for (int i = 0; i < 4; i++) {
-            addNodeL(new MapNode(PosConstants.LEFT, calculateChildXL(selectedNode), 0));
+            addNode(new MapNode(PosConstants.LEFT, calculateChildXL(selectedNode), 0), PosConstants.LEFT);
         }
         setSelectedNode(firstNode);
 
         adjustChildrenYL();
         refreshLinesL();
+        adjustTranslateY(firstNode.getParentNode().getLastChildL());
     }
 
     public void batchAddSibling() {
@@ -217,39 +202,40 @@ public class SubjectController {
         }
 
         MapNode parentNode = selectedNode.getParentNode();
-        setSubjectTranslateY(-NodeConstants.FIVE_NODE_TRANSLATE);
         if (selectedNode.getPos() == PosConstants.RIGHT) {
             MapNode firstNode = new MapNode(PosConstants.RIGHT, selectedNode.getLayoutX(), 0);
-            parentNode.addChildRAt(parentNode.getChildrenR().indexOf(selectedNode) + 1, firstNode);
+            parentNode.addChildAt(parentNode.getChildrenR().indexOf(selectedNode) + 1, firstNode, PosConstants.RIGHT);
             addNode(firstNode);
             for (int i = 1; i < 5; i++) {
                 MapNode siblingNode = new MapNode(PosConstants.RIGHT, selectedNode.getLayoutX(), 0);
-                parentNode.addChildRAt(parentNode.getChildrenR().indexOf(selectedNode) + 1 + i, siblingNode);
+                parentNode.addChildAt(parentNode.getChildrenR().indexOf(selectedNode) + 1 + i, siblingNode, PosConstants.RIGHT);
                 addNode(siblingNode);
             }
             setSelectedNode(firstNode);
 
             adjustChildrenYR();
             refreshLinesR();
+            adjustTranslateY(firstNode.getParentNode().getLastChildR());
         } else {
             // 父节点 X 轴 - 节点间隔 - 节点最小宽度
             MapNode firstNode = new MapNode(PosConstants.LEFT, parentNode.getLayoutX() - NodeConstants.ADD_LEFT_NODE_GAP_X, 0);
-            parentNode.addChildLAt(parentNode.getChildrenL().indexOf(selectedNode) + 1, firstNode);
+            parentNode.addChildAt(parentNode.getChildrenL().indexOf(selectedNode) + 1, firstNode, PosConstants.LEFT);
             addNode(firstNode);
             for (int i = 1; i < 5; i++) {
                 MapNode siblingNode = new MapNode(PosConstants.LEFT, selectedNode.getLayoutX(), 0);
-                parentNode.addChildLAt(parentNode.getChildrenL().indexOf(selectedNode) + 1 + i, siblingNode);
+                parentNode.addChildAt(parentNode.getChildrenL().indexOf(selectedNode) + 1 + i, siblingNode, PosConstants.LEFT);
                 addNode(siblingNode);
             }
             setSelectedNode(firstNode);
 
             adjustChildrenYL();
             refreshLinesL();
+            adjustTranslateY(firstNode.getParentNode().getLastChildL());
         }
     }
 
     /**
-     * 添加节点，并设它为选中节点
+     * 添加节点，并设为选中节点
      */
     public void addNodeAndSelect(MapNode node) {
         addNode(node);
@@ -259,13 +245,8 @@ public class SubjectController {
     /**
      * 给选中节点添加子节点，并且不改变选中节点
      */
-    private void addNodeR(MapNode childNode) {
-        selectedNode.addChildR(childNode);
-        addNode(childNode);
-    }
-
-    private void addNodeL(MapNode childNode) {
-        selectedNode.addChildL(childNode);
+    private void addNode(MapNode childNode, byte pos) {
+        selectedNode.addChild(childNode, pos);
         addNode(childNode);
     }
 
@@ -418,11 +399,11 @@ public class SubjectController {
 
         if (pos == PosConstants.LEFT) {
             for (MapNode childNode : originalNode.getChildrenL()) {
-                cloneNode.addChildL(clone(childNode));
+                cloneNode.addChild(clone(childNode), PosConstants.LEFT);
             }
         } else {
             for (MapNode childNode : originalNode.getChildrenR()) {
-                cloneNode.addChildR(clone(childNode));
+                cloneNode.addChild(clone(childNode), PosConstants.RIGHT);
             }
         }
 
@@ -436,7 +417,7 @@ public class SubjectController {
             for (MapNode childNode : originalNode.getChildrenL()) {
                 MapNode childCloneNode = clone(childNode);
                 childCloneNode.setPos(PosConstants.RIGHT);
-                cloneNode.addChildR(childCloneNode);
+                cloneNode.addChild(childCloneNode, PosConstants.RIGHT);
                 transBtnToR(childCloneNode);
             }
         }
@@ -520,7 +501,7 @@ public class SubjectController {
                 cloneNode.setParentNode(selectedNode);
                 transToR(cloneNode);
             } else {
-                selectedNode.addChildR(cloneNode);
+                selectedNode.addChild(cloneNode, PosConstants.RIGHT);
             }
 
             subject.addClone(cloneNode);
@@ -536,7 +517,7 @@ public class SubjectController {
                 cloneNode.setParentNode(selectedNode);
                 transToL(cloneNode);
             } else {
-                selectedNode.addChildL(cloneNode);
+                selectedNode.addChild(cloneNode, PosConstants.LEFT);
             }
 
             subject.addClone(cloneNode);
@@ -567,7 +548,7 @@ public class SubjectController {
                 cloneNode.setParentNode(parentNode);
                 transToRAt(index, cloneNode);
             } else {
-                parentNode.addChildRAt(index, cloneNode);
+                parentNode.addChildAt(index, cloneNode, PosConstants.RIGHT);
             }
 
             subject.addClone(cloneNode);
@@ -582,7 +563,7 @@ public class SubjectController {
                 cloneNode.setParentNode(parentNode);
                 transToLAt(index, cloneNode);
             } else {
-                parentNode.addChildLAt(index, cloneNode);
+                parentNode.addChildAt(index, cloneNode, PosConstants.LEFT);
             }
 
             subject.addClone(cloneNode);
@@ -599,7 +580,7 @@ public class SubjectController {
      */
     private void transToR(MapNode cloneNode) {
         cloneNode.setPos(PosConstants.RIGHT);
-        cloneNode.getParentNode().addChildR(cloneNode);
+        cloneNode.getParentNode().addChild(cloneNode, PosConstants.RIGHT);
         transBtnToR(cloneNode);
 
         Iterator<MapNode> iterator = cloneNode.getChildrenL().iterator();
@@ -612,7 +593,7 @@ public class SubjectController {
 
     private void transToL(MapNode cloneNode) {
         cloneNode.setPos(PosConstants.LEFT);
-        cloneNode.getParentNode().addChildL(cloneNode);
+        cloneNode.getParentNode().addChild(cloneNode, PosConstants.LEFT);
         transBtnToL(cloneNode);
 
         Iterator<MapNode> iterator = cloneNode.getChildrenR().iterator();
@@ -627,9 +608,9 @@ public class SubjectController {
         // 父节点粘到选中节点的上面，子节点继续跟着父节点
         cloneNode.setPos(PosConstants.RIGHT);
         if (index != -1) {
-            cloneNode.getParentNode().addChildRAt(index, cloneNode);
+            cloneNode.getParentNode().addChildAt(index, cloneNode, PosConstants.RIGHT);
         } else {
-            cloneNode.getParentNode().addChildR(cloneNode);
+            cloneNode.getParentNode().addChild(cloneNode, PosConstants.RIGHT);
         }
         transBtnToR(cloneNode);
 
@@ -644,9 +625,9 @@ public class SubjectController {
     private void transToLAt(int index, MapNode cloneNode) {
         cloneNode.setPos(PosConstants.LEFT);
         if (index != -1) {
-            cloneNode.getParentNode().addChildLAt(index, cloneNode);
+            cloneNode.getParentNode().addChildAt(index, cloneNode, PosConstants.LEFT);
         } else {
-            cloneNode.getParentNode().addChildL(cloneNode);
+            cloneNode.getParentNode().addChild(cloneNode, PosConstants.LEFT);
         }
         transBtnToL(cloneNode);
 
@@ -671,6 +652,131 @@ public class SubjectController {
         cloneNode.removeAddButtonL();
         cloneNode.addButtonR();
         cloneNode.addButtonListenR();
+    }
+
+    //———————————————————————————————————————————删除———————————————————————————————————————————
+
+    /**
+     *
+     * @param keepChildren true： 删除选中节点及其子节点
+     *                     false：删除选中节点，子节点成为父节点的子节点
+     */
+    public void delete(boolean keepChildren) {
+        if (selectedNode == null || selectedNode == rootNode) {
+            return;
+        }
+        commandHistory.execute(new DeleteCommand(this, selectedNode, keepChildren));
+    }
+
+    /**
+     * 删除空白节点
+     */
+    public void deleteEmpty() {
+        if (selectedNode == null) {
+            return;
+        }
+
+        // 中间节点要删左右子节点
+        if (selectedNode.getPos() != PosConstants.LEFT) {
+            deleteEmptyR(selectedNode);
+            adjustChildrenYR();
+            refreshLinesR();
+        }
+        if (selectedNode.getPos() != PosConstants.RIGHT) {
+            deleteEmptyL(selectedNode);
+            adjustChildrenYL();
+            refreshLinesL();
+        }
+    }
+
+    private void deleteEmptyR(MapNode node) {
+        Iterator<MapNode> iterator = node.getChildrenR().iterator();
+        while (iterator.hasNext()) {
+            MapNode childNode = iterator.next();
+            if (childNode.getTextArea().getText().isEmpty() && childNode.getImageName() == null) {
+                iterator.remove();
+                childNode.setParentNode(null);
+                subject.remove(childNode);
+                // 空白节点如果有子节点，一并删除
+                // 一个节点有两个引用，父节点和 nodesLayer，两个引用都删除，就会被 GC 掉
+                deleteChildrenFromSubjectR(childNode);
+                setSubjectTranslateY(childNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
+            } else {
+                // 非空时，递归看子节点是否为空
+                deleteEmptyR(childNode);
+            }
+        }
+    }
+
+    private void deleteEmptyL(MapNode node) {
+        Iterator<MapNode> iterator = node.getChildrenL().iterator();
+        while (iterator.hasNext()) {
+            MapNode childNode = iterator.next();
+            if (childNode.getTextArea().getText().isEmpty() && childNode.getImageName() == null) {
+                iterator.remove();
+                childNode.setParentNode(null);
+                subject.remove(childNode);
+                deleteChildrenFromSubjectL(childNode);
+                setSubjectTranslateY(childNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
+            } else {
+                deleteEmptyL(childNode);
+            }
+        }
+    }
+
+    /**
+     * 删除节点
+     * 传入参数，保证在重做时，不选中节点的情况下，仍然能删除
+     */
+    public void deleteR(MapNode deletedNode) {
+        MapNode parent = deletedNode.getParentNode();
+        changeSelectedNode(deletedNode, parent, parent.getChildrenR());
+
+        parent.removeChild(deletedNode, PosConstants.RIGHT);
+        subject.remove(deletedNode);
+    }
+
+    public void deleteL(MapNode deletedNode) {
+        MapNode parent = deletedNode.getParentNode();
+        changeSelectedNode(deletedNode, parent, parent.getChildrenL());
+
+        parent.removeChild(deletedNode, PosConstants.LEFT);
+        subject.remove(deletedNode);
+    }
+
+    /**
+     * 删除 subject 中的子节点
+     */
+    public void deleteChildrenFromSubjectR(MapNode parentNode) {
+        for (MapNode childNode : parentNode.getChildrenR()) {
+            subject.remove(childNode);
+            deleteChildrenFromSubjectR(childNode);
+        }
+    }
+
+    public void deleteChildrenFromSubjectL(MapNode parentNode) {
+        for (MapNode childNode : parentNode.getChildrenL()) {
+            subject.remove(childNode);
+            deleteChildrenFromSubjectL(childNode);
+        }
+    }
+
+    /**
+     * 改变选中节点
+     * 有下一个节点就改成下一个节点，没有就改成上一个
+     * 没有兄弟节点，就改成父节点
+     */
+    private void changeSelectedNode(MapNode toDelete, MapNode parent, List<MapNode> children) {
+        if (children.size() == 1) {
+            setSelectedNode(parent);
+        } else {
+            int index = children.indexOf(toDelete);
+            if (index != children.size() - 1) {
+                setSelectedNode(children.get(index + 1));
+            } else {
+                setSelectedNode(children.get(index - 1));
+            }
+        }
     }
 
     //———————————————————————————————————————————收起、展开———————————————————————————————————————————
@@ -779,131 +885,6 @@ public class SubjectController {
         }
         adjustChildrenY();
         refreshLines();
-    }
-
-    //———————————————————————————————————————————删除———————————————————————————————————————————
-
-    /**
-     *
-     * @param keepChildren true： 删除选中节点及其子节点
-     *                     false：删除选中节点，子节点成为父节点的子节点
-     */
-    public void delete(boolean keepChildren) {
-        if (selectedNode == null || selectedNode == rootNode) {
-            return;
-        }
-        commandHistory.execute(new DeleteCommand(this, selectedNode, keepChildren));
-    }
-
-    /**
-     * 删除空白节点
-     */
-    public void deleteEmpty() {
-        if (selectedNode == null) {
-            return;
-        }
-
-        // 中间节点要删左右子节点
-        if (selectedNode.getPos() != PosConstants.LEFT) {
-            deleteEmptyR(selectedNode);
-            adjustChildrenYR();
-            refreshLinesR();
-        }
-        if (selectedNode.getPos() != PosConstants.RIGHT) {
-            deleteEmptyL(selectedNode);
-            adjustChildrenYL();
-            refreshLinesL();
-        }
-    }
-
-    private void deleteEmptyR(MapNode node) {
-        Iterator<MapNode> iterator = node.getChildrenR().iterator();
-        while (iterator.hasNext()) {
-            MapNode childNode = iterator.next();
-            if (childNode.getTextArea().getText().isEmpty() && childNode.getImageName() == null) {
-                iterator.remove();
-                childNode.setParentNode(null);
-                subject.remove(childNode);
-                // 空白节点如果有子节点，一并删除
-                // 一个节点有两个引用，父节点和 nodesLayer，两个引用都删除，就会被 GC 掉
-                deleteChildrenFromSubjectR(childNode);
-                setSubjectTranslateY(childNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
-            } else {
-                // 非空时，递归看子节点是否为空
-                deleteEmptyR(childNode);
-            }
-        }
-    }
-
-    private void deleteEmptyL(MapNode node) {
-        Iterator<MapNode> iterator = node.getChildrenL().iterator();
-        while (iterator.hasNext()) {
-            MapNode childNode = iterator.next();
-            if (childNode.getTextArea().getText().isEmpty() && childNode.getImageName() == null) {
-                iterator.remove();
-                childNode.setParentNode(null);
-                subject.remove(childNode);
-                deleteChildrenFromSubjectL(childNode);
-                setSubjectTranslateY(childNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
-            } else {
-                deleteEmptyL(childNode);
-            }
-        }
-    }
-
-    /**
-     * 删除节点
-     * 传入参数，保证在重做时，不选中节点的情况下，仍然能删除
-     */
-    public void deleteR(MapNode deletedNode) {
-        MapNode parent = deletedNode.getParentNode();
-        changeSelectedNode(deletedNode, parent, parent.getChildrenR());
-
-        parent.removeChildR(deletedNode);
-        subject.remove(deletedNode);
-    }
-
-    public void deleteL(MapNode deletedNode) {
-        MapNode parent = deletedNode.getParentNode();
-        changeSelectedNode(deletedNode, parent, parent.getChildrenL());
-
-        parent.removeChildL(deletedNode);
-        subject.remove(deletedNode);
-    }
-
-    /**
-     * 删除 subject 中的子节点
-     */
-    public void deleteChildrenFromSubjectR(MapNode parentNode) {
-        for (MapNode childNode : parentNode.getChildrenR()) {
-            subject.remove(childNode);
-            deleteChildrenFromSubjectR(childNode);
-        }
-    }
-
-    public void deleteChildrenFromSubjectL(MapNode parentNode) {
-        for (MapNode childNode : parentNode.getChildrenL()) {
-            subject.remove(childNode);
-            deleteChildrenFromSubjectL(childNode);
-        }
-    }
-
-    /**
-     * 改变选中节点
-     * 有下一个节点就改成下一个节点，没有就改成上一个
-     * 没有兄弟节点，就改成父节点
-     */
-    private void changeSelectedNode(MapNode toDelete, MapNode parent, List<MapNode> children) {
-        if (children.size() == 1) {
-            setSelectedNode(parent);
-        } else {
-            int index = children.indexOf(toDelete);
-            if (index != children.size() - 1) {
-                setSelectedNode(children.get(index + 1));
-            } else {
-                setSelectedNode(children.get(index - 1));
-            }
-        }
     }
 
     //———————————————————————————————————————————调整———————————————————————————————————————————

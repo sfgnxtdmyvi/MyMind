@@ -46,7 +46,7 @@ public class DeleteCommand implements Command {
                 // 删除节点，子节点成为父节点的子节点
                 int i = index;
                 for (MapNode childNode : childrenR) {
-                    parentNode.addChildRAt(i, childNode);
+                    parentNode.addChildAt(i, childNode, PosConstants.RIGHT);
                     i++;
                 }
                 // deletedNode 的子节点 List 中仍保留子节点，方便 undo
@@ -72,7 +72,7 @@ public class DeleteCommand implements Command {
 
                 int i = index;
                 for (MapNode childNode : childrenL) {
-                    parentNode.addChildLAt(i, childNode);
+                    parentNode.addChildAt(i, childNode, PosConstants.LEFT);
                     i++;
                 }
 
@@ -123,9 +123,9 @@ public class DeleteCommand implements Command {
 
                 // 删除节点重新插入，该节点在父节点中的子节点删除
                 for (MapNode childNode : childrenR) {
-                    parentNode.undoR(childNode, deletedNode);
+                    parentNode.removeChild(childNode, deletedNode, PosConstants.RIGHT);
                 }
-                parentNode.addChildRAt(index, deletedNode);
+                parentNode.addChildAt(index, deletedNode, PosConstants.RIGHT);
                 subject.addNode(deletedNode);
 
                 subjectController.adjustChildrenXR(parentNode);
@@ -141,9 +141,9 @@ public class DeleteCommand implements Command {
                 }
 
                 for (MapNode childNode : childrenL) {
-                    parentNode.undoL(childNode, deletedNode);
+                    parentNode.removeChild(childNode, deletedNode, PosConstants.LEFT);
                 }
-                parentNode.addChildLAt(index, deletedNode);
+                parentNode.addChildAt(index, deletedNode, PosConstants.LEFT);
                 subject.addNode(deletedNode);
 
                 subjectController.adjustChildrenXL(parentNode);
@@ -156,7 +156,7 @@ public class DeleteCommand implements Command {
         } else {
             if (pos == PosConstants.RIGHT) {
                 undoR(deletedNode);
-                parentNode.addChildRAt(index, deletedNode);
+                parentNode.addChildAt(index, deletedNode, PosConstants.RIGHT);
                 if (parentNode.getChildrenR().size() != 1) {
                     subjectController.setSubjectTranslateY(-(deletedNode.getHeightR() * NodeConstants.TRANSLATE_RATE));
                 }
@@ -164,7 +164,7 @@ public class DeleteCommand implements Command {
                 subjectController.refreshLinesR();
             } else {
                 undoL(deletedNode);
-                parentNode.addChildLAt(index, deletedNode);
+                parentNode.addChildAt(index, deletedNode, PosConstants.LEFT);
                 if (parentNode.getChildrenL().size() != 1) {
                     subjectController.setSubjectTranslateY(-(deletedNode.getHeightL() * NodeConstants.TRANSLATE_RATE));
                 }

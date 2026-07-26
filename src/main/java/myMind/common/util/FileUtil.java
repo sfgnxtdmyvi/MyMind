@@ -105,7 +105,7 @@ public class FileUtil {
         for (Object o : childrenJsonArray) {
             JSONObject childrenJson = (JSONObject) o;
             MapNode node = buildNode(childrenJson, PosConstants.RIGHT);
-            parentNode.addChildR(node);
+            parentNode.addChild(node, PosConstants.RIGHT);
             subjectController.addNode(node);
 
             loadChildR(childrenJson.getJSONArray(FileConstants.CHILDREN), node, subjectController);
@@ -120,7 +120,7 @@ public class FileUtil {
         for (Object o : childrenJsonArray) {
             JSONObject childrenJson = (JSONObject) o;
             MapNode node = buildNode(childrenJson, PosConstants.LEFT);
-            parentNode.addChildL(node);
+            parentNode.addChild(node, PosConstants.LEFT);
             subjectController.addNode(node);
 
             loadChildL(childrenJson.getJSONArray(FileConstants.CHILDREN), node, subjectController);
