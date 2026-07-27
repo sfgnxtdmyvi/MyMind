@@ -4,7 +4,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import lombok.Setter;
-import myMind.common.constants.PosConstants;
 import myMind.common.manager.ReferenceManager;
 import myMind.componet.MapNode;
 
@@ -21,12 +20,7 @@ public class ContextMenuController {
     @FXML
     private void onShowing() {
         MapNode selectedNode = subjectController.getSelectedNode();
-        List<MapNode> children;
-        if (selectedNode.getPos() == PosConstants.LEFT) {
-            children = selectedNode.getChildrenL();
-        } else {
-            children = selectedNode.getChildrenR();
-        }
+        List<MapNode> children = selectedNode.getChildren(selectedNode.getPos());
         if (children.isEmpty() || children.get(0).isVisible()) {
             Label label = (Label) collapseOrExpandItem.getGraphic();
             label.setText("收起 ▲");

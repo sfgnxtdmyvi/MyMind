@@ -1,7 +1,6 @@
 package myMind.common.history;
 
 import myMind.common.constants.NodeConstants;
-import myMind.common.constants.PosConstants;
 import myMind.componet.MapNode;
 import myMind.componet.Subject;
 import myMind.controller.SubjectController;
@@ -29,85 +28,52 @@ public class DeleteCommand implements Command {
         this.translateY = subject.getTranslateY();
         this.pos = deletedNode.getPos();
         // 撤消时，插入原位置
-        this.index = (pos == PosConstants.RIGHT) ? parentNode.getChildrenR().indexOf(deletedNode) : parentNode.getChildrenL().indexOf(deletedNode);
+        this.index = parentNode.getChildren(pos).indexOf(deletedNode);
     }
 
     @Override
     public void execute() {
         if (keepChildren) {
-            if (pos == PosConstants.RIGHT) {
-                List<MapNode> childrenR = deletedNode.getChildrenR();
-                if (childrenR.isEmpty()) {
-                    deleteNotRemain();
-                    keepChildren = false;
-                    return;
-                }
-
-                // 删除节点，子节点成为父节点的子节点
-                int i = index;
-                for (MapNode childNode : childrenR) {
-                    parentNode.addChildAt(i, childNode, PosConstants.RIGHT);
-                    i++;
-                }
-                // deletedNode 的子节点 List 中仍保留子节点，方便 undo
-                subjectController.deleteR(deletedNode);
-
-                subjectController.adjustChildrenXR(parentNode);
-                // 删除前会改变选中节点 -> 失焦事件 -> adjust -> adjustChildrenY
-                // 此时 deletedNode 还没删除，但是它的子节点都已经添加到 parentNode 中，子节点有2份，
-                // 因此 adjustChildrenY 的结果是错误的，需要再调整一遍
-                subjectController.adjustChildrenYR();
-                subjectController.refreshLinesR();
-                MapNode lastChildR = deletedNode.getLastChildR();
-                subjectController.setSelectedNode(lastChildR);
-                subjectController.adjustTranslateY(lastChildR);
-            } else {
-                List<MapNode> childrenL = deletedNode.getChildrenL();
-                subjectController.deleteL(deletedNode);
-                if (childrenL.isEmpty()) {
-                    deleteNotRemain();
-                    keepChildren = false;
-                    return;
-                }
-
-                int i = index;
-                for (MapNode childNode : childrenL) {
-                    parentNode.addChildAt(i, childNode, PosConstants.LEFT);
-                    i++;
-                }
-
-                subjectController.adjustChildrenXL(parentNode);
-                subjectController.adjustChildrenYL();
-                subjectController.refreshLinesL();
-                MapNode lastChildL = deletedNode.getLastChildL();
-                subjectController.setSelectedNode(lastChildL);
-                subjectController.adjustTranslateY(lastChildL);
+            List<MapNode> children = deletedNode.getChildren(pos);
+            if (children.isEmpty()) {
+                deleteNotRemain();
+                keepChildren = false;
+                return;
             }
+
+            // 删除节点，子节点成为父节点的子节点
+            int i = index;
+            for (MapNode childNode : children) {
+                parentNode.addChildAt(i, childNode, pos);
+                i++;
+            }
+            // deletedNode 的子节点 List 中仍保留子节点，方便 undo
+            subjectController.delete(deletedNode, pos);
+
+            subjectController.adjustChildrenX(parentNode, pos);
+            // 删除前会改变选中节点 -> 失焦事件 -> adjust -> adjustChildrenY
+            // 此时 deletedNode 还没删除，但是它的子节点都已经添加到 parentNode 中，子节点有2份，
+            // 因此 adjustChildrenY 的结果是错误的，需要再调整一遍
+            subjectController.adjustChildrenY(pos);
+            subjectController.refreshLines(pos);
+            MapNode lastChild = deletedNode.getLastChild(pos);
+            subjectController.setSelectedNode(lastChild);
+            subjectController.adjustTranslateY(lastChild);
         } else {
             deleteNotRemain();
         }
     }
 
     private void deleteNotRemain() {
-        if (pos == PosConstants.RIGHT) {
-            // 删除空白节点时，这里的调整就够了
-            if (parentNode.getChildrenR().size() != 1) {
-                subjectController.setSubjectTranslateY(deletedNode.getHeightR() * NodeConstants.TRANSLATE_RATE);
-            }
-            // 删除 subject 中的子节点
-            subjectController.deleteChildrenFromSubjectR(deletedNode);
-            subjectController.deleteR(deletedNode);
-            subjectController.adjustChildrenYR();
-            subjectController.refreshLinesR();
-        } else {
-            if (parentNode.getChildrenL().size() != 1) {
-                subjectController.setSubjectTranslateY(deletedNode.getHeightL() * NodeConstants.TRANSLATE_RATE);
-            }
-            subjectController.deleteChildrenFromSubjectL(deletedNode);
-            subjectController.deleteL(deletedNode);
-            subjectController.adjustChildrenYL();
-            subjectController.refreshLinesL();
+        // 删除空白节点时，这里的调整就够了
+        if (parentNode.getChildren(pos).size() != 1) {
+            subjectController.setSubjectTranslateY(deletedNode.getHeight(pos) * NodeConstants.TRANSLATE_RATE);
         }
+        // 删除 subject 中的子节点
+        subjectController.deleteChildrenFromSubject(deletedNode, pos);
+        subjectController.delete(deletedNode, pos);
+        subjectController.adjustChildrenY(pos);
+        subjectController.refreshLines(pos);
         subjectController.adjustTranslateY(subjectController.getSelectedNode());
     }
 
@@ -115,78 +81,41 @@ public class DeleteCommand implements Command {
     public void undo() {
         if (keepChildren) {
             double selfHeight = deletedNode.getPrefHeight();
-            if (pos == PosConstants.RIGHT) {
-                List<MapNode> childrenR = deletedNode.getChildrenR();
-                if (childrenR.isEmpty()) {
-                    return;
-                }
-
-                // 删除节点重新插入，该节点在父节点中的子节点删除
-                for (MapNode childNode : childrenR) {
-                    parentNode.removeChild(childNode, deletedNode, PosConstants.RIGHT);
-                }
-                parentNode.addChildAt(index, deletedNode, PosConstants.RIGHT);
-                subject.addNode(deletedNode);
-
-                subjectController.adjustChildrenXR(parentNode);
-                double childrenHeight = deletedNode.getChildrenHeightR();
-                if (selfHeight > childrenHeight) {
-                    subjectController.adjustChildrenYR();
-                }
-                subjectController.refreshLinesR();
-            } else {
-                List<MapNode> childrenL = deletedNode.getChildrenL();
-                if (childrenL.isEmpty()) {
-                    return;
-                }
-
-                for (MapNode childNode : childrenL) {
-                    parentNode.removeChild(childNode, deletedNode, PosConstants.LEFT);
-                }
-                parentNode.addChildAt(index, deletedNode, PosConstants.LEFT);
-                subject.addNode(deletedNode);
-
-                subjectController.adjustChildrenXL(parentNode);
-                double childrenHeight = deletedNode.getChildrenHeightL();
-                if (selfHeight > childrenHeight) {
-                    subjectController.adjustChildrenYL();
-                }
-                subjectController.refreshLinesL();
+            List<MapNode> children = deletedNode.getChildren(pos);
+            if (children.isEmpty()) {
+                return;
             }
+
+            // 删除节点重新插入，该节点在父节点中的子节点删除
+            for (MapNode childNode : children) {
+                parentNode.removeChild(childNode, deletedNode, pos);
+            }
+            parentNode.addChildAt(index, deletedNode, pos);
+            subject.addNode(deletedNode);
+
+            subjectController.adjustChildrenX(parentNode, pos);
+            double childrenHeight = deletedNode.getChildrenHeight(pos);
+            if (selfHeight > childrenHeight) {
+                subjectController.adjustChildrenY(pos);
+            }
+            subjectController.refreshLines(pos);
         } else {
-            if (pos == PosConstants.RIGHT) {
-                undoR(deletedNode);
-                parentNode.addChildAt(index, deletedNode, PosConstants.RIGHT);
-                if (parentNode.getChildrenR().size() != 1) {
-                    subjectController.setSubjectTranslateY(-(deletedNode.getHeightR() * NodeConstants.TRANSLATE_RATE));
-                }
-                subjectController.adjustChildrenYR();
-                subjectController.refreshLinesR();
-            } else {
-                undoL(deletedNode);
-                parentNode.addChildAt(index, deletedNode, PosConstants.LEFT);
-                if (parentNode.getChildrenL().size() != 1) {
-                    subjectController.setSubjectTranslateY(-(deletedNode.getHeightL() * NodeConstants.TRANSLATE_RATE));
-                }
-                subjectController.adjustChildrenYL();
-                subjectController.refreshLinesL();
+            undo(deletedNode, pos);
+            parentNode.addChildAt(index, deletedNode, pos);
+            if (parentNode.getChildren(pos).size() != 1) {
+                subjectController.setSubjectTranslateY(-(deletedNode.getHeight(pos) * NodeConstants.TRANSLATE_RATE));
             }
+            subjectController.adjustChildrenY(pos);
+            subjectController.refreshLines(pos);
         }
         subjectController.setSelectedNode(deletedNode);
         subject.setTranslateY(translateY);
     }
 
-    private void undoR(MapNode parentNode) {
+    private void undo(MapNode parentNode, byte pos) {
         subject.addNode(parentNode);
-        for (MapNode childNode : parentNode.getChildrenR()) {
-            undoR(childNode);
-        }
-    }
-
-    private void undoL(MapNode parentNode) {
-        subject.addNode(parentNode);
-        for (MapNode childNode : parentNode.getChildrenL()) {
-            undoL(childNode);
+        for (MapNode childNode : parentNode.getChildren(pos)) {
+            undo(childNode, pos);
         }
     }
 }

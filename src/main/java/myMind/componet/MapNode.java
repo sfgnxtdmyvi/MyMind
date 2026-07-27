@@ -104,10 +104,10 @@ public class MapNode extends StackPane {
 
         // 中间节点会添加两个按钮
         if (pos != PosConstants.LEFT) {
-            addButtonR();
+            addButton(PosConstants.RIGHT);
         }
         if (pos != PosConstants.RIGHT) {
-            addButtonL();
+            addButton(PosConstants.LEFT);
         }
 
         getStyleClass().add("node");
@@ -117,32 +117,32 @@ public class MapNode extends StackPane {
         addListener();
     }
 
-    public void addButtonR() {
-        addButtonR = new Button(NodeConstants.ADD);
-        addButtonR.getStyleClass().addAll("add-button", "add-button-r");
-        addButtonR.setVisible(false);
-        StackPane.setAlignment(addButtonR, Pos.CENTER_RIGHT);
-        getChildren().add(addButtonR);
+    public void addButton(byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            addButtonR = new Button(NodeConstants.ADD);
+            addButtonR.getStyleClass().addAll("add-button", "add-button-r");
+            addButtonR.setVisible(false);
+            StackPane.setAlignment(addButtonR, Pos.CENTER_RIGHT);
+            getChildren().add(addButtonR);
+        } else {
+            addButtonL = new Button(NodeConstants.ADD);
+            addButtonL.getStyleClass().addAll("add-button", "add-button-l");
+            addButtonL.setVisible(false);
+            StackPane.setAlignment(addButtonL, Pos.CENTER_LEFT);
+            getChildren().add(addButtonL);
+        }
     }
 
-    public void addButtonL() {
-        addButtonL = new Button(NodeConstants.ADD);
-        addButtonL.getStyleClass().addAll("add-button", "add-button-l");
-        addButtonL.setVisible(false);
-        StackPane.setAlignment(addButtonL, Pos.CENTER_LEFT);
-        getChildren().add(addButtonL);
-    }
-
-    public void removeAddButtonR() {
-        getChildren().remove(addButtonR);
-        addButtonR.setOnAction(null);
-        addButtonR = null;
-    }
-
-    public void removeAddButtonL() {
-        getChildren().remove(addButtonL);
-        addButtonL.setOnAction(null);
-        addButtonL = null;
+    public void removeAddButton(byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            getChildren().remove(addButtonR);
+            addButtonR.setOnAction(null);
+            addButtonR = null;
+        } else {
+            getChildren().remove(addButtonL);
+            addButtonL.setOnAction(null);
+            addButtonL = null;
+        }
     }
 
     public void setImage(String imageName, double imageWidth, double imageHeight) {
@@ -245,15 +245,6 @@ public class MapNode extends StackPane {
      */
     private void addButtonListen() {
         // 鼠标移入左右中心点时，显示添加按钮
-        if (pos == PosConstants.RIGHT) {
-            addButtonListenR();
-        }
-
-        if (pos == PosConstants.LEFT) {
-            addButtonListenL();
-        }
-
-        // 用 pos != PosConstants.LEFT 写法添加事件的话，根节点添加左按钮的事件时，会覆盖右按钮的事件
         if (pos == PosConstants.MIDDLE) {
             setOnMouseMoved(e -> {
                 double midHeight = getBoundsInLocal().getHeight() / 2;
@@ -276,35 +267,37 @@ public class MapNode extends StackPane {
 
             addButtonR.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_R));
             addButtonL.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_L));
+        }else {
+            addButtonListen(pos);
         }
     }
 
-    public void addButtonListenR() {
-        setOnMouseMoved(e -> {
-            double midHeight = getBoundsInLocal().getHeight() / 2;
-            double y = e.getY();
-            if (getBoundsInLocal().getWidth() - NodeConstants.BUTTON_THRESHOLD < e.getX() &&
-                    midHeight - NodeConstants.BUTTON_THRESHOLD < y && y < midHeight + NodeConstants.BUTTON_THRESHOLD) {
-                addButtonR.setVisible(true);
-            }
-        });
-        setOnMouseExited(e -> addButtonR.setVisible(false));
+    public void addButtonListen(byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            setOnMouseMoved(e -> {
+                double midHeight = getBoundsInLocal().getHeight() / 2;
+                double y = e.getY();
+                if (getBoundsInLocal().getWidth() - NodeConstants.BUTTON_THRESHOLD < e.getX() &&
+                        midHeight - NodeConstants.BUTTON_THRESHOLD < y && y < midHeight + NodeConstants.BUTTON_THRESHOLD) {
+                    addButtonR.setVisible(true);
+                }
+            });
+            setOnMouseExited(e -> addButtonR.setVisible(false));
 
-        addButtonR.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_R));
-    }
+            addButtonR.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_R));
+        } else {
+            setOnMouseMoved(e -> {
+                double midHeight = getBoundsInLocal().getHeight() / 2;
+                double y = e.getY();
+                if (e.getX() < NodeConstants.BUTTON_THRESHOLD &&
+                        midHeight - NodeConstants.BUTTON_THRESHOLD < y && y < midHeight + NodeConstants.BUTTON_THRESHOLD) {
+                    addButtonL.setVisible(true);
+                }
+            });
+            setOnMouseExited(e -> addButtonL.setVisible(false));
 
-    public void addButtonListenL() {
-        setOnMouseMoved(e -> {
-            double midHeight = getBoundsInLocal().getHeight() / 2;
-            double y = e.getY();
-            if (e.getX() < NodeConstants.BUTTON_THRESHOLD &&
-                    midHeight - NodeConstants.BUTTON_THRESHOLD < y && y < midHeight + NodeConstants.BUTTON_THRESHOLD) {
-                addButtonL.setVisible(true);
-            }
-        });
-        setOnMouseExited(e -> addButtonL.setVisible(false));
-
-        addButtonL.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_L));
+            addButtonL.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_L));
+        }
     }
 
     /**
@@ -527,25 +520,12 @@ public class MapNode extends StackPane {
      * 所有子节点的高度 + 间隔
      *
      */
-    public double getChildrenHeightR() {
+    public double getChildrenHeight(byte pos) {
         double totalHeight = 0;
         int size = 0;
-        for (MapNode child : childrenR) {
+        for (MapNode child : getChildren(pos)) {
             if (child.isVisible()) {
-                totalHeight += child.getHeightR();
-                size++;
-            }
-        }
-        totalHeight += size != 0 ? NodeConstants.GAP_Y * (size - 1) : 0;
-        return totalHeight;
-    }
-
-    public double getChildrenHeightL() {
-        double totalHeight = 0;
-        int size = 0;
-        for (MapNode child : childrenL) {
-            if (child.isVisible()) {
-                totalHeight += child.getHeightL();
+                totalHeight += child.getHeight(pos);
                 size++;
             }
         }
@@ -558,94 +538,50 @@ public class MapNode extends StackPane {
      * Math.max（当前节点的高度，子节点的总高度）
      *
      */
-    public double getHeightR() {
+    public double getHeight(byte pos) {
         // 每个调用的地方都可见，不用判断 isVisible
-        if (childrenR.isEmpty()) {
+        if (getChildren(pos).isEmpty()) {
             return getPrefHeight();
         }
-        return Math.max(getPrefHeight(), getChildrenHeightR());
-    }
-
-    public double getHeightL() {
-        if (childrenL.isEmpty()) {
-            return getPrefHeight();
-        }
-        return Math.max(getPrefHeight(), getChildrenHeightL());
+        return Math.max(getPrefHeight(), getChildrenHeight(pos));
     }
 
     //———————————————————————————————————————————位置计算———————————————————————————————————————————
-    public double getStartYR() {
+    public double getStartY(byte pos) {
+        List<MapNode> children = getChildren(pos);
         // 找到第一个可见的子节点
-        MapNode fistNode = childrenR.get(0);
-        for (int i = 1; i < childrenR.size() && !fistNode.isVisible(); i++) {
-            fistNode = childrenR.get(i);
+        MapNode fistNode = children.get(0);
+        for (int i = 1; i < children.size() && !fistNode.isVisible(); i++) {
+            fistNode = children.get(i);
         }
         // 从 adjustChildrenY 调用这个方法时，必然有可见的子节点，
         // 递归时，可能从头找到尾都是收起的节点，返回到上层的 Math.min(selfEndY, Integer.MAX_VALUE)
         if (!fistNode.isVisible()) {
             return Integer.MAX_VALUE;
         }
-        if (!fistNode.childrenR.isEmpty()) {
+        if (!fistNode.getChildren(pos).isEmpty()) {
             // 当前节点可能比子节节点的总高度更高
-            return Math.min(fistNode.getLayoutY(), fistNode.getStartYR());
+            return Math.min(fistNode.getLayoutY(), fistNode.getStartY(pos));
         } else {
             return fistNode.getLayoutY();
         }
     }
 
-    public double getStartYL() {
-        MapNode fistNode = childrenL.get(0);
-        for (int i = 1; i < childrenL.size() && !fistNode.isVisible(); i++) {
-            fistNode = childrenL.get(i);
-        }
-        if (!fistNode.isVisible()) {
-            return Integer.MAX_VALUE;
-        }
-        if (!fistNode.childrenL.isEmpty()) {
-            return Math.min(fistNode.getLayoutY(), fistNode.getStartYL());
-        } else {
-            return fistNode.getLayoutY();
-        }
-    }
-
-    public double getEndYR() {
-        MapNode lastNode = childrenR.get(childrenR.size() - 1);
-        for (int i = childrenR.size() - 2; i >= 0 && !lastNode.isVisible(); i--) {
-            lastNode = childrenR.get(i);
+    public double getEndY(byte pos) {
+        MapNode lastNode = getLastChild(pos);
+        List<MapNode> children = getChildren(pos);
+        for (int i = children.size() - 2; i >= 0 && !lastNode.isVisible(); i--) {
+            lastNode = children.get(i);
         }
         double selfEndY = lastNode.getLayoutY() + lastNode.getPrefHeight();
         if (!lastNode.isVisible()) {
             return Integer.MIN_VALUE;
         }
-        if (!lastNode.childrenR.isEmpty()) {
-            return Math.max(selfEndY, lastNode.getEndYR());
+        if (!lastNode.getChildren(pos).isEmpty()) {
+            return Math.max(selfEndY, lastNode.getEndY(pos));
         } else {
             return selfEndY;
         }
-    }
-
-    public double getEndYL() {
-        MapNode lastNode = childrenL.get(childrenL.size() - 1);
-        for (int i = childrenL.size() - 2; i >= 0 && !lastNode.isVisible(); i--) {
-            lastNode = childrenL.get(i);
-        }
-        if (!lastNode.isVisible()) {
-            return Integer.MIN_VALUE;
-        }
-        double selfEndY = lastNode.getLayoutY() + lastNode.getPrefHeight();
-        if (!lastNode.childrenL.isEmpty()) {
-            return Math.max(selfEndY, lastNode.getEndYL());
-        } else {
-            return selfEndY;
-        }
-    }
-
-    public MapNode getLastChildR() {
-        return childrenR.get(childrenR.size() - 1);
-    }
-
-    public MapNode getLastChildL() {
-        return childrenL.get(childrenL.size() - 1);
     }
 
     //———————————————————————————————————————————其他———————————————————————————————————————————
@@ -665,5 +601,26 @@ public class MapNode extends StackPane {
             incomingReferences = new ArrayList<>();
         }
         incomingReferences.add(node);
+    }
+
+    public List<MapNode> getChildren(byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            return childrenR;
+        } else {
+            return childrenL;
+        }
+    }
+
+    public void setAddButtonText(String text, byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            addButtonR.setText(text);
+        } else {
+            addButtonL.setText(text);
+        }
+    }
+
+    public MapNode getLastChild(byte pos) {
+        List<MapNode> children = getChildren(pos);
+        return children.get(children.size() - 1);
     }
 }

@@ -8,6 +8,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.QuadCurve;
 import lombok.Data;
+import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.util.MessageUtil;
 
@@ -115,23 +116,15 @@ public class Subject extends StackPane {
 
     public void addClone(MapNode CloneNode) {
         addNode(CloneNode);
-        addCloneChildrenR(CloneNode);
-        addCloneChildrenL(CloneNode);
+        addCloneChildren(CloneNode, PosConstants.RIGHT);
+        addCloneChildren(CloneNode, PosConstants.LEFT);
     }
 
-    public void addCloneChildrenR(MapNode CloneNode) {
+    public void addCloneChildren(MapNode CloneNode, byte pos) {
         ObservableList<Node> children = nodesLayer.getChildren();
-        for (MapNode node : CloneNode.getChildrenR()) {
+        for (MapNode node : CloneNode.getChildren(pos)) {
             children.add(node);
-            addCloneChildrenR(node);
-        }
-    }
-
-    public void addCloneChildrenL(MapNode CloneNode) {
-        ObservableList<Node> children = nodesLayer.getChildren();
-        for (MapNode node : CloneNode.getChildrenL()) {
-            children.add(node);
-            addCloneChildrenL(node);
+            addCloneChildren(node, pos);
         }
     }
 
@@ -140,20 +133,20 @@ public class Subject extends StackPane {
     }
 
     //———————————————————————————————————————————连线———————————————————————————————————————————
-    public void addLineR(QuadCurve line) {
-        linesLayerR.getChildren().add(line);
+    public void addLine(QuadCurve line, byte pos) {
+        if(pos == PosConstants.RIGHT){
+            linesLayerR.getChildren().add(line);
+        }else {
+            linesLayerL.getChildren().add(line);
+        }
     }
 
-    public void addLineL(QuadCurve line) {
-        linesLayerL.getChildren().add(line);
-    }
-
-    public void clearLineR() {
-        linesLayerR.getChildren().clear();
-    }
-
-    public void clearLineL() {
-        linesLayerL.getChildren().clear();
+    public void clearLine(byte pos) {
+        if(pos == PosConstants.RIGHT){
+            linesLayerR.getChildren().clear();
+        }else {
+            linesLayerL.getChildren().clear();
+        }
     }
 
     @Override

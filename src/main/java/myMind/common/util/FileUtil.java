@@ -83,8 +83,8 @@ public class FileUtil {
             SubjectController subjectController = mindMap.getSubjectController();
 
             // 加载子节点
-            loadChildR(subject.getJSONArray(FileConstants.CHILDREN_R), rootNode, subjectController);
-            loadChildL(subject.getJSONArray(FileConstants.CHILDREN_L), rootNode, subjectController);
+            loadChild(subject.getJSONArray(FileConstants.CHILDREN_R), rootNode, subjectController, PosConstants.RIGHT);
+            loadChild(subject.getJSONArray(FileConstants.CHILDREN_L), rootNode, subjectController, PosConstants.LEFT);
 
             subjectController.adjustChildrenSize();
             subjectController.adjustXY();
@@ -97,33 +97,18 @@ public class FileUtil {
         addRecentFile(file);
     }
 
-    private static void loadChildR(JSONArray childrenJsonArray, MapNode parentNode, SubjectController subjectController) {
+    private static void loadChild(JSONArray childrenJsonArray, MapNode parentNode, SubjectController subjectController, byte pos) {
         if (childrenJsonArray == null) {
             return;
         }
 
         for (Object o : childrenJsonArray) {
             JSONObject childrenJson = (JSONObject) o;
-            MapNode node = buildNode(childrenJson, PosConstants.RIGHT);
-            parentNode.addChild(node, PosConstants.RIGHT);
+            MapNode node = buildNode(childrenJson, pos);
+            parentNode.addChild(node, pos);
             subjectController.addNode(node);
 
-            loadChildR(childrenJson.getJSONArray(FileConstants.CHILDREN), node, subjectController);
-        }
-    }
-
-    private static void loadChildL(JSONArray childrenJsonArray, MapNode parentNode, SubjectController subjectController) {
-        if (childrenJsonArray == null) {
-            return;
-        }
-
-        for (Object o : childrenJsonArray) {
-            JSONObject childrenJson = (JSONObject) o;
-            MapNode node = buildNode(childrenJson, PosConstants.LEFT);
-            parentNode.addChild(node, PosConstants.LEFT);
-            subjectController.addNode(node);
-
-            loadChildL(childrenJson.getJSONArray(FileConstants.CHILDREN), node, subjectController);
+            loadChild(childrenJson.getJSONArray(FileConstants.CHILDREN), node, subjectController, pos);
         }
     }
 
@@ -235,34 +220,22 @@ public class FileUtil {
             MapNode rootNode = subjectController.getRootNode();
 
             JSONObject subjectJson = saveNode(rootNode);
-            saveChildrenR(subjectJson, rootNode.getChildrenR(), FileConstants.CHILDREN_R);
-            saveChildrenL(subjectJson, rootNode.getChildrenL(), FileConstants.CHILDREN_L);
+            saveChildren(subjectJson, rootNode.getChildrenR(), FileConstants.CHILDREN_R, PosConstants.RIGHT);
+            saveChildren(subjectJson, rootNode.getChildrenL(), FileConstants.CHILDREN_L, PosConstants.LEFT);
 
             subjects.put(String.valueOf(subjectController.getSubject().getSubjectId()), subjectJson);
         }
         return subjects;
     }
 
-    private static void saveChildrenR(JSONObject parentJson, List<MapNode> childrenR, String key) {
+    private static void saveChildren(JSONObject parentJson, List<MapNode> childrenR, String key, byte pos) {
         if (!childrenR.isEmpty()) {
             JSONArray childrenRJson = parentJson.putArray(key);
             for (MapNode node : childrenR) {
                 JSONObject childJson = saveNode(node);
                 childrenRJson.add(childJson);
 
-                saveChildrenR(childJson, node.getChildrenR(), FileConstants.CHILDREN);
-            }
-        }
-    }
-
-    private static void saveChildrenL(JSONObject parentJson, List<MapNode> childrenL, String key) {
-        if (!childrenL.isEmpty()) {
-            JSONArray childrenLJson = parentJson.putArray(key);
-            for (MapNode node : childrenL) {
-                JSONObject childJson = saveNode(node);
-                childrenLJson.add(childJson);
-
-                saveChildrenL(childJson, node.getChildrenL(), FileConstants.CHILDREN);
+                saveChildren(childJson, node.getChildren(pos), FileConstants.CHILDREN, pos);
             }
         }
     }

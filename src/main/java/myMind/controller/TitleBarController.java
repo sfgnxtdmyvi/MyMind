@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.Setter;
 import myMind.common.constants.CssStyle;
 import myMind.common.constants.FileConstants;
+import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.manager.CssManager;
 import myMind.common.util.FileUtil;
@@ -192,18 +193,18 @@ public class TitleBarController {
     }
 
     @FXML
-    private void insertChild() {
-        subjectController.insertChild();
+    private void insert() {
+        subjectController.insert();
     }
 
     @FXML
     private void addChildR() {
-        subjectController.addChildR();
+        subjectController.addChild(PosConstants.RIGHT);
     }
 
     @FXML
     private void addChildL() {
-        subjectController.addChildL();
+        subjectController.addChild(PosConstants.LEFT);
     }
 
     @FXML
@@ -213,12 +214,12 @@ public class TitleBarController {
 
     @FXML
     private void batchAddChildR() {
-        subjectController.batchAddChildR();
+        subjectController.batchAddChild(PosConstants.RIGHT);
     }
 
     @FXML
     private void batchAddChildL() {
-        subjectController.batchAddChildL();
+        subjectController.batchAddChild(PosConstants.LEFT);
     }
 
     @FXML
