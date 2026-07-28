@@ -54,12 +54,12 @@ public class ContextMenuController {
 
     @FXML
     public void delete() {
-        subjectController.delete(false);
+        subjectController.deleteNode(false);
     }
 
     @FXML
     public void deleteRemainChildren() {
-        subjectController.delete(true);
+        subjectController.deleteNode(true);
     }
 
     @FXML

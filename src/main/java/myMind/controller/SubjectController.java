@@ -1,11 +1,9 @@
 package myMind.controller;
 
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Tab;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.QuadCurve;
@@ -19,15 +17,10 @@ import myMind.common.manager.ReferenceManager;
 import myMind.common.util.CloneNodeUtil;
 import myMind.common.util.IdGenerator;
 import myMind.componet.MapNode;
-import myMind.componet.MapTextArea;
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
 import org.fxmisc.richtext.StyleClassedTextArea;
-import org.fxmisc.richtext.model.EditableStyledDocument;
-import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
-import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -78,6 +71,8 @@ public class SubjectController {
         byte pos = selectedNode.getPos();
         List<MapNode> children = selectedNode.getChildren(pos);
         if (children.isEmpty()) {
+
+        } else {
             MapNode childNode = new MapNode(pos, calculateChildX(selectedNode, pos), calculateChildY(selectedNode));
             // 原本的子节点成为新节点的子节点
             Iterator<MapNode> iterator = children.iterator();
@@ -91,8 +86,6 @@ public class SubjectController {
 
             adjustChildrenX(selectedNode, pos);
             refreshLines(pos);
-        } else {
-
         }
     }
 
@@ -321,69 +314,7 @@ public class SubjectController {
 
     //———————————————————————————————————————————复制粘贴———————————————————————————————————————————
     public void copy() {
-        CloneNodeUtil.setNode(clone(selectedNode));
-    }
-
-    private MapNode clone(MapNode originalNode) {
-        byte pos = originalNode.getPos();
-
-        MapNode cloneNode = new MapNode(pos, IdGenerator.nextId(), buildTextArea(originalNode.getTextArea()));
-        String imageName = originalNode.getImageName();
-        if (imageName != null) {
-            ImageView image = originalNode.getImageView();
-            cloneNode.setImage(imageName, image.getFitWidth(), image.getFitHeight());
-            cloneNode.getTextArea().setVisible(originalNode.getTextArea().isVisible());
-        }
-
-        cloneNode.setPrefWidth(originalNode.getPrefWidth());
-        cloneNode.setPrefHeight(originalNode.getPrefHeight());
-
-        for (MapNode childNode : originalNode.getChildren(pos)) {
-            cloneNode.addChild(clone(childNode), pos);
-        }
-
-        // 复制根节点时，把左子节点都添加到右边
-        if (pos == PosConstants.MIDDLE) {
-            cloneNode.setPos(PosConstants.RIGHT);
-            ObservableList<Node> children = cloneNode.getChildren();
-            children.remove(cloneNode.getAddButtonL());
-            cloneNode.addButtonListen(PosConstants.RIGHT);
-
-            for (MapNode childNode : originalNode.getChildrenL()) {
-                MapNode childCloneNode = clone(childNode);
-                childCloneNode.setPos(PosConstants.RIGHT);
-                cloneNode.addChild(childCloneNode, PosConstants.RIGHT);
-                transBtn(childCloneNode, PosConstants.RIGHT);
-            }
-        }
-        return cloneNode;
-    }
-
-    private StyleClassedTextArea buildTextArea(StyleClassedTextArea originalTextArea) {
-        // EditableStyledDocument 是 StyleClassedTextArea 的内容（文本和样式）
-        EditableStyledDocument<Collection<String>, String, Collection<String>> originalDoc
-                = originalTextArea.getContent();
-
-        int length = originalDoc.getLength();
-        if (length == 0) {
-            StyleClassedTextArea textArea = new MapTextArea(true);
-            textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
-            return textArea;
-        }
-
-        // 获取只读快照
-        ReadOnlyStyledDocument<Collection<String>, String, Collection<String>> snapshot
-                = (ReadOnlyStyledDocument<Collection<String>, String, Collection<String>>)
-                originalDoc.subSequence(0, length);
-
-        // 基于快照构造新的可编辑文档
-        StyleClassedTextArea textArea
-                = new MapTextArea(new SimpleEditableStyledDocument<>(snapshot), true);
-        textArea.setPrefHeight(originalTextArea.getPrefHeight());
-        textArea.setMaxWidth(originalTextArea.getMaxWidth());
-        textArea.layout();
-
-        return textArea;
+        CloneNodeUtil.setCloneNode(selectedNode.clone());
     }
 
     public void cut() {
@@ -393,59 +324,30 @@ public class SubjectController {
 
         // 根节点改成复制
         if (selectedNode == rootNode) {
-            CloneNodeUtil.setNode(clone(selectedNode));
+            copy();
+            return;
         } else {
-            CloneNodeUtil.setNode(selectedNode);
+            CloneNodeUtil.setCloneNode(selectedNode);
         }
 
+        // 删除当前节点
         byte pos = selectedNode.getPos();
         if (selectedNode.getParentNode().getChildren(pos).size() != 1) {
             setSubjectTranslateY(selectedNode.getHeight(pos) * NodeConstants.TRANSLATE_RATE);
         }
         deleteChildrenFromSubject(selectedNode, pos);
-        delete(selectedNode, pos);
+        deleteNode(selectedNode, pos);
+
         adjustChildrenY(pos);
         refreshLines(pos);
         adjustTranslateY(selectedNode);
     }
 
-    /**
-     *
-     * @param pos 粘到目标的左边还是右边，跟 cloneNode 的 pos 可以不一致
-     */
     private void pasteChild(MapNode cloneNode, byte pos) {
         if (selectedNode == null) {
             return;
         }
-
-        // 添加事件应在粘贴时，在复制事添加事件是用当前主题添加的，如果粘贴到其他主题则无法使用
-        setOnAction(cloneNode);
-        if (pos == PosConstants.RIGHT) {
-            cloneNode.setLayoutX(calculateChildX(selectedNode, pos));
-
-            // selectedNode 与 cloneNode 的 pos 不一致时，需要移动
-            if (cloneNode.getPos() == PosConstants.LEFT) {
-                cloneNode.setParentNode(selectedNode);
-                transNode(cloneNode, PosConstants.RIGHT);
-            } else {
-                selectedNode.addChild(cloneNode, pos);
-            }
-        } else {
-            // calculateChildXL 算的是新增空节点的 x 坐标
-            cloneNode.setLayoutX(selectedNode.getLayoutX() - NodeConstants.GAP_X - cloneNode.getPrefWidth());
-
-            if (cloneNode.getPos() == PosConstants.RIGHT) {
-                cloneNode.setParentNode(selectedNode);
-                transNode(cloneNode, PosConstants.LEFT);
-            } else {
-                selectedNode.addChild(cloneNode, pos);
-            }
-        }
-        subject.addClone(cloneNode);
-        setOnActionChildren(cloneNode, pos);
-        adjustChildrenXY(cloneNode, pos);
-        adjustTranslateY(cloneNode);
-        setSelectedNode(cloneNode);
+        paste(selectedNode, cloneNode, -1, pos);
     }
 
     /**
@@ -456,83 +358,31 @@ public class SubjectController {
         if (selectedNode == null || selectedNode == rootNode) {
             return;
         }
-
         MapNode parentNode = selectedNode.getParentNode();
+        paste(parentNode, cloneNode, parentNode.getChildren(pos).indexOf(selectedNode), pos);
+    }
+
+    /**
+     * @param index -1表示添加到最后
+     * @param pos   粘到目标的左边还是右边，跟 cloneNode 的 pos 可以不一致
+     */
+    private void paste(MapNode parentNode, MapNode cloneNode, int index, byte pos) {
+        // selectedNode 与 cloneNode 的 pos 不一致时，需要移动
+        if (cloneNode.getPos() != pos) {
+            cloneNode.setParentNode(parentNode);
+            cloneNode.transPosAt(index, cloneNode.getPos(), pos);
+        } else {
+            parentNode.addChildAt(index, cloneNode, pos);
+        }
+
+        // 添加事件应在粘贴时，在复制事添加事件是用当前主题添加的，如果粘贴到其他主题则无法使用
         setOnAction(cloneNode);
-        int index = parentNode.getChildren(pos).indexOf(selectedNode);
-        if (pos == PosConstants.RIGHT) {
-            cloneNode.setLayoutX(calculateChildX(parentNode, PosConstants.RIGHT));
-
-            if (cloneNode.getPos() == PosConstants.LEFT) {
-                cloneNode.setParentNode(parentNode);
-                transNodeAt(index, cloneNode, PosConstants.RIGHT);
-            } else {
-                parentNode.addChildAt(index, cloneNode, pos);
-            }
-        } else {
-            cloneNode.setLayoutX(parentNode.getLayoutX() - NodeConstants.GAP_X - cloneNode.getPrefWidth());
-
-            if (cloneNode.getPos() == PosConstants.RIGHT) {
-                cloneNode.setParentNode(parentNode);
-                transNodeAt(index, cloneNode, PosConstants.LEFT);
-            } else {
-                parentNode.addChildAt(index, cloneNode, pos);
-            }
-        }
-
-        subject.addClone(cloneNode);
         setOnActionChildren(cloneNode, pos);
-
-        adjustChildrenXY(cloneNode, pos);
-        adjustTranslateY(cloneNode);
         setSelectedNode(cloneNode);
-    }
+        subject.addClone(cloneNode);
 
-    /**
-     * 节点改变方向
-     */
-    private void transNode(MapNode cloneNode, byte pos) {
-        cloneNode.setPos(pos);
-        cloneNode.getParentNode().addChild(cloneNode, pos);
-        transBtn(cloneNode, pos);
-
-        Iterator<MapNode> iterator = cloneNode.getChildren(pos).iterator();
-        while (iterator.hasNext()) {
-            MapNode child = iterator.next();
-            iterator.remove();
-            transNode(child, pos);
-        }
-    }
-
-    private void transNodeAt(int index, MapNode cloneNode, byte pos) {
-        // 父节点粘到选中节点的上面，子节点继续跟着父节点
-        cloneNode.setPos(pos);
-        if (index != -1) {
-            cloneNode.getParentNode().addChildAt(index, cloneNode, pos);
-        } else {
-            cloneNode.getParentNode().addChild(cloneNode, pos);
-        }
-        transBtn(cloneNode, pos);
-
-        Iterator<MapNode> iterator = cloneNode.getChildren(pos).iterator();
-        while (iterator.hasNext()) {
-            MapNode child = iterator.next();
-            iterator.remove();
-            transNodeAt(-1, child, pos);
-        }
-    }
-
-    /**
-     * 移动按钮
-     */
-    private void transBtn(MapNode cloneNode, byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            cloneNode.removeAddButton(PosConstants.LEFT);
-        } else {
-            cloneNode.removeAddButton(PosConstants.RIGHT);
-        }
-        cloneNode.addButton(pos);
-        cloneNode.addButtonListen(pos);
+        adjustChildrenXY(parentNode, pos);
+        adjustTranslateY(cloneNode);
     }
 
     //———————————————————————————————————————————删除———————————————————————————————————————————
@@ -542,7 +392,7 @@ public class SubjectController {
      * @param keepChildren true： 删除选中节点及其子节点
      *                     false：删除选中节点，子节点成为父节点的子节点
      */
-    public void delete(boolean keepChildren) {
+    public void deleteNode(boolean keepChildren) {
         if (selectedNode == null || selectedNode == rootNode) {
             return;
         }
@@ -593,9 +443,9 @@ public class SubjectController {
 
     /**
      * 删除节点
-     * 传入参数，保证在重做时，不选中节点的情况下，仍然能删除
+     *
      */
-    public void delete(MapNode deletedNode, byte pos) {
+    public void deleteNode(MapNode deletedNode, byte pos) {
         MapNode parent = deletedNode.getParentNode();
         changeSelectedNode(deletedNode, parent, parent.getChildren(pos));
 
@@ -605,6 +455,7 @@ public class SubjectController {
 
     /**
      * 删除 subject 中的子节点
+     *
      */
     public void deleteChildrenFromSubject(MapNode parentNode, byte pos) {
         for (MapNode childNode : parentNode.getChildren(pos)) {

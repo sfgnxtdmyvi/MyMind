@@ -25,6 +25,9 @@ import myMind.common.util.IdGenerator;
 import myMind.common.util.MeasureTextUtil;
 import myMind.common.util.MessageUtil;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
+import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
@@ -34,6 +37,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -41,15 +45,15 @@ import java.util.function.Consumer;
 // 从 nodesLayer 中 remove 时，要用到 equals，不能依赖可变的属性
 @EqualsAndHashCode(of = "nodeId")
 public class MapNode extends StackPane {
+
     private final long nodeId;
     private long subjectId;
 
-    //节点之间的关系
+    // 节点之间的关系
     private byte pos;
     private MapNode parentNode;
-    private final List<MapNode> childrenR = new ArrayList<>();
-    private final List<MapNode> childrenL = new ArrayList<>();
-
+    private List<MapNode> childrenR;
+    private List<MapNode> childrenL;
     private MapNode outgoingReference;
     private List<MapNode> incomingReferences;
 
@@ -58,15 +62,16 @@ public class MapNode extends StackPane {
     private Consumer<Double> setSubjectTranslateX;
 
     private VBox contentBox;
-    private String imageName;
-    private ImageView imageView;
-    private StackPane imageContainer;
-    private Button closeButton;
     private StyleClassedTextArea textArea;
 
     private Button addButtonR;
     private Button addButtonL;
 
+    // 图片
+    private StackPane imageContainer;
+    private ImageView imageView;
+    private Button closeButton;
+    private String imageName;
     private boolean isResizing = false;
     private double startX;
     private double startWidth;
@@ -79,24 +84,16 @@ public class MapNode extends StackPane {
     }
 
     public MapNode(byte pos) {
-        this.pos = pos;
-        nodeId = IdGenerator.nextId();
-        StyleClassedTextArea textArea = new MapTextArea();
+        this(pos, IdGenerator.nextId(), new MapTextArea());
         textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
-        // 不能用 this()，它必须在第一行
-        // 用 this() 或 super() 时，不能使用任何实例字段
-        buildNode(textArea);
     }
 
     public MapNode(byte pos, long id, StyleClassedTextArea textArea) {
         this.pos = pos;
+        initChildren(pos);
         nodeId = id;
-        buildNode(textArea);
-    }
 
-    private void buildNode(StyleClassedTextArea textArea) {
         this.textArea = textArea;
-
         contentBox = new VBox(textArea);
         contentBox.setAlignment(Pos.CENTER);
         contentBox.setPadding(new Insets(NodeConstants.PADDING));
@@ -117,6 +114,25 @@ public class MapNode extends StackPane {
         addListener();
     }
 
+    private void initChildren(byte pos) {
+        if (pos != PosConstants.LEFT) {
+            childrenR = new ArrayList<>();
+        }
+        if (pos != PosConstants.RIGHT) {
+            childrenL = new ArrayList<>();
+        }
+    }
+
+    //———————————————————————————————————————————按钮———————————————————————————————————————————
+
+    public void setAddButtonText(String text, byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            addButtonR.setText(text);
+        } else {
+            addButtonL.setText(text);
+        }
+    }
+
     public void addButton(byte pos) {
         if (pos == PosConstants.RIGHT) {
             addButtonR = new Button(NodeConstants.ADD);
@@ -133,7 +149,7 @@ public class MapNode extends StackPane {
         }
     }
 
-    public void removeAddButton(byte pos) {
+    public void removeButton(byte pos) {
         if (pos == PosConstants.RIGHT) {
             getChildren().remove(addButtonR);
             addButtonR.setOnAction(null);
@@ -144,6 +160,21 @@ public class MapNode extends StackPane {
             addButtonL = null;
         }
     }
+
+    /**
+     * 移动按钮
+     */
+    public void transBtn(byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            removeButton(PosConstants.LEFT);
+        } else {
+            removeButton(PosConstants.RIGHT);
+        }
+        addButton(pos);
+        addButtonListen(pos);
+    }
+
+    //———————————————————————————————————————————图片———————————————————————————————————————————
 
     public void setImage(String imageName, double imageWidth, double imageHeight) {
         buildImageContainer();
@@ -172,6 +203,8 @@ public class MapNode extends StackPane {
         addImageListener();
         contentBox.getChildren().add(0, imageContainer);
     }
+
+    //———————————————————————————————————————————监听器———————————————————————————————————————————
 
     private void addListener() {
         // 由于 addButton 是一个独立的 Button 组件，它会消费鼠标事件，事件不会冒泡到父节点 MapNode，
@@ -234,10 +267,6 @@ public class MapNode extends StackPane {
                 adjust(true);
             }
         });
-
-//        textArea.selectedTextProperty().addListener((obs, oldVal, newVal) -> {
-//            onAction.accept(NodeEvent.CLICK);
-//        });
     }
 
     /**
@@ -259,7 +288,6 @@ public class MapNode extends StackPane {
                     addButtonL.setVisible(true);
                 }
             });
-
             setOnMouseExited(e -> {
                 addButtonR.setVisible(false);
                 addButtonL.setVisible(false);
@@ -267,7 +295,7 @@ public class MapNode extends StackPane {
 
             addButtonR.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_R));
             addButtonL.setOnAction(e -> onAction.accept(NodeEvent.ADD_BUTTON_L));
-        }else {
+        } else {
             addButtonListen(pos);
         }
     }
@@ -300,9 +328,6 @@ public class MapNode extends StackPane {
         }
     }
 
-    /**
-     * 图片监听
-     */
     private void addImageListener() {
         // 鼠标移入时，显示边框
         imageContainer.setOnMouseEntered(e -> imageContainer.getStyleClass().add("nodeImage"));
@@ -384,6 +409,8 @@ public class MapNode extends StackPane {
             }
         });
     }
+
+    //———————————————————————————————————————————调整———————————————————————————————————————————
 
     /**
      * 调整尺寸和位置
@@ -472,20 +499,17 @@ public class MapNode extends StackPane {
     }
 
     //—————————————————————————————————————————增—————————————————————————————————————————
+
     public void addChild(MapNode child, byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            childrenR.add(child);
-        } else {
-            childrenL.add(child);
-        }
-        child.setParentNode(this);
+        addChildAt(-1, child, pos);
     }
 
     public void addChildAt(int index, MapNode child, byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            childrenR.add(index, child);
+        List<MapNode> children = getChildren(pos);
+        if (index == -1) {
+            children.add(child);
         } else {
-            childrenL.add(index, child);
+            children.add(index, child);
         }
         child.setParentNode(this);
     }
@@ -494,7 +518,6 @@ public class MapNode extends StackPane {
 
     /**
      * 在子节点 List 中删除 child，设置 child 的 parentNode 为 null
-     *
      */
     public void removeChild(MapNode child, byte pos) {
         removeChild(child, null, pos);
@@ -502,7 +525,6 @@ public class MapNode extends StackPane {
 
     /**
      * 在子节点 List 中删除 child，设置 child 的 parentNode
-     *
      */
     public void removeChild(MapNode child, MapNode parentNode, byte pos) {
         if (pos == PosConstants.RIGHT) {
@@ -518,7 +540,6 @@ public class MapNode extends StackPane {
     /**
      * 子节点的总高度
      * 所有子节点的高度 + 间隔
-     *
      */
     public double getChildrenHeight(byte pos) {
         double totalHeight = 0;
@@ -536,7 +557,6 @@ public class MapNode extends StackPane {
     /**
      * 节点的高度
      * Math.max（当前节点的高度，子节点的总高度）
-     *
      */
     public double getHeight(byte pos) {
         // 每个调用的地方都可见，不用判断 isVisible
@@ -547,6 +567,7 @@ public class MapNode extends StackPane {
     }
 
     //———————————————————————————————————————————位置计算———————————————————————————————————————————
+
     public double getStartY(byte pos) {
         List<MapNode> children = getChildren(pos);
         // 找到第一个可见的子节点
@@ -584,6 +605,108 @@ public class MapNode extends StackPane {
         }
     }
 
+    //———————————————————————————————————————————节点———————————————————————————————————————————
+
+    public List<MapNode> getChildren(byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            return childrenR;
+        } else {
+            return childrenL;
+        }
+    }
+
+    public void removeChildren(byte pos) {
+        if (pos == PosConstants.RIGHT) {
+            childrenR = null;
+        } else {
+            childrenL = null;
+        }
+    }
+
+    public MapNode getLastChild(byte pos) {
+        List<MapNode> children = getChildren(pos);
+        return children.get(children.size() - 1);
+    }
+
+    @Override
+    public MapNode clone() {
+        // 克隆当前节点
+        MapNode cloneNode = new MapNode(pos, IdGenerator.nextId(), cloneTextArea());
+        if (imageName != null) {
+            cloneNode.setImage(imageName, imageView.getFitWidth(), imageView.getFitHeight());
+            cloneNode.getTextArea().setVisible(textArea.isVisible());
+        }
+        cloneNode.setPrefWidth(getPrefWidth());
+        cloneNode.setPrefHeight(getPrefHeight());
+        // 克隆子节点
+        for (MapNode childNode : getChildren(pos)) {
+            cloneNode.addChild(childNode.clone(), pos);
+        }
+
+        if (pos == PosConstants.MIDDLE) {
+            cloneNode.setPos(PosConstants.RIGHT);
+            cloneNode.removeButton(PosConstants.LEFT);
+            cloneNode.addButtonListen(PosConstants.RIGHT);
+
+            // 当克隆节点为子节点时，上面克隆的是左子节点
+            for (MapNode childNode : getChildren(PosConstants.RIGHT)) {
+                cloneNode.addChild(childNode.clone(), PosConstants.RIGHT);
+            }
+            // 把左子节点都移动到右边
+            for (MapNode childNode : cloneNode.getChildren(PosConstants.LEFT)) {
+                childNode.transPosAt(-1, PosConstants.LEFT, PosConstants.RIGHT);
+            }
+            cloneNode.setChildrenL(null);
+        }
+        return cloneNode;
+    }
+
+    private StyleClassedTextArea cloneTextArea() {
+        // EditableStyledDocument 是 StyleClassedTextArea 的内容（文本和样式）
+        EditableStyledDocument<Collection<String>, String, Collection<String>> originalDoc
+                = textArea.getContent();
+
+        int length = originalDoc.getLength();
+        if (length == 0) {
+            StyleClassedTextArea cloneTextArea = new MapTextArea(true);
+            cloneTextArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
+            return cloneTextArea;
+        }
+
+        // 获取只读快照
+        ReadOnlyStyledDocument<Collection<String>, String, Collection<String>> snapshot
+                = (ReadOnlyStyledDocument<Collection<String>, String, Collection<String>>)
+                originalDoc.subSequence(0, length);
+
+        // 基于快照构造新的可编辑文档
+        StyleClassedTextArea cloneTextArea
+                = new MapTextArea(new SimpleEditableStyledDocument<>(snapshot), true);
+        cloneTextArea.setPrefHeight(cloneTextArea.getPrefHeight());
+        cloneTextArea.setMaxWidth(cloneTextArea.getMaxWidth());
+        cloneTextArea.layout();
+
+        return cloneTextArea;
+    }
+
+    /**
+     * 改变方向到指定索引
+     *
+     * @param index -1表示添加到最后
+     *
+     */
+    public void transPosAt(int index, byte srcPos, byte targetPos) {
+        // 父节点粘到选中节点的上面，子节点继续跟着父节点
+        pos = targetPos;
+        initChildren(pos);
+        parentNode.addChildAt(index, this, targetPos);
+        transBtn(targetPos);
+
+        for (MapNode child : getChildren(srcPos)) {
+            child.transPosAt(-1, srcPos, targetPos);
+        }
+        removeChildren(srcPos);
+    }
+
     //———————————————————————————————————————————其他———————————————————————————————————————————
 
     public boolean isEmpty() {
@@ -603,24 +726,4 @@ public class MapNode extends StackPane {
         incomingReferences.add(node);
     }
 
-    public List<MapNode> getChildren(byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            return childrenR;
-        } else {
-            return childrenL;
-        }
-    }
-
-    public void setAddButtonText(String text, byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            addButtonR.setText(text);
-        } else {
-            addButtonL.setText(text);
-        }
-    }
-
-    public MapNode getLastChild(byte pos) {
-        List<MapNode> children = getChildren(pos);
-        return children.get(children.size() - 1);
-    }
 }

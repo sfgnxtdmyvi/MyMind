@@ -384,12 +384,26 @@ public class FileUtil {
 
         int count = 0;
         File dirImage = new File(ConfigConstants.DIR_IMAGE);
+
+//        for (File file : dirImage.listFiles()) {
+//            if (!fileNameSet.contains(file.getName())) {
+//                file.delete();
+//                count++;
+//            }
+//        }
+
+        System.out.println();
+
+        Set<String> fileNameSet2 = new HashSet<>();
         for (File file : dirImage.listFiles()) {
-            if (!fileNameSet.contains(file.getName())) {
-                file.delete();
-                count++;
+            fileNameSet2.add(file.getName());
+        }
+        for (String s : fileNameSet) {
+            if (!fileNameSet2.contains(s)) {
+                System.out.print(s + " ");
             }
         }
+
         if (count > 0) {
             MessageUtil.showMessage("删除了 " + count + " 张图片");
         } else {
@@ -407,32 +421,21 @@ public class FileUtil {
                 for (Object value : json.values()) {
                     JSONObject rootNode = (JSONObject) value;
                     addImage(fileNameSet, rootNode);
-                    addImageR(rootNode.getJSONObject(FileConstants.CHILDREN_R), fileNameSet);
-                    addImageL(rootNode.getJSONObject(FileConstants.CHILDREN_L), fileNameSet);
+                    addImage(rootNode.getJSONArray(FileConstants.CHILDREN_R), fileNameSet);
+                    addImage(rootNode.getJSONArray(FileConstants.CHILDREN_L), fileNameSet);
                 }
             }
         }
     }
 
-    private static void addImageR(JSONObject childrenR, Set<String> fileNameSet) {
-        if (childrenR == null) {
+    private static void addImage(JSONArray children, Set<String> fileNameSet) {
+        if (children == null) {
             return;
         }
-        for (Object value : childrenR.values()) {
+        for (Object value : children) {
             JSONObject node = (JSONObject) value;
             addImage(fileNameSet, node);
-            addImageR(node.getJSONObject(FileConstants.CHILDREN_R), fileNameSet);
-        }
-    }
-
-    private static void addImageL(JSONObject childrenL, Set<String> fileNameSet) {
-        if (childrenL == null) {
-            return;
-        }
-        for (Object value : childrenL.values()) {
-            JSONObject node = (JSONObject) value;
-            addImage(fileNameSet, node);
-            addImageL(node.getJSONObject(FileConstants.CHILDREN_L), fileNameSet);
+            addImage(node.getJSONArray(FileConstants.CHILDREN), fileNameSet);
         }
     }
 
@@ -440,60 +443,6 @@ public class FileUtil {
         String imageName = node.getString(FileConstants.IMAGE_NAME);
         if (imageName != null) {
             fileNameSet.add(imageName);
-        }
-    }
-
-    /**
-     * 删除每个节点末尾的句号
-     */
-    public static void deletePeriod() {
-        deletePeriodFile(new File(ConfigConstants.DIR_FILES));
-        MessageUtil.showMessage("处理完毕");
-    }
-
-    private static void deletePeriodFile(File parentFile) {
-        for (File file : parentFile.listFiles()) {
-            if (file.isDirectory()) {
-                deletePeriodFile(file);
-            } else {
-                JSONObject json = readFile(file);
-                for (Object value : json.values()) {
-                    JSONObject subject = (JSONObject) value;
-                    String text = subject.getString(FileConstants.TEXT);
-                    subject.put(FileConstants.TEXT, FormatUtil.deletePeriod(text));
-                    deletePeriodNodeR(subject.getJSONObject(FileConstants.CHILDREN_R));
-                    deletePeriodNodeL(subject.getJSONObject(FileConstants.CHILDREN_L));
-                }
-                try (FileWriter fw = new FileWriter(file)) {
-                    fw.write(json.toString());
-                } catch (IOException e) {
-                    MessageUtil.showMessage("处理失败：" + e.getMessage());
-                }
-            }
-        }
-    }
-
-    private static void deletePeriodNodeR(JSONObject json) {
-        if (json == null) {
-            return;
-        }
-        for (int i = 0; i < json.size(); i++) {
-            JSONObject childJson = json.getJSONObject(Integer.toString(i));
-            String text = childJson.getString(FileConstants.TEXT);
-            childJson.put(FileConstants.TEXT, FormatUtil.deletePeriod(text));
-            deletePeriodNodeR(childJson.getJSONObject(FileConstants.CHILDREN_R));
-        }
-    }
-
-    private static void deletePeriodNodeL(JSONObject json) {
-        if (json == null) {
-            return;
-        }
-        for (int i = 0; i < json.size(); i++) {
-            JSONObject childJson = json.getJSONObject(Integer.toString(i));
-            String text = childJson.getString(FileConstants.TEXT);
-            childJson.put(FileConstants.TEXT, FormatUtil.deletePeriod(text));
-            deletePeriodNodeL(childJson.getJSONObject(FileConstants.CHILDREN_L));
         }
     }
 

@@ -3,9 +3,10 @@ package myMind.common.util;
 import myMind.componet.MapNode;
 
 public class CloneNodeUtil {
+
     private static final ThreadLocal<MapNode> nodeHolder = new ThreadLocal<>();
 
-    public static void setNode(MapNode node) {
+    public static void setCloneNode(MapNode node) {
         nodeHolder.set(node);
     }
 
@@ -14,4 +15,5 @@ public class CloneNodeUtil {
         nodeHolder.remove();
         return mapNode;
     }
+
 }

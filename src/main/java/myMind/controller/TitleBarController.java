@@ -176,11 +176,6 @@ public class TitleBarController {
     }
 
     @FXML
-    public void deletePeriod() {
-        FileUtil.deletePeriod();
-    }
-
-    @FXML
     public void updateMap() {
         FileUtil.updateMap();
     }

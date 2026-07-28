@@ -110,21 +110,21 @@ public class Subject extends StackPane {
     }
 
     //———————————————————————————————————————————节点———————————————————————————————————————————
+
     public void addNode(MapNode node) {
         nodesLayer.getChildren().add(node);
     }
 
-    public void addClone(MapNode CloneNode) {
-        addNode(CloneNode);
-        addCloneChildren(CloneNode, PosConstants.RIGHT);
-        addCloneChildren(CloneNode, PosConstants.LEFT);
+    public void addClone(MapNode cloneNode) {
+        addNode(cloneNode);
+        addCloneChildren(cloneNode);
     }
 
-    public void addCloneChildren(MapNode CloneNode, byte pos) {
-        ObservableList<Node> children = nodesLayer.getChildren();
-        for (MapNode node : CloneNode.getChildren(pos)) {
-            children.add(node);
-            addCloneChildren(node, pos);
+    public void addCloneChildren(MapNode cloneNode) {
+        ObservableList<Node> observableList = nodesLayer.getChildren();
+        for (MapNode node : cloneNode.getChildren(cloneNode.getPos())) {
+            observableList.add(node);
+            addCloneChildren(node);
         }
     }
 
@@ -134,17 +134,17 @@ public class Subject extends StackPane {
 
     //———————————————————————————————————————————连线———————————————————————————————————————————
     public void addLine(QuadCurve line, byte pos) {
-        if(pos == PosConstants.RIGHT){
+        if (pos == PosConstants.RIGHT) {
             linesLayerR.getChildren().add(line);
-        }else {
+        } else {
             linesLayerL.getChildren().add(line);
         }
     }
 
     public void clearLine(byte pos) {
-        if(pos == PosConstants.RIGHT){
+        if (pos == PosConstants.RIGHT) {
             linesLayerR.getChildren().clear();
-        }else {
+        } else {
             linesLayerL.getChildren().clear();
         }
     }

@@ -48,7 +48,7 @@ public class DeleteCommand implements Command {
                 i++;
             }
             // deletedNode 的子节点 List 中仍保留子节点，方便 undo
-            subjectController.delete(deletedNode, pos);
+            subjectController.deleteNode(deletedNode, pos);
 
             subjectController.adjustChildrenX(parentNode, pos);
             // 删除前会改变选中节点 -> 失焦事件 -> adjust -> adjustChildrenY
@@ -71,7 +71,7 @@ public class DeleteCommand implements Command {
         }
         // 删除 subject 中的子节点
         subjectController.deleteChildrenFromSubject(deletedNode, pos);
-        subjectController.delete(deletedNode, pos);
+        subjectController.deleteNode(deletedNode, pos);
         subjectController.adjustChildrenY(pos);
         subjectController.refreshLines(pos);
         subjectController.adjustTranslateY(subjectController.getSelectedNode());
