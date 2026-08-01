@@ -59,9 +59,8 @@ public class SubjectController {
     //———————————————————————————————————————————新增———————————————————————————————————————————
 
     /**
-     * 有子节点：在当前节点和它的子节点之间插入
-     * 没有子节点：在当前节点和它的父节点之间插入
-     *
+     * 没有子节点：往父节点一侧插入
+     * 有子节点：往子节点一侧插入
      */
     public void insert() {
         if (selectedNode == null) {
@@ -70,23 +69,32 @@ public class SubjectController {
 
         byte pos = selectedNode.getPos();
         List<MapNode> children = selectedNode.getChildren(pos);
+        MapNode insertNode;
         if (children.isEmpty()) {
-
+            if (selectedNode == rootNode) {
+                return;
+            }
+            MapNode parentNode = selectedNode.getParentNode();
+            insertNode = new MapNode(pos, calculateChildX(parentNode, pos), calculateChildY(parentNode));
+            // 插入节点替代当前节点的位置
+            parentNode.addChildAt(parentNode.getChildren(pos).indexOf(selectedNode), insertNode, pos);
+            // 当前节点变成插入节点的子节点
+            parentNode.removeChild(selectedNode, pos);
+            insertNode.addChild(selectedNode, pos);
         } else {
-            MapNode childNode = new MapNode(pos, calculateChildX(selectedNode, pos), calculateChildY(selectedNode));
-            // 原本的子节点成为新节点的子节点
+            insertNode = new MapNode(pos, calculateChildX(selectedNode, pos), calculateChildY(selectedNode));
+            // 当前节点的子节点变成插入节点的子节点
             Iterator<MapNode> iterator = children.iterator();
             while (iterator.hasNext()) {
                 MapNode node = iterator.next();
                 iterator.remove();
-                childNode.addChild(node, pos);
+                insertNode.addChild(node, pos);
             }
-            selectedNode.addChild(childNode, pos);
-            addNodeAndSelect(childNode);
-
-            adjustChildrenX(selectedNode, pos);
-            refreshLines(pos);
+            selectedNode.addChild(insertNode, pos);
         }
+        addNodeAndSelect(insertNode);
+        adjustChildrenX(insertNode, pos);
+        refreshLines(pos);
     }
 
     public void addChild(byte pos) {

@@ -31,6 +31,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -215,8 +217,8 @@ public class FileUtil {
     private static JSONObject saveSubjects(MindMap mindMap) {
         ObservableList<Tab> tabs = mindMap.getTabs();
         JSONObject subjects = new JSONObject();
-        for (int i = 0; i < tabs.size(); i++) {
-            SubjectController subjectController = (SubjectController) tabs.get(i).getUserData();
+        for (Tab tab : tabs) {
+            SubjectController subjectController = (SubjectController) tab.getUserData();
             MapNode rootNode = subjectController.getRootNode();
 
             JSONObject subjectJson = saveNode(rootNode);
@@ -313,6 +315,7 @@ public class FileUtil {
     }
 
     //—————————————————————————————————————————最近打开—————————————————————————————————————————
+
     static {
         recentFiles = new LinkedList<>();
         File file = new File(ConfigConstants.DIR_RECENT_FILES);
@@ -384,23 +387,14 @@ public class FileUtil {
 
         int count = 0;
         File dirImage = new File(ConfigConstants.DIR_IMAGE);
-
-//        for (File file : dirImage.listFiles()) {
-//            if (!fileNameSet.contains(file.getName())) {
-//                file.delete();
-//                count++;
-//            }
-//        }
-
-        System.out.println();
-
-        Set<String> fileNameSet2 = new HashSet<>();
         for (File file : dirImage.listFiles()) {
-            fileNameSet2.add(file.getName());
-        }
-        for (String s : fileNameSet) {
-            if (!fileNameSet2.contains(s)) {
-                System.out.print(s + " ");
+            if (!fileNameSet.contains(file.getName())) {
+                try {
+                    Files.move(file.toPath(), new File(ConfigConstants.DIR_DELETE_IMAGES).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    MessageUtil.showMessage(e.getMessage());
+                }
+                count++;
             }
         }
 

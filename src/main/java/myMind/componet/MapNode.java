@@ -361,6 +361,7 @@ public class MapNode extends StackPane {
             imageContainer.setManaged(false);
             FileUtil.deleteImage(imageName);
             imageName = null;
+            textArea.setVisible(true);
             adjust(true);
         });
 
