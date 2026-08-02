@@ -28,7 +28,7 @@ public class MapTextArea extends StyleClassedTextArea {
         if (Platform.isFxApplicationThread()) {
             this.initInputMethodHandling();
         } else {
-            Platform.runLater(() -> this.initInputMethodHandling());
+            Platform.runLater(this::initInputMethodHandling);
         }
 
         getStyleClass().add("text-area");

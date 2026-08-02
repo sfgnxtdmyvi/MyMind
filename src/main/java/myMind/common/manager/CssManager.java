@@ -37,7 +37,7 @@ public class CssManager {
     }
 
     public static void init(AnchorPane root) {
-        root.setStyle(CssStyle.getStyle(CssManager.getTabStyle()));
+        root.setStyle(CssStyle.getStyle(tabStyle));
     }
 
     public static void setCss(String style, String value) {

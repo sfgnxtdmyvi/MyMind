@@ -683,7 +683,7 @@ public class MapNode extends StackPane {
         StyleClassedTextArea cloneTextArea
                 = new MapTextArea(new SimpleEditableStyledDocument<>(snapshot), true);
         cloneTextArea.setPrefHeight(cloneTextArea.getPrefHeight());
-        cloneTextArea.setMaxWidth(cloneTextArea.getMaxWidth());
+        cloneTextArea.setMaxWidth(textArea.getMaxWidth());
         cloneTextArea.layout();
 
         return cloneTextArea;

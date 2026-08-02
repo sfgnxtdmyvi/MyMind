@@ -49,7 +49,6 @@ public class MindMapController {
 
     private static final List<String> STYLE_SHEETS = List.of(
             MindMapController.class.getResource("/css/base.css").toExternalForm(),
-            MindMapController.class.getResource("/css/menu.css").toExternalForm(),
             MindMapController.class.getResource("/css/node.css").toExternalForm(),
             MindMapController.class.getResource("/css/style-wheel.css").toExternalForm(),
             MindMapController.class.getResource("/css/title-bar.css").toExternalForm()

@@ -255,4 +255,18 @@ public class MindMap extends TabPane {
             textArea.replaceText(selection.getStart(), selection.getEnd(), formatedText);
         }
     }
+
+    /**
+     * 分割节点
+     * 冒号左边的保留在原节点，冒号右边的移到子节点
+     */
+    public void split() {
+        MapNode selectedNode = subjectController.getSelectedNode();
+        StyleClassedTextArea textArea = selectedNode.getTextArea();
+        String[] split = FormatUtil.split(textArea.getText());
+        textArea.replaceText(split[0]);
+
+        subjectController.addChild(selectedNode.getPos());
+        subjectController.getSelectedNode().getTextArea().replaceText(split[1]);
+    }
 }
