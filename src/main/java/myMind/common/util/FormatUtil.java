@@ -29,6 +29,10 @@ public class FormatUtil {
                 after.append("\n");
             }
         }
+
+        if(after.isEmpty()){
+            return null;
+        }
         return new String[]{before.substring(0, before.length() - 1), after.substring(0, after.length() - 1)};
     }
 

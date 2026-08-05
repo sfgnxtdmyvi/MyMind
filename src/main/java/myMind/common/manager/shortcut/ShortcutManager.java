@@ -28,6 +28,7 @@ import java.util.Map;
 
 import static javafx.scene.input.KeyCode.BACK_SPACE;
 import static javafx.scene.input.KeyCode.C;
+import static javafx.scene.input.KeyCode.D;
 import static javafx.scene.input.KeyCode.DELETE;
 import static javafx.scene.input.KeyCode.DOWN;
 import static javafx.scene.input.KeyCode.EQUALS;
@@ -82,6 +83,8 @@ public class ShortcutManager {
                 new ShortcutBinding(mindMap::format, "格式化"));
         keyMap.put(new KeyCodeCombination(K, SHORTCUT_DOWN, ALT_DOWN),
                 new ShortcutBinding(mindMap::split, "分割节点"));
+        keyMap.put(new KeyCodeCombination(D, SHORTCUT_DOWN),
+                new ShortcutBinding(mindMap::copyLine, "向下复制一行"));
         load();
 
         keyEventHandler = event -> {

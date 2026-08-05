@@ -727,4 +727,8 @@ public class MapNode extends StackPane {
         incomingReferences.add(node);
     }
 
+    public void removeIncomingReference(MapNode node) {
+        incomingReferences.remove(node);
+    }
+
 }

@@ -264,9 +264,25 @@ public class MindMap extends TabPane {
         MapNode selectedNode = subjectController.getSelectedNode();
         StyleClassedTextArea textArea = selectedNode.getTextArea();
         String[] split = FormatUtil.split(textArea.getText());
+        if (split == null) {
+            return;
+        }
         textArea.replaceText(split[0]);
 
         subjectController.addChild(selectedNode.getPos());
         subjectController.getSelectedNode().getTextArea().replaceText(split[1]);
+    }
+
+    /**
+     * 向下复制一行
+     */
+    public void copyLine() {
+        MapNode selectedNode = subjectController.getSelectedNode();
+        StyleClassedTextArea textArea = selectedNode.getTextArea();
+
+        textArea.selectLine();
+        String selectedText = textArea.getSelectedText();
+        IndexRange selection = textArea.getSelection();
+        textArea.replaceText(selection.getStart(), selection.getEnd(), selectedText + "\n"+ selectedText);
     }
 }

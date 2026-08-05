@@ -37,9 +37,6 @@ public class ReferenceManager {
 
     /**
      * 记录原位置
-     *
-     * @param subject
-     * @param srcNode
      */
     public static void setSrc(MindMap mindMap, Subject subject, MapNode srcNode) {
         ReferenceManager.isReferencing = true;
@@ -69,6 +66,8 @@ public class ReferenceManager {
         subject.setTranslateY(subjectTranslateY);
         subjectId = null;
     }
+
+    //———————————————————————————————————————————加载———————————————————————————————————————————
 
     public static void prepare() {
         incomingReferences = new HashMap<>();
