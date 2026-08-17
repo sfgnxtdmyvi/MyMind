@@ -12,7 +12,7 @@ public class LineColorConstants {
 
     static {
         Collections.addAll(lineColors,
-                Color.web("#fdb466"),
+//                Color.web("#fdb466"),
                 Color.web("#64cab9"),
                 Color.web("#f6b7dd"),
                 Color.web("#a3daa6"),

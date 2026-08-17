@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ScrollPane?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="myMind.controller.SearchController"
+      fx:id="searchPanel">
+
+    <HBox>
+        <Label text="搜索" id="search-label"/>
+        <Pane HBox.hgrow="ALWAYS"/>
+        <Button text="×" id="close-button" onMouseClicked="#showAndHide"/>
+    </HBox>
+
+    <HBox id="second-row">
+        <TextField fx:id="searchTextField" onKeyPressed="#searchTextFieldPressed"
+                   promptText="输入关键词搜索..." HBox.hgrow="ALWAYS"/>
+        <Button id="searchButton" text="🔍" onMouseClicked="#search"/>
+    </HBox>
+
+    <Label fx:id="statusLabel" visible="false" text="共 0 个结果"/>
+    <!-- fitToWidth="true" 会让内容节点的宽度始终等于 ScrollPane 的视口宽度 -->
+    <ScrollPane fx:id="resultListScrollPane" VBox.vgrow="ALWAYS" fitToWidth="true" hbarPolicy="NEVER">
+        <VBox fx:id="resultList" />
+    </ScrollPane>
+
+</VBox>

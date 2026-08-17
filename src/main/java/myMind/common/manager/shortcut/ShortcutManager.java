@@ -13,6 +13,7 @@ import myMind.common.manager.ReferenceManager;
 import myMind.common.util.MessageUtil;
 import myMind.componet.MindMap;
 import myMind.controller.ContextMenuController;
+import myMind.controller.SearchController;
 import myMind.controller.TitleBarController;
 
 import java.io.BufferedReader;
@@ -32,6 +33,7 @@ import static javafx.scene.input.KeyCode.D;
 import static javafx.scene.input.KeyCode.DELETE;
 import static javafx.scene.input.KeyCode.DOWN;
 import static javafx.scene.input.KeyCode.EQUALS;
+import static javafx.scene.input.KeyCode.F;
 import static javafx.scene.input.KeyCode.K;
 import static javafx.scene.input.KeyCode.L;
 import static javafx.scene.input.KeyCode.LEFT;
@@ -50,7 +52,7 @@ public class ShortcutManager {
     private EventHandler<KeyEvent> keyEventHandler;
     private EventHandler<MouseEvent> mouseEventHandler;
 
-    public ShortcutManager(Scene scene, MindMap mindMap, ContextMenuController contextMenuController, TitleBarController titleBarController) {
+    public ShortcutManager(Scene scene, MindMap mindMap, ContextMenuController contextMenuController, TitleBarController titleBarController, SearchController searchController) {
         this.scene = scene;
         keyMap = new HashMap<>();
         keyMap.put(new KeyCodeCombination(C, SHORTCUT_DOWN, SHIFT_DOWN),
@@ -85,6 +87,9 @@ public class ShortcutManager {
                 new ShortcutBinding(mindMap::split, "分割节点"));
         keyMap.put(new KeyCodeCombination(D, SHORTCUT_DOWN),
                 new ShortcutBinding(mindMap::copyLine, "向下复制一行"));
+
+        keyMap.put(new KeyCodeCombination(F, SHORTCUT_DOWN),
+                new ShortcutBinding(searchController::showAndHide, "搜索"));
         load();
 
         keyEventHandler = event -> {

@@ -386,8 +386,8 @@ public class SubjectController {
         // 添加事件应在粘贴时，在复制事添加事件是用当前主题添加的，如果粘贴到其他主题则无法使用
         setOnAction(cloneNode);
         setOnActionChildren(cloneNode, pos);
-        setSelectedNode(cloneNode);
         subject.addClone(cloneNode);
+        setSelectedNode(cloneNode);
 
         adjustChildrenXY(parentNode, pos);
         adjustTranslateY(cloneNode);
@@ -866,31 +866,44 @@ public class SubjectController {
 
         MapNode parentNode = selectedNode.getParentNode();
         List<MapNode> children = parentNode.getChildren(pos);
+        // 有兄弟就移动到兄弟
         int index = children.indexOf(selectedNode);
-        // 有上一个兄弟就移动到上一个兄弟
         if (index != 0) {
             setSelectedNode(children.get(index - 1));
-            adjustTranslateY(selectedNode);
-        }
-        //    叔 - 堂兄弟
-        // 爷      最下面的堂兄弟（目标）
-        //    父 - 当前
-        else {
-            MapNode grandPaNode = parentNode.getParentNode();
-            if (grandPaNode == null) {
-                return;
-            }
-            List<MapNode> uncles = grandPaNode.getChildren(pos);
-            index = uncles.indexOf(parentNode);
-            if (index != 0) {
-                MapNode uncle = uncles.get(index - 1);
-                List<MapNode> cousin = uncle.getChildren(pos);
-                if (!cousin.isEmpty()) {
-                    setSelectedNode(cousin.get(cousin.size() - 1));
-                    adjustTranslateY(selectedNode);
+        } else {
+            //            broAncestor - node - node - node - brother
+            // ancestor -
+            //            curAncestor - node - node - node - selectedNode
+            // 当前节点的深度
+            int depth = 1;
+            // 当前节点的祖先
+            MapNode curAncestor = parentNode;
+            // 祖先和祖先的兄弟的共同祖先
+            MapNode ancestor = curAncestor.getParentNode();
+            List<MapNode> childrenOfAncestor = ancestor.getChildren(pos);
+            while ((index = childrenOfAncestor.indexOf(curAncestor)) == 0) {
+                curAncestor = ancestor;
+                ancestor = curAncestor.getParentNode();
+                if (ancestor == null) {
+                    return;
                 }
+                childrenOfAncestor = ancestor.getChildren(pos);
+                depth++;
             }
+
+            // 当前节点的兄弟，它的初值是当前节点的祖先的兄弟
+            MapNode brother = childrenOfAncestor.get(index - 1);
+            while (depth != 0) {
+                List<MapNode> childrenOfBrother = brother.getChildren(pos);
+                if (childrenOfBrother.isEmpty()) {
+                    break;
+                }
+                brother = childrenOfBrother.get(childrenOfBrother.size() - 1);
+                depth--;
+            }
+            setSelectedNode(brother);
         }
+        adjustTranslateY(selectedNode);
     }
 
     public void moveDown() {
@@ -904,23 +917,34 @@ public class SubjectController {
         int index = children.indexOf(selectedNode);
         if (index != children.size() - 1) {
             setSelectedNode(children.get(index + 1));
-            adjustTranslateY(selectedNode);
         } else {
-            MapNode grandPaNode = parentNode.getParentNode();
-            if (grandPaNode == null) {
-                return;
-            }
-            List<MapNode> uncles = grandPaNode.getChildren(pos);
-            index = uncles.indexOf(parentNode);
-            if (index != uncles.size() - 1) {
-                MapNode uncle = uncles.get(index + 1);
-                List<MapNode> cousin = uncle.getChildren(pos);
-                if (!cousin.isEmpty()) {
-                    setSelectedNode(cousin.get(0));
-                    adjustTranslateY(selectedNode);
+            int depth = 1;
+            // 当前节点的祖先
+            MapNode curAncestor = parentNode;
+            MapNode ancestor = curAncestor.getParentNode();
+            List<MapNode> childrenOfAncestor = ancestor.getChildren(pos);
+            while ((index = childrenOfAncestor.indexOf(curAncestor)) == childrenOfAncestor.size() - 1) {
+                curAncestor = ancestor;
+                ancestor = curAncestor.getParentNode();
+                if (ancestor == null) {
+                    return;
                 }
+                childrenOfAncestor = ancestor.getChildren(pos);
+                depth++;
             }
+
+            MapNode brother = childrenOfAncestor.get(index + 1);
+            while (depth != 0) {
+                List<MapNode> childrenOfBrother = brother.getChildren(pos);
+                if (childrenOfBrother.isEmpty()) {
+                    break;
+                }
+                brother = childrenOfBrother.get(0);
+                depth--;
+            }
+            setSelectedNode(brother);
         }
+        adjustTranslateY(selectedNode);
     }
 
     //———————————————————————————————————————————其他———————————————————————————————————————————

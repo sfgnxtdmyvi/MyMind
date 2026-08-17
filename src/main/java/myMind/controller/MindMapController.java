@@ -15,13 +15,14 @@ import javafx.scene.image.Image;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.Data;
 import myMind.common.manager.CssManager;
-import myMind.common.manager.shortcut.ShortcutManager;
 import myMind.common.manager.StyleWheelManager;
+import myMind.common.manager.shortcut.ShortcutManager;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MessageUtil;
 import myMind.common.util.ScheduleUtil;
@@ -37,11 +38,14 @@ import java.util.List;
 public class MindMapController {
     private Stage stage;
     private Scene scene;
+
     private AnchorPane root;
     private HBox titleBar;
-
     private TitleBarController titleBarController;
+
     private MindMap mindMap;
+    private VBox searchPanel;
+    private SearchController searchController;
 
     private ContextMenuController contextMenuController;
     private ContextMenu contextMenu;
@@ -50,9 +54,11 @@ public class MindMapController {
     private static final List<String> STYLE_SHEETS = List.of(
             MindMapController.class.getResource("/css/base.css").toExternalForm(),
             MindMapController.class.getResource("/css/node.css").toExternalForm(),
+            MindMapController.class.getResource("/css/search-panel.css").toExternalForm(),
             MindMapController.class.getResource("/css/style-wheel.css").toExternalForm(),
             MindMapController.class.getResource("/css/title-bar.css").toExternalForm()
     );
+
     private ShortcutManager shortcutManager;
     private EventHandler<ContextMenuEvent> contextMenuEventEventHandler;
     private ChangeListener<Tab> tabChangeListener;
@@ -69,6 +75,10 @@ public class MindMapController {
             loader = new FXMLLoader(getClass().getResource("/fxml/context-menu.fxml"));
             contextMenu = loader.load();
             contextMenuController = loader.getController();
+
+            loader = new FXMLLoader(getClass().getResource("/fxml/search-panel.fxml"));
+            searchPanel = loader.load();
+            searchController = loader.getController();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -96,11 +106,16 @@ public class MindMapController {
         AnchorPane.setLeftAnchor(titleBar, 0.0);
         AnchorPane.setRightAnchor(titleBar, 0.0);
         mindMap = new MindMap(addSubject);
-        root.getChildren().add(mindMap);
+        root.getChildren().addAll(mindMap, searchPanel);
         AnchorPane.setTopAnchor(mindMap, titleBar.getHeight());
         AnchorPane.setBottomAnchor(mindMap, 0.0);
         AnchorPane.setLeftAnchor(mindMap, 0.0);
         AnchorPane.setRightAnchor(mindMap, 0.0);
+        searchController.setMindMap(mindMap);
+        searchPanel.setVisible(false);
+        AnchorPane.setTopAnchor(searchPanel, titleBar.getHeight());
+        AnchorPane.setBottomAnchor(searchPanel, 0.0);
+        AnchorPane.setLeftAnchor(searchPanel, 0.0);
         MessageUtil.init(root, stage);
 
         titleBarController.setMindMap(mindMap);
@@ -112,7 +127,7 @@ public class MindMapController {
     }
 
     private void addListener() {
-        shortcutManager = new ShortcutManager(scene, mindMap, contextMenuController, titleBarController);
+        shortcutManager = new ShortcutManager(scene, mindMap, contextMenuController, titleBarController, searchController);
         stage.setUserData(shortcutManager);
 
         // 防止被 StyleClassedTextArea 阻止事件
@@ -122,7 +137,7 @@ public class MindMapController {
             if (selectedNode == null) {
                 return;
             }
-//
+
             if (selectedNode.getTextArea().getSelection().getLength() != 0) {
                 // 默认将 content 的左上角放到 (x, y) 处，所以加上偏移，使轮盘居中
                 styleWheel.show(stage, event.getScreenX() - 125, event.getScreenY() - 125);

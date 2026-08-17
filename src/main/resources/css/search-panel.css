@@ -1,0 +1,102 @@
+#searchPanel {
+    -fx-background-color: #f3f3f3;
+    -fx-pref-width: 280;
+    -fx-padding: 6 16 0 16;
+    -fx-spacing: 8;
+}
+
+/* 第一行 */
+#search-label {
+    -fx-pref-height: 24;
+}
+
+#close-button {
+    -fx-background-color: transparent;
+
+    /* 让内容变大，而按钮大小不变 */
+    -fx-pref-width: 24;
+    -fx-pref-height: 24;
+    -fx-min-width: 24;
+    -fx-min-height: 24;
+    -fx-max-width: 24;
+    -fx-max-height: 24;
+    /* 清除内边距 */
+    -fx-padding: 0;
+}
+
+#close-button .text {
+    -fx-font-size: 24px;
+    -fx-translate-y: -5.1;
+}
+
+#close-button:hover {
+    -fx-background-color: #dfdfdf;
+}
+
+/* 第二行 */
+#second-row{
+    -fx-spacing: 8;
+}
+
+#searchTextField {
+    -fx-focus-color: #aad1ff;
+    -fx-faint-focus-color: transparent;
+    -fx-pref-height: 30;
+}
+
+#searchButton {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 5;
+    -fx-background-insets: 0;
+    -fx-border-color: #dddddd;
+    -fx-border-radius: 5;
+    -fx-border-insets: 0;
+
+    -fx-pref-width: 45;
+    -fx-pref-height: 30;
+    -fx-min-width: 45;
+    -fx-min-height: 30;
+    -fx-max-width: 45;
+    -fx-max-height: 30;
+    -fx-padding: 0;
+}
+
+#searchButton .text {
+    -fx-font-size: 18px;
+    -fx-translate-y: -1.1;
+}
+
+#searchButton:hover {
+    -fx-background-color: #ededed;
+}
+
+/* 结果列表 */
+#statusLabel {
+    -fx-font-size: 13px;
+}
+
+#resultListScrollPane {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+}
+
+#resultList {
+}
+
+#resultList .styled-text-area {
+    -fx-font-size: 16px;
+    -fx-background-color: transparent;
+}
+
+#resultList .styled-text-area .text {
+    -fx-fill: #514e4e;
+}
+
+#resultList .styled-text-area:hover {
+    -fx-background-color: #e3e2e2;
+}
+
+.high-light-text {
+    -rtfx-background-color: #ffeaaf;
+}

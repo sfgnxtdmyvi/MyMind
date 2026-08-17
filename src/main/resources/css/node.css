@@ -75,8 +75,8 @@
 }
 
 .close-button .text, .add-button .text {
-    -fx-translate-x: 0.2;
-    -fx-translate-y: -3.2;
+    -fx-translate-x: 0.1;
+    -fx-translate-y: -3.5;
 }
 
 .add-button:hover {
