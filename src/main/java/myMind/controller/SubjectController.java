@@ -36,7 +36,6 @@ public class SubjectController {
     public SubjectController() {
         subject = new Subject(IdGenerator.nextId());
         rootNode = new MapNode(PosConstants.MIDDLE);
-        // todo 根节点样式
         rootNode.getStyleClass().add("root-node");
         addNode(rootNode);
         Platform.runLater(() -> {
@@ -98,7 +97,7 @@ public class SubjectController {
     }
 
     public void addChild(byte pos) {
-        if (isValidPos(pos)) {
+        if (isNotValidPos(pos)) {
             return;
         }
 
@@ -135,11 +134,9 @@ public class SubjectController {
 
     /**
      * 批量添加子节点，并选中第一个节点
-     *
-     * @param pos
      */
     public void batchAddChild(byte pos) {
-        if (isValidPos(pos)) {
+        if (isNotValidPos(pos)) {
             return;
         }
 
@@ -295,10 +292,6 @@ public class SubjectController {
         node.setSetSubjectTranslateX(this::setSubjectTranslateX);
     }
 
-    public MindMap getMindMap() {
-        return (MindMap) getSubject().getParent().getParent();
-    }
-
     private void setOnActionChildren(MapNode cloneNode, byte pos) {
         for (MapNode node : cloneNode.getChildren(pos)) {
             setOnAction(node);
@@ -318,6 +311,13 @@ public class SubjectController {
 
     private double calculateChildY(MapNode parentNode) {
         return parentNode.getLayoutY() + (parentNode.getPrefHeight() - NodeConstants.MIN_NODE_HEIGHT) / 2.0;
+    }
+
+    /**
+     * 不是根节点，且节点的 pos 和传入的 pos 不一致，则非法
+     */
+    private boolean isNotValidPos(byte pos) {
+        return selectedNode == null || (selectedNode.getPos() != PosConstants.MIDDLE && selectedNode.getPos() != pos);
     }
 
     //———————————————————————————————————————————复制粘贴———————————————————————————————————————————
@@ -957,10 +957,7 @@ public class SubjectController {
         commandHistory.redo();
     }
 
-    private boolean isValidPos(byte pos) {
-        if (selectedNode == null || (selectedNode.getPos() != PosConstants.MIDDLE && selectedNode.getPos() != pos)) {
-            return true;
-        }
-        return false;
+    public MindMap getMindMap() {
+        return (MindMap) getSubject().getParent().getParent();
     }
 }

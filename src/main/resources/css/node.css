@@ -3,15 +3,23 @@
     -fx-border-radius: 8;
     -fx-border-color: #c2c2c2;
     -fx-border-width: 1;
+    -fx-border-style: solid outside;
     -fx-background-color: white;
 }
 
+.root-node {
+    -fx-border-color: #aad1ff;
+    -fx-border-width: 2;
+}
+
 .selected-node {
-    -fx-border-color: #e6af88;
+    -fx-border-color: #fbc49e;
+    -fx-border-width: 2;
 }
 
 .nodeImage {
     -fx-border-width: 1;
+    -fx-border-style: solid outside;
     -fx-border-color: #82a7f3;
 }
 
@@ -20,28 +28,9 @@
     -fx-fill: #aad1ff;
 }
 
-.text-area {
+.styled-text-area {
     -fx-font-family: 'Microsoft YaHei';
     -fx-font-size: 20px;
-}
-
-.root-node {
-    -fx-border-width: 2;
-    -fx-border-color: #aad1ff;
-}
-
-.map-text-area{
-    -fx-background-radius:0;
-    -fx-background-color:white;
-    -fx-focus-color:transparent;
-    -fx-faint-focus-color:transparent;
-    -fx-padding: 0;
-}
-
-.map-text-area .content {
-    -fx-background-radius:0;
-    -fx-background-color:white;
-    -fx-padding:0;
 }
 
 /*——————————————————————————————————按钮——————————————————————————————————*/

@@ -30,10 +30,7 @@ public class MapTextArea extends StyleClassedTextArea {
         } else {
             Platform.runLater(this::initInputMethodHandling);
         }
-
-        getStyleClass().add("text-area");
         setWrapText(true);
-        setAutoHeight(true);
     }
 
     private void initInputMethodHandling() {

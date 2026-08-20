@@ -97,6 +97,7 @@ public class MapNode extends StackPane {
         contentBox = new VBox(textArea);
         contentBox.setAlignment(Pos.CENTER);
         contentBox.setPadding(new Insets(NodeConstants.PADDING));
+        contentBox.setSpacing(1);
         getChildren().add(contentBox);
 
         // 中间节点会添加两个按钮
@@ -463,28 +464,28 @@ public class MapNode extends StackPane {
             nodeWidth = NodeConstants.MIN_NODE_WIDTH;
             nodeHeight = NodeConstants.MIN_NODE_HEIGHT;
         } else {
-            // textArea 宽度 + border + padding
+            // textArea 宽度 + padding
             textWidth = MeasureTextUtil.getTextWidth(text);
             // 节点在最小宽度时，文本保持居中
             if (!exact && textArea.getMaxWidth() > NodeConstants.MIN_TEXTAREA_WIDTH) {
                 textWidth = textWidth > textArea.getMaxWidth() ? textWidth + 50 : textArea.getMaxWidth();
             }
             textWidth = Math.min(textWidth, NodeConstants.MAX_TEXTAREA_WIDTH);
-            nodeWidth = Math.max(NodeConstants.MIN_NODE_WIDTH, (textWidth + NodeConstants.BORDER_AND_PADDING) * 1.01);
+            nodeWidth = Math.max(NodeConstants.MIN_NODE_WIDTH, (textWidth + NodeConstants.PADDING_2) * 1.01);
             if (imageVisible) {
-                // 文本宽度 < 图片宽度时，宽度 = 图片宽度 + border + padding
-                nodeWidth = Math.max(nodeWidth, imageView.getFitWidth() + NodeConstants.BORDER_AND_PADDING + 2.6);
+                // 文本宽度 < 图片宽度时，宽度 = 图片宽度 + padding
+                nodeWidth = Math.max(nodeWidth, imageView.getFitWidth() + NodeConstants.PADDING_2);
             }
 
-            // textArea 高度 + border + padding [+ image 高度 + border]
+            // textArea 高度 + padding [+ image 高度]
             if (getPrefWidth() >= NodeConstants.MAX_TEXTAREA_WIDTH && !text.contains("\n")) {
                 textHeight = MeasureTextUtil.getTextHeight() * 1.06;
             } else {
                 textHeight = MeasureTextUtil.getTextHeight() * 1.022;
             }
-            nodeHeight = textHeight + NodeConstants.BORDER_AND_PADDING;
+            nodeHeight = textHeight + NodeConstants.PADDING_2;
             if (imageVisible) {
-                nodeHeight += imageView.getFitHeight() + 2.6;
+                nodeHeight += imageView.getFitHeight();
                 if (textEmpty) {
                     textArea.setVisible(false);
                     nodeHeight -= textHeight;

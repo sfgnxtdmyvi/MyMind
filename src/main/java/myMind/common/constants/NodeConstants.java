@@ -10,9 +10,8 @@ public class NodeConstants {
     public static final double MAX_TEXTAREA_WIDTH = 1000;
     public static final double MIN_TEXTAREA_HEIGHT = MIN_NODE_HEIGHT - 22;
     public static final double HALF_MIN_TEXTAREA_HEIGHT = MIN_TEXTAREA_HEIGHT / 2;
-
     public static final int PADDING = 12;
-    public static final int BORDER_AND_PADDING = 2 + PADDING * 2;
+    public static final int PADDING_2 = PADDING * 2;
 
     public static final double GAP_X = MIN_NODE_WIDTH / 4;
     public static final double GAP_Y = MIN_NODE_WIDTH / 5;

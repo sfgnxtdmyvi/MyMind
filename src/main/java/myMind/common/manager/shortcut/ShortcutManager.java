@@ -41,6 +41,7 @@ import static javafx.scene.input.KeyCode.MINUS;
 import static javafx.scene.input.KeyCode.RIGHT;
 import static javafx.scene.input.KeyCode.UP;
 import static javafx.scene.input.KeyCode.X;
+import static javafx.scene.input.KeyCode.Y;
 import static javafx.scene.input.KeyCombination.ALT_DOWN;
 import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
 import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
@@ -87,6 +88,8 @@ public class ShortcutManager {
                 new ShortcutBinding(mindMap::split, "分割节点"));
         keyMap.put(new KeyCodeCombination(D, SHORTCUT_DOWN),
                 new ShortcutBinding(mindMap::copyLine, "向下复制一行"));
+        keyMap.put(new KeyCodeCombination(Y, SHORTCUT_DOWN),
+                new ShortcutBinding(mindMap::deleteLine, "删除当前行"));
 
         keyMap.put(new KeyCodeCombination(F, SHORTCUT_DOWN),
                 new ShortcutBinding(searchController::showAndHide, "搜索"));

@@ -15,6 +15,11 @@ import myMind.common.util.FormatUtil;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.TwoDimensional;
+import org.reactfx.collection.LiveList;
+
+import java.util.Collection;
 
 @Data
 public class MindMap extends TabPane {
@@ -200,7 +205,6 @@ public class MindMap extends TabPane {
         getTabs().add(tab);
 
         MapNode rootNode = subjectController.getRootNode();
-//        StackPane tabHeaderArea = (StackPane) lookup(".tab-header-area");
         rootNode.setLayoutX((getWidth() - rootNode.getPrefWidth()) / 2);
         rootNode.setLayoutY((getHeight() - rootNode.getPrefHeight()) / 2);
         rootNode.getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
@@ -274,15 +278,61 @@ public class MindMap extends TabPane {
     }
 
     /**
-     * 向下复制一行
+     * 向下复制一行，或复制选中文本
      */
     public void copyLine() {
         MapNode selectedNode = subjectController.getSelectedNode();
         StyleClassedTextArea textArea = selectedNode.getTextArea();
-
-        textArea.selectLine();
-        String selectedText = textArea.getSelectedText();
+        int caretPos = textArea.getCaretPosition();
         IndexRange selection = textArea.getSelection();
-        textArea.replaceText(selection.getStart(), selection.getEnd(), selectedText + "\n"+ selectedText);
+        if (selection.getLength() == 0) {
+            textArea.selectLine();
+        }
+        selection = textArea.getSelection();
+        String selectedText = textArea.getSelectedText();
+        textArea.replaceText(selection.getStart(), selection.getEnd(), selectedText + "\n" + selectedText);
+        textArea.moveTo(caretPos + selectedText.length() + 1);
+    }
+
+    /**
+     * 删除当前行
+     */
+    public void deleteLine() {
+        MapNode selectedNode = subjectController.getSelectedNode();
+        StyleClassedTextArea textArea = selectedNode.getTextArea();
+
+        int caretPos = textArea.getCaretPosition();
+        TwoDimensional.Position pos = textArea.offsetToPosition(caretPos, TwoDimensional.Bias.Forward);
+        int rowIndex = pos.getMajor();
+        int columnIndex = pos.getMinor();
+
+        LiveList<Paragraph<Collection<String>, String, Collection<String>>> paragraphs = textArea.getParagraphs();
+        // 当前行的起始偏移量
+        int start = 0;
+        for (int i = 0; i < rowIndex; i++) {
+            start += paragraphs.get(i).length();
+        }
+        // 当前行的结束偏移量（包含换行符）
+        int end = start + paragraphs.get(rowIndex).length() + 1;
+
+        if (paragraphs.size() - 1 == rowIndex) {
+            // 当前是最后一行，移动到上一行
+            rowIndex = rowIndex - 1;
+            // 上一行的长度小于当前列索引，将列列索引设为上一行的末尾
+            if (paragraphs.size() != 1 && paragraphs.get(rowIndex).length() < columnIndex) {
+                columnIndex = paragraphs.get(rowIndex).length();
+            }
+        }
+        // 下一行的长度小于当前列索引，将列列索引设为下一行的末尾
+        else if (paragraphs.size() != 1 && paragraphs.get(rowIndex + 1).length() < columnIndex) {
+            columnIndex = paragraphs.get(rowIndex + 1).length();
+        }
+
+        textArea.deleteText(start, end);
+
+        if (textArea.getLength() == 0) {
+            return;
+        }
+        textArea.moveTo(rowIndex, columnIndex);
     }
 }
