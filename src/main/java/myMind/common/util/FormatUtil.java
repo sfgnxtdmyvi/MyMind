@@ -25,12 +25,16 @@ public class FormatUtil {
             before.append(split[0]);
             before.append("\n");
             if (split.length >= 2) {
-                after.append(split[1].replaceAll("(.*)。", "$1"));
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int i = 1; i < split.length; i++) {
+                    stringBuilder.append(split[i]);
+                }
+                after.append(stringBuilder.toString().replaceAll("(.*)。", "$1"));
                 after.append("\n");
             }
         }
 
-        if(after.isEmpty()){
+        if (after.isEmpty()) {
             return null;
         }
         return new String[]{before.substring(0, before.length() - 1), after.substring(0, after.length() - 1)};

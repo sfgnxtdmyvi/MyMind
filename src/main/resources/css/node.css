@@ -10,6 +10,7 @@
 .root-node {
     -fx-border-color: #aad1ff;
     -fx-border-width: 2;
+    /*-fx-font-weight: bold;*/
 }
 
 .selected-node {

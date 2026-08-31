@@ -159,17 +159,12 @@ public class SubjectController {
 
         MapNode parentNode = selectedNode.getParentNode();
         byte pos = selectedNode.getPos();
-        MapNode firstNode;
-        if (pos == PosConstants.RIGHT) {
-            firstNode = new MapNode(pos, selectedNode.getLayoutX(), 0);
-        } else {
-            // 父节点 X 轴 - 节点间隔 - 节点最小宽度
-            firstNode = new MapNode(PosConstants.LEFT, calculateChildX(parentNode, PosConstants.LEFT), 0);
-        }
+        double siblingX = calculateChildX(parentNode, pos);
+        MapNode firstNode = new MapNode(pos, siblingX, 0);
         parentNode.addChildAt(parentNode.getChildren(pos).indexOf(selectedNode) + 1, firstNode, pos);
         addNode(firstNode);
         for (int i = 1; i < 5; i++) {
-            MapNode siblingNode = new MapNode(pos, selectedNode.getLayoutX(), 0);
+            MapNode siblingNode = new MapNode(pos, siblingX, 0);
             parentNode.addChildAt(parentNode.getChildren(pos).indexOf(selectedNode) + 1 + i, siblingNode, pos);
             addNode(siblingNode);
         }
@@ -659,14 +654,14 @@ public class SubjectController {
     }
 
     public void adjustChildrenSize() {
-        rootNode.adjustSize(true);
+        rootNode.adjustSize();
         adjustChildrenSize(rootNode, PosConstants.RIGHT);
         adjustChildrenSize(rootNode, PosConstants.LEFT);
     }
 
     private void adjustChildrenSize(MapNode MapNode, byte pos) {
         for (MapNode childNode : MapNode.getChildren(pos)) {
-            childNode.adjustSize(true);
+            childNode.adjustSize();
             adjustChildrenSize(childNode, pos);
         }
     }

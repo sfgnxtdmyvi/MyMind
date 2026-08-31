@@ -247,7 +247,7 @@ public class MapNode extends StackPane {
                         ratio = imageWidth / imageHeight;
                         imageName = FileUtil.saveImage(bufferedImage, imageName);
 
-                        adjust(true);
+                        adjust();
                     } catch (UnsupportedFlavorException | IOException ex) {
                         MessageUtil.showMessage("粘贴失败：" + ex.getMessage());
                     }
@@ -259,13 +259,13 @@ public class MapNode extends StackPane {
 
         // 文本变化调整节点大小
         textArea.textProperty()
-                .addListener((obs, oldText, newText) -> adjust(false));
+                .addListener((obs, oldText, newText) -> adjust());
 
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
                 // 清除选区，恢复背景色
                 textArea.deselect();
-                adjust(true);
+                adjust();
             }
         });
     }
@@ -363,7 +363,7 @@ public class MapNode extends StackPane {
             FileUtil.deleteImage(imageName);
             imageName = null;
             textArea.setVisible(true);
-            adjust(true);
+            adjust();
         });
 
         // 缩放
@@ -384,18 +384,17 @@ public class MapNode extends StackPane {
                 imageView.setFitWidth(imageWidth);
                 // 根据宽度的变化量，按宽高比计算高度
                 imageView.setFitHeight(imageWidth / ratio);
-                adjust(true);
+                adjust();
             }
         });
 
         imageContainer.setOnMouseReleased(e -> {
-            isResizing = false;
-            imageView.setCursor(Cursor.DEFAULT);
-        });
-
-        // 点击有图片没有文字的节点显示 textArea
-        imageContainer.setOnMouseClicked(e -> {
-            if (!textArea.isVisible()) {
+            if (isResizing) {
+                isResizing = false;
+                imageView.setCursor(Cursor.DEFAULT);
+            }
+            // 点击有图片没有文字的节点显示 textArea
+            else if (!textArea.isVisible()) {
                 // setVisible(false) 后，maxWidth 就变成0了
                 textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
                 textArea.setVisible(true);
@@ -417,10 +416,10 @@ public class MapNode extends StackPane {
     /**
      * 调整尺寸和位置
      */
-    public void adjust(boolean exact) {
+    public void adjust() {
         double oldWidth = getPrefWidth();
         double oldHeight = getPrefHeight();
-        adjustSize(exact);
+        adjustSize();
         setSubjectTranslateY.accept(-(getPrefHeight() - oldHeight) * 0.5);
 
         // 调整位置
@@ -446,10 +445,8 @@ public class MapNode extends StackPane {
 
     /**
      * 根据内容调整尺寸
-     *
-     * @param exact 是否精确调整宽度，新增文本时不精准调整，使得增加微小宽度时，不改变宽度
      */
-    public void adjustSize(boolean exact) {
+    public void adjustSize() {
         String text = textArea.getText();
         boolean imageVisible = imageName != null;
         double nodeWidth;
@@ -466,12 +463,8 @@ public class MapNode extends StackPane {
         } else {
             // textArea 宽度 + padding
             textWidth = MeasureTextUtil.getTextWidth(text);
-            // 节点在最小宽度时，文本保持居中
-            if (!exact && textArea.getMaxWidth() > NodeConstants.MIN_TEXTAREA_WIDTH) {
-                textWidth = textWidth > textArea.getMaxWidth() ? textWidth + 50 : textArea.getMaxWidth();
-            }
-            textWidth = Math.min(textWidth, NodeConstants.MAX_TEXTAREA_WIDTH);
-            nodeWidth = Math.max(NodeConstants.MIN_NODE_WIDTH, (textWidth + NodeConstants.PADDING_2) * 1.01);
+            textWidth = Math.min(textWidth, NodeConstants.MAX_TEXTAREA_WIDTH) * 1.01;
+            nodeWidth = Math.max(NodeConstants.MIN_NODE_WIDTH, textWidth + NodeConstants.PADDING_2);
             if (imageVisible) {
                 // 文本宽度 < 图片宽度时，宽度 = 图片宽度 + padding
                 nodeWidth = Math.max(nodeWidth, imageView.getFitWidth() + NodeConstants.PADDING_2);
