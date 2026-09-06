@@ -391,7 +391,7 @@ public class FileUtil {
         for (File file : dirImage.listFiles()) {
             if (!fileNameSet.contains(file.getName())) {
                 try {
-                    Files.move(file.toPath(), new File(ConfigConstants.DIR_DELETE_IMAGES).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    Files.move(file.toPath(), new File(ConfigConstants.DIR_DELETE_IMAGES + file.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
                     MessageUtil.showMessage(e.getMessage());
                 }

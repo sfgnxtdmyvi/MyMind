@@ -8,7 +8,7 @@ public class SizeConstants {
     public static final double SCREEN_WIDTH = screenBounds.getWidth();
     public static final double SCREEN_HEIGHT = screenBounds.getHeight();
 
-    public static final int MAX_RECENT_FILES = 10;
+    public static final int MAX_RECENT_FILES = 15;
 
     // subject 离屏幕的距离
     public static final int SUBJECT_MARGIN = 300;

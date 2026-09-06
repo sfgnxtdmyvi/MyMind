@@ -41,11 +41,13 @@ public class FormatUtil {
     }
 
     /**
-     * 英文符号转换成中文符号
+     * 处理符号
+     * 符号与文字匹配，中文后跟中文符号，英文后跟英文符号
      */
     private static String punctuation(String string) {
-        string = string.replace("…", "……").
-                replaceAll("\"(\\p{IsHan}+)\"", "“$1”");
+        string = string.replace("…", "……")
+                .replaceAll("\"(\\p{IsHan}+)\"", "“$1”")
+                .replaceAll("([a-zA-z])，", "$1,");
 
         char[] charArray = string.toCharArray();
 
@@ -84,12 +86,14 @@ public class FormatUtil {
         return string.replace("， ", "，")
                 .replace("： ", "：")
                 .replace(": ", ":")
-                //英文逗号后面不是空格，补上
-                .replaceAll(",(?!\\s)", ", ");
+                .replace(" ", " ")
+                // 英文逗号后面不是空格，补上
+                .replaceAll(",(?!\\s)", ", ")
+                // 英文逗号后的多个空格改成一个
+                .replaceAll(",\\s{2,}", ", ");
 //                .replace(" ", "")
 //                .replace("　", "")
 //                .replace("Ø", "")
-//                .replace(" ", "")
 //                .replace("\t", "")
     }
 

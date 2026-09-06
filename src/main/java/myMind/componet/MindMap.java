@@ -262,19 +262,29 @@ public class MindMap extends TabPane {
 
     /**
      * 分割节点
-     * 冒号左边的保留在原节点，冒号右边的移到子节点
+     * 切割选中文本到新节点
+     * 冒号左边的保留在原节点，冒号右边的移到新节点
      */
     public void split() {
         MapNode selectedNode = subjectController.getSelectedNode();
         StyleClassedTextArea textArea = selectedNode.getTextArea();
-        String[] split = FormatUtil.split(textArea.getText());
-        if (split == null) {
-            return;
+        IndexRange selection = textArea.getSelection();
+        String newNodeText;
+
+        if (selection.getLength() != 0) {
+            newNodeText = textArea.getSelectedText();
+            textArea.replaceText(selection.getStart(), selection.getEnd(), "");
+        } else {
+            String[] split = FormatUtil.split(textArea.getText());
+            if (split == null) {
+                return;
+            }
+            textArea.replaceText(split[0]);
+            newNodeText = split[1];
         }
-        textArea.replaceText(split[0]);
 
         subjectController.addChild(selectedNode.getPos());
-        subjectController.getSelectedNode().getTextArea().replaceText(split[1]);
+        subjectController.getSelectedNode().getTextArea().replaceText(newNodeText);
     }
 
     /**

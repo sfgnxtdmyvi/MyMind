@@ -100,6 +100,7 @@ public class ContextMenuController {
             StyleClassedTextArea textArea = selectedNode.getTextArea();
             textArea.clearStyle(0, textArea.getText().length());
             outgoingNode.removeIncomingReference(selectedNode);
+            outgoingNode.setSubjectId(0);
         }
 
     }
