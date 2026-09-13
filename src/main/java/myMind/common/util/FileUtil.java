@@ -10,7 +10,6 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.FileConstants;
-import myMind.common.constants.NodeConstants;
 import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.manager.ReferenceManager;
@@ -165,7 +164,6 @@ public class FileUtil {
 
         StyleClassedTextArea textArea = new MapTextArea(doc, true);
         // 解决奇怪 bug，如果没有手动换行，只有前两行能看到，其他是空白的，点击后，才能正常显示
-        textArea.setMaxWidth(NodeConstants.MAX_TEXTAREA_WIDTH);
         textArea.layout();
         return textArea;
     }

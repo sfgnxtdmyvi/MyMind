@@ -242,6 +242,34 @@ public class MindMap extends TabPane {
         return empty;
     }
 
+
+    //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
+    public void moveRight() {
+        subjectController.moveRight();
+    }
+
+    public void moveLeft() {
+        subjectController.moveLeft();
+    }
+
+    public void moveUp() {
+        subjectController.moveUp();
+    }
+
+    public void moveDown() {
+        subjectController.moveDown();
+    }
+
+    //—————————————————————————————————————————移动节点—————————————————————————————————————————
+    public void moveNodeUp() {
+        subjectController.moveNodeUp();
+    }
+
+    public void moveNodeDown() {
+        subjectController.moveNodeDown();
+    }
+    //—————————————————————————————————————————文本处理—————————————————————————————————————————
+
     /**
      * 格式化
      */

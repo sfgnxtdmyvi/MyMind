@@ -77,15 +77,21 @@ public class MapNode extends StackPane {
     private double startWidth;
     private double ratio;
 
+    public MapNode(byte pos) {
+        this(pos, IdGenerator.nextId(), new MapTextArea());
+        textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
+    }
+
     public MapNode(byte pos, double x, double y) {
         this(pos);
         setLayoutX(x);
         setLayoutY(y);
     }
 
-    public MapNode(byte pos) {
-        this(pos, IdGenerator.nextId(), new MapTextArea());
-        textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
+    public MapNode(byte pos, double x, double y, StyleClassedTextArea textArea) {
+        this(pos, IdGenerator.nextId(), textArea);
+        setLayoutX(x);
+        setLayoutY(y);
     }
 
     public MapNode(byte pos, long id, StyleClassedTextArea textArea) {

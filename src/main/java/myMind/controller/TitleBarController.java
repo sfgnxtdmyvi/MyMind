@@ -255,23 +255,6 @@ public class TitleBarController {
         }
     }
 
-    //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
-    public void moveRight() {
-        subjectController.moveRight();
-    }
-
-    public void moveLeft() {
-        subjectController.moveLeft();
-    }
-
-    public void moveUp() {
-        subjectController.moveUp();
-    }
-
-    public void moveDown() {
-        subjectController.moveDown();
-    }
-
     //—————————————————————————————————————————标题栏—————————————————————————————————————————
     // todo 调整尺寸
     // todo 移动窗口

@@ -3,6 +3,7 @@ package myMind.controller;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.IndexRange;
 import javafx.scene.control.Tab;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Paint;
@@ -17,6 +18,7 @@ import myMind.common.manager.ReferenceManager;
 import myMind.common.util.CloneNodeUtil;
 import myMind.common.util.IdGenerator;
 import myMind.componet.MapNode;
+import myMind.componet.MapTextArea;
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -74,7 +76,19 @@ public class SubjectController {
                 return;
             }
             MapNode parentNode = selectedNode.getParentNode();
-            insertNode = new MapNode(pos, calculateChildX(parentNode, pos), calculateChildY(parentNode));
+
+            //以选中文本作为新节点的内容
+            StyleClassedTextArea selectedTextArea = selectedNode.getTextArea();
+            IndexRange selection = selectedTextArea.getSelection();
+            if (selection.getLength() != 0) {
+                MapTextArea textArea = new MapTextArea();
+                textArea.replaceText(selectedTextArea.getSelectedText());
+                insertNode = new MapNode(pos, calculateChildX(parentNode, pos), calculateChildY(parentNode), textArea);
+                insertNode.adjustSize();
+            } else {
+                insertNode = new MapNode(pos, calculateChildX(parentNode, pos), calculateChildY(parentNode));
+            }
+
             // 插入节点替代当前节点的位置
             parentNode.addChildAt(parentNode.getChildren(pos).indexOf(selectedNode), insertNode, pos);
             // 当前节点变成插入节点的子节点
@@ -854,46 +868,59 @@ public class SubjectController {
     }
 
     public void moveUp() {
-        byte pos = selectedNode.getPos();
-        if (pos == PosConstants.MIDDLE) {
+        move(-1);
+    }
+
+    public void moveDown() {
+        move(1);
+    }
+
+    private void move(int dir) {
+        if (selectedNode == rootNode) {
             return;
         }
 
+        byte pos = selectedNode.getPos();
         MapNode parentNode = selectedNode.getParentNode();
         List<MapNode> children = parentNode.getChildren(pos);
-        // 有兄弟就移动到兄弟
         int index = children.indexOf(selectedNode);
-        if (index != 0) {
-            setSelectedNode(children.get(index - 1));
+        // 边界索引：上移看第一个，下移看最后一个
+        int boundaryIndex = (dir == -1) ? 0 : children.size() - 1;
+
+        if (index != boundaryIndex) {
+            // 有相邻兄弟，直接选中
+            setSelectedNode(children.get(index + dir));
         } else {
-            //            broAncestor - node - node - node - brother
-            // ancestor -
-            //            curAncestor - node - node - node - selectedNode
-            // 当前节点的深度
+            // 没有相邻兄弟，需要跨层找“祖先的兄弟”
             int depth = 1;
-            // 当前节点的祖先
-            MapNode curAncestor = parentNode;
+            MapNode ancestor = parentNode;
             // 祖先和祖先的兄弟的共同祖先
-            MapNode ancestor = curAncestor.getParentNode();
-            List<MapNode> childrenOfAncestor = ancestor.getChildren(pos);
-            while ((index = childrenOfAncestor.indexOf(curAncestor)) == 0) {
-                curAncestor = ancestor;
-                ancestor = curAncestor.getParentNode();
-                if (ancestor == null) {
+            MapNode commoAncestor = ancestor.getParentNode();
+            List<MapNode> childrenOfAncestor = commoAncestor.getChildren(pos);
+            int boundary = (dir == -1) ? 0 : childrenOfAncestor.size() - 1;
+
+            // 向上找，直到找到一个有兄弟的祖先
+            while ((index = childrenOfAncestor.indexOf(ancestor)) == boundary) {
+                ancestor = commoAncestor;
+                commoAncestor = ancestor.getParentNode();
+                if (commoAncestor == null) {
                     return;
                 }
-                childrenOfAncestor = ancestor.getChildren(pos);
+                childrenOfAncestor = commoAncestor.getChildren(pos);
+                boundary = (dir == -1) ? 0 : childrenOfAncestor.size() - 1;
                 depth++;
             }
 
             // 当前节点的兄弟，它的初值是当前节点的祖先的兄弟
-            MapNode brother = childrenOfAncestor.get(index - 1);
+            MapNode brother = childrenOfAncestor.get(index + dir);
+            // 深入祖先的兄弟的子树，上移取最后一个孩子，下移取第一个孩子
             while (depth != 0) {
                 List<MapNode> childrenOfBrother = brother.getChildren(pos);
                 if (childrenOfBrother.isEmpty()) {
                     break;
                 }
-                brother = childrenOfBrother.get(childrenOfBrother.size() - 1);
+                int childIndex = (dir == -1) ? childrenOfBrother.size() - 1 : 0;
+                brother = childrenOfBrother.get(childIndex);
                 depth--;
             }
             setSelectedNode(brother);
@@ -901,45 +928,35 @@ public class SubjectController {
         adjustTranslateY(selectedNode);
     }
 
-    public void moveDown() {
-        byte pos = selectedNode.getPos();
-        if (pos == PosConstants.MIDDLE) {
+    //—————————————————————————————————————————移动节点—————————————————————————————————————————
+
+    public void moveNodeUp() {
+        moveNode(-1);
+    }
+
+    public void moveNodeDown() {
+        moveNode(1);
+    }
+
+    private void moveNode(int dir) {
+        if (selectedNode == rootNode) {
             return;
         }
 
+        byte pos = selectedNode.getPos();
         MapNode parentNode = selectedNode.getParentNode();
         List<MapNode> children = parentNode.getChildren(pos);
         int index = children.indexOf(selectedNode);
-        if (index != children.size() - 1) {
-            setSelectedNode(children.get(index + 1));
-        } else {
-            int depth = 1;
-            // 当前节点的祖先
-            MapNode curAncestor = parentNode;
-            MapNode ancestor = curAncestor.getParentNode();
-            List<MapNode> childrenOfAncestor = ancestor.getChildren(pos);
-            while ((index = childrenOfAncestor.indexOf(curAncestor)) == childrenOfAncestor.size() - 1) {
-                curAncestor = ancestor;
-                ancestor = curAncestor.getParentNode();
-                if (ancestor == null) {
-                    return;
-                }
-                childrenOfAncestor = ancestor.getChildren(pos);
-                depth++;
-            }
-
-            MapNode brother = childrenOfAncestor.get(index + 1);
-            while (depth != 0) {
-                List<MapNode> childrenOfBrother = brother.getChildren(pos);
-                if (childrenOfBrother.isEmpty()) {
-                    break;
-                }
-                brother = childrenOfBrother.get(0);
-                depth--;
-            }
-            setSelectedNode(brother);
+        int targetIndex = index + dir;
+        if (targetIndex < 0 || targetIndex >= children.size()) {
+            return;
         }
-        adjustTranslateY(selectedNode);
+
+        children.remove(index);
+        children.add(targetIndex, selectedNode);
+
+        adjustChildrenY(parentNode, null, pos);
+        refreshLines(pos);
     }
 
     //———————————————————————————————————————————其他———————————————————————————————————————————

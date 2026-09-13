@@ -74,13 +74,17 @@ public class ShortcutManager {
                 new ShortcutBinding(contextMenuController::deleteEmpty, "删除空白节点"));
 
         keyMap.put(new KeyCodeCombination(RIGHT, SHIFT_DOWN, ALT_DOWN),
-                new ShortcutBinding(titleBarController::moveRight, "右移"));
+                new ShortcutBinding(mindMap::moveRight, "右移"));
         keyMap.put(new KeyCodeCombination(LEFT, SHIFT_DOWN, ALT_DOWN),
-                new ShortcutBinding(titleBarController::moveLeft, "左移"));
+                new ShortcutBinding(mindMap::moveLeft, "左移"));
         keyMap.put(new KeyCodeCombination(UP, SHIFT_DOWN, ALT_DOWN),
-                new ShortcutBinding(titleBarController::moveUp, "上移"));
+                new ShortcutBinding(mindMap::moveUp, "上移"));
         keyMap.put(new KeyCodeCombination(DOWN, SHIFT_DOWN, ALT_DOWN),
-                new ShortcutBinding(titleBarController::moveDown, "下移"));
+                new ShortcutBinding(mindMap::moveDown, "下移"));
+        keyMap.put(new KeyCodeCombination(UP, SHORTCUT_DOWN, SHIFT_DOWN),
+                new ShortcutBinding(mindMap::moveNodeUp, "上移节点"));
+        keyMap.put(new KeyCodeCombination(DOWN, SHORTCUT_DOWN, SHIFT_DOWN),
+                new ShortcutBinding(mindMap::moveNodeDown, "下移节点"));
 
         keyMap.put(new KeyCodeCombination(L, SHORTCUT_DOWN, ALT_DOWN),
                 new ShortcutBinding(mindMap::format, "格式化"));
