@@ -10,6 +10,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import lombok.Data;
+import myMind.common.Location;
 import myMind.common.constants.SizeConstants;
 import myMind.common.util.FormatUtil;
 import myMind.controller.StyleWheelArcController;
@@ -19,13 +20,21 @@ import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.TwoDimensional;
 import org.reactfx.collection.LiveList;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Data
 public class MindMap extends TabPane {
+
     private SubjectController subjectController;
     private Subject subject;
     private String filePath;
+
+    // 节点的跳转历史
+    private List<Location> locations = new ArrayList<>();
+    private int curLocation = -1;
+    private boolean needRecording = true;
 
     public MindMap(Boolean addSubject) {
         //关闭按钮的显示策略
@@ -168,11 +177,13 @@ public class MindMap extends TabPane {
         });
     }
 
+    //—————————————————————————————————————————主题—————————————————————————————————————————
+
     /**
      * 添加主题
      */
     public void addSubject() {
-        subjectController = new SubjectController();
+        subjectController = new SubjectController(this::recordLocation);
         String subjectName = "主题-" + (getTabs().size() + 1);
         Tab tab = addTab(subjectName);
         tab.setText(subjectName);
@@ -183,7 +194,7 @@ public class MindMap extends TabPane {
      * 打开导图时用
      */
     public void addSubject(MapNode node, long id) {
-        subjectController = new SubjectController(node, id);
+        subjectController = new SubjectController(node, id, this::recordLocation);
         String subjectName = "主题-" + (getTabs().size() + 1);
         Tab tab = addTab(subjectName);
 
@@ -218,15 +229,83 @@ public class MindMap extends TabPane {
         return tab;
     }
 
-    public Tab jumpToSubject(long subjectId) {
+    /**
+     * 记录当前位置
+     */
+    public void recordLocation() {
+        if (!needRecording) {
+            return;
+        }
+
+        // 回退后，移动到新的位置时，移除 curLocation 后面的
+        while (curLocation < locations.size() - 1) {
+            locations.remove(curLocation + 1);
+        }
+
+        Location location = new Location(subject.getSubjectId(), subject.getTranslateX(), subject.getTranslateY(), subjectController.getSelectedNode());
+        if (!locations.isEmpty() && location.equals(locations.get(locations.size() - 1))) {
+            return;
+        }
+        locations.add(location);
+        curLocation = locations.size() - 1;
+    }
+
+    /**
+     * 跳转到下一个记录
+     */
+    public void forward() {
+        if (curLocation != locations.size() - 1) {
+            jump(++curLocation);
+        }
+    }
+
+    /**
+     * 跳转到上一个记录
+     */
+    public void back() {
+        if (curLocation != 0) {
+            jump(--curLocation);
+        }
+    }
+
+    /**
+     * 历史位置之间的跳转
+     */
+    private void jump(int index) {
+        Location location = locations.get(index);
+        Long subjectId = location.getSubjectId();
         for (Tab tab : getTabs()) {
             Subject subject = (Subject) tab.getContent();
             if (subject.getSubjectId() == subjectId) {
+                // 避免跳转主题导致的记录位置
+                needRecording = false;
                 getSelectionModel().select(tab);
-                return tab;
+                // 不能抽取到 recordLocation()，如果主题没变，则不会触发 recordLocation()
+                needRecording = true;
+                subject.setTranslateX(location.getSubjectTranslateX());
+                subject.setTranslateY(location.getSubjectTranslateY());
+                SubjectController subjectController = (SubjectController) tab.getUserData();
+                subjectController.setSelectedNode(location.getMapNode(), false);
+                return;
             }
         }
-        return null;
+    }
+
+    /**
+     * 跳转到指定主题，并移动到指定节点的位置
+     */
+    public void jump(long subjectId, MapNode targetNode) {
+        for (Tab tab : getTabs()) {
+            Subject subject = (Subject) tab.getContent();
+            if (subject.getSubjectId() == subjectId) {
+                needRecording = false;
+                getSelectionModel().select(tab);
+                needRecording = true;
+                subjectController.toCenter(targetNode);
+                subjectController.setSelectedNode(targetNode, true);
+                return;
+            }
+        }
     }
 
     public boolean isEmpty() {
@@ -242,8 +321,8 @@ public class MindMap extends TabPane {
         return empty;
     }
 
-
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
+
     public void moveRight() {
         subjectController.moveRight();
     }
@@ -261,6 +340,7 @@ public class MindMap extends TabPane {
     }
 
     //—————————————————————————————————————————移动节点—————————————————————————————————————————
+
     public void moveNodeUp() {
         subjectController.moveNodeUp();
     }
@@ -268,6 +348,7 @@ public class MindMap extends TabPane {
     public void moveNodeDown() {
         subjectController.moveNodeDown();
     }
+
     //—————————————————————————————————————————文本处理—————————————————————————————————————————
 
     /**
@@ -373,4 +454,5 @@ public class MindMap extends TabPane {
         }
         textArea.moveTo(rowIndex, columnIndex);
     }
+
 }

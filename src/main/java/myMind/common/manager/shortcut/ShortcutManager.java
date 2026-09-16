@@ -9,7 +9,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import myMind.common.constants.ConfigConstants;
-import myMind.common.manager.ReferenceManager;
 import myMind.common.util.MessageUtil;
 import myMind.componet.MindMap;
 import myMind.controller.ContextMenuController;
@@ -109,10 +108,13 @@ public class ShortcutManager {
             }
         };
         mouseEventHandler = event -> {
-            if (event.getButton() == MouseButton.BACK) {
-                ReferenceManager.back();
+            if (event.getButton() == MouseButton.FORWARD) {
+                mindMap.forward();
+            }else if (event.getButton() == MouseButton.BACK) {
+                mindMap.back();
             }
         };
+
         // getAccelerators 在目标节点处理完之后，且不消费事件时才触发
         scene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
         scene.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEventHandler);

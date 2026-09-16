@@ -92,9 +92,7 @@ public class ContextMenuController {
         MapNode selectedNode = subjectController.getSelectedNode();
         MapNode outgoingNode;
         if ((outgoingNode = selectedNode.getOutgoingReference()) == null) {
-            ReferenceManager.setSrc(subjectController.getMindMap(),
-                    subjectController.getSubject(),
-                    selectedNode);
+            ReferenceManager.setSrcNode(selectedNode);
         } else {
             selectedNode.setOutgoingReference(null);
             StyleClassedTextArea textArea = selectedNode.getTextArea();
@@ -102,7 +100,6 @@ public class ContextMenuController {
             outgoingNode.removeIncomingReference(selectedNode);
             outgoingNode.setSubjectId(0);
         }
-
     }
 
     public void dispose() {

@@ -1,10 +1,8 @@
 package myMind.controller;
 
-import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
-import javafx.scene.control.Tab;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.QuadCurve;
@@ -35,26 +33,20 @@ public class SubjectController {
     private MapNode selectedNode;
     private CommandHistory commandHistory = new CommandHistory();
 
-    public SubjectController() {
-        subject = new Subject(IdGenerator.nextId());
-        rootNode = new MapNode(PosConstants.MIDDLE);
-        rootNode.getStyleClass().add("root-node");
-        addNode(rootNode);
-        Platform.runLater(() -> {
-            selectedNode = rootNode;
-            selectedNode.getTextArea().requestFocus();
-        });
+    private Runnable onSelect;
+
+    public SubjectController(Runnable onSelect) {
+        this(new MapNode(PosConstants.MIDDLE), IdGenerator.nextId(), onSelect);
     }
 
-    public SubjectController(MapNode node, long id) {
+    public SubjectController(MapNode node, long id, Runnable onSelect) {
         subject = new Subject(id);
         rootNode = node;
         rootNode.getStyleClass().add("root-node");
         addNode(node);
-        Platform.runLater(() -> {
-            selectedNode = rootNode;
-            selectedNode.getTextArea().requestFocus();
-        });
+        selectedNode = rootNode;
+        selectedNode.getStyleClass().add("selected-node");
+        this.onSelect = onSelect;
     }
 
     //———————————————————————————————————————————新增———————————————————————————————————————————
@@ -159,7 +151,7 @@ public class SubjectController {
         for (int i = 0; i < 4; i++) {
             addNode(new MapNode(pos, calculateChildX(selectedNode, pos), 0), pos);
         }
-        setSelectedNode(firstNode);
+        setSelectedNode(firstNode, true);
 
         adjustChildrenY(pos);
         refreshLines(pos);
@@ -182,7 +174,7 @@ public class SubjectController {
             parentNode.addChildAt(parentNode.getChildren(pos).indexOf(selectedNode) + 1 + i, siblingNode, pos);
             addNode(siblingNode);
         }
-        setSelectedNode(firstNode);
+        setSelectedNode(firstNode, true);
 
         adjustChildrenY(pos);
         refreshLines(pos);
@@ -194,7 +186,7 @@ public class SubjectController {
      */
     public void addNodeAndSelect(MapNode node) {
         addNode(node);
-        setSelectedNode(node);
+        setSelectedNode(node, true);
     }
 
     /**
@@ -214,6 +206,7 @@ public class SubjectController {
         node.setOnAction(event -> {
             switch (event) {
                 case CLICK -> {
+                    setSelectedNode(node, true);
                     if (ReferenceManager.isReferencing()) {
                         ReferenceManager.setReferencing(false);
 
@@ -225,10 +218,7 @@ public class SubjectController {
 
                         node.addIncomingReference(srcNode);
                         node.setSubjectId(subject.getSubjectId());
-
-                        ReferenceManager.back();
                     } else {
-                        setSelectedNode(node);
                         MapNode cloneNode = CloneNodeUtil.getCloneNode();
                         if (cloneNode != null) {
                             pasteSibling(cloneNode, node.getPos());
@@ -237,22 +227,14 @@ public class SubjectController {
                 }
                 case JUMP -> {
                     if (node.getOutgoingReference() != null) {
+                        setSelectedNode(node, true);
                         MapNode targetNode = node.getOutgoingReference();
-                        MindMap mindMap = getMindMap();
-
-                        // 记录当前位置
-                        ReferenceManager.setSrc(mindMap, subject);
-
-                        // 跳转过去
-                        Tab tab = mindMap.jumpToSubject(targetNode.getSubjectId());
-                        SubjectController subjectController = (SubjectController) tab.getUserData();
-                        subjectController.toCenter(targetNode);
-                        subjectController.setSelectedNode(targetNode);
+                        getMindMap().jump(targetNode.getSubjectId(), targetNode);
                     }
                 }
 
                 case ADD_BUTTON_R -> {
-                    setSelectedNode(node);
+                    setSelectedNode(node, true);
                     if (node.getAddButtonR().getText().equals(NodeConstants.EXPAND_R)) {
                         node.getAddButtonR().setText(NodeConstants.ADD);
                         expand(node, PosConstants.RIGHT);
@@ -268,7 +250,7 @@ public class SubjectController {
                     }
                 }
                 case ADD_BUTTON_L -> {
-                    setSelectedNode(node);
+                    setSelectedNode(node, true);
                     if (node.getAddButtonL().getText().equals(NodeConstants.EXPAND_L)) {
                         node.getAddButtonL().setText(NodeConstants.ADD);
                         expand(node, PosConstants.LEFT);
@@ -372,7 +354,12 @@ public class SubjectController {
      *
      */
     public void pasteSibling(MapNode cloneNode, byte pos) {
-        if (selectedNode == null || selectedNode == rootNode) {
+        if (selectedNode == null) {
+            return;
+        }
+        // 不放回去会丢失 cloneNode
+        if (selectedNode == rootNode) {
+            CloneNodeUtil.setCloneNode(cloneNode);
             return;
         }
         MapNode parentNode = selectedNode.getParentNode();
@@ -396,7 +383,7 @@ public class SubjectController {
         setOnAction(cloneNode);
         setOnActionChildren(cloneNode, pos);
         subject.addClone(cloneNode);
-        setSelectedNode(cloneNode);
+        setSelectedNode(cloneNode, true);
 
         adjustChildrenXY(parentNode, pos);
         adjustTranslateY(cloneNode);
@@ -488,13 +475,13 @@ public class SubjectController {
      */
     private void changeSelectedNode(MapNode toDelete, MapNode parent, List<MapNode> children) {
         if (children.size() == 1) {
-            setSelectedNode(parent);
+            setSelectedNode(parent, true);
         } else {
             int index = children.indexOf(toDelete);
             if (index != children.size() - 1) {
-                setSelectedNode(children.get(index + 1));
+                setSelectedNode(children.get(index + 1), true);
             } else {
-                setSelectedNode(children.get(index - 1));
+                setSelectedNode(children.get(index - 1), true);
             }
         }
     }
@@ -829,24 +816,30 @@ public class SubjectController {
     }
 
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
-    public void setSelectedNode(MapNode node) {
+    public void setSelectedNode(MapNode node, boolean needRecording) {
+        if (selectedNode == node) {
+            return;
+        }
         selectedNode.getStyleClass().remove("selected-node");
         selectedNode = node;
         selectedNode.getStyleClass().add("selected-node");
         // 保证在通过快捷键切换选中节点后，文本框获得焦点
         selectedNode.getTextArea().requestFocus();
+        if (needRecording) {
+            onSelect.run();
+        }
     }
 
     public void moveRight() {
         // 左边节点 -> 父节点
         // 根、右边节点 -> 中间的右子节点
         if (selectedNode.getPos() == PosConstants.LEFT) {
-            setSelectedNode(selectedNode.getParentNode());
+            setSelectedNode(selectedNode.getParentNode(), true);
             adjustTranslateX(selectedNode);
         } else {
             List<MapNode> children = selectedNode.getChildrenR();
             if (!children.isEmpty()) {
-                setSelectedNode(children.get(children.size() / 2));
+                setSelectedNode(children.get(children.size() / 2), true);
                 adjustTranslateX(selectedNode);
             }
         }
@@ -856,12 +849,12 @@ public class SubjectController {
         // 父节点 <- 右边节点
         // 中间的左子节点 <- 左边、根节点
         if (selectedNode.getPos() == PosConstants.RIGHT) {
-            setSelectedNode(selectedNode.getParentNode());
+            setSelectedNode(selectedNode.getParentNode(), true);
             adjustTranslateX(selectedNode);
         } else {
             List<MapNode> children = selectedNode.getChildrenL();
             if (!children.isEmpty()) {
-                setSelectedNode(children.get(children.size() / 2));
+                setSelectedNode(children.get(children.size() / 2), true);
                 adjustTranslateX(selectedNode);
             }
         }
@@ -889,7 +882,7 @@ public class SubjectController {
 
         if (index != boundaryIndex) {
             // 有相邻兄弟，直接选中
-            setSelectedNode(children.get(index + dir));
+            setSelectedNode(children.get(index + dir), true);
         } else {
             // 没有相邻兄弟，需要跨层找“祖先的兄弟”
             int depth = 1;
@@ -923,7 +916,7 @@ public class SubjectController {
                 brother = childrenOfBrother.get(childIndex);
                 depth--;
             }
-            setSelectedNode(brother);
+            setSelectedNode(brother, true);
         }
         adjustTranslateY(selectedNode);
     }

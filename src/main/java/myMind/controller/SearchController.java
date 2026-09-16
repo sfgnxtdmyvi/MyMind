@@ -40,9 +40,9 @@ public class SearchController {
 
     @FXML
     public void showAndHide() {
-        if(searchPanel.isVisible()){
+        if (searchPanel.isVisible()) {
             searchPanel.setVisible(false);
-        }else {
+        } else {
             searchPanel.setVisible(true);
             searchTextField.requestFocus();
         }
@@ -50,7 +50,7 @@ public class SearchController {
 
     @FXML
     private void searchTextFieldPressed(KeyEvent event) {
-        if(event.getCode() == KeyCode.ENTER){
+        if (event.getCode() == KeyCode.ENTER) {
             search();
         }
     }
@@ -63,7 +63,7 @@ public class SearchController {
         resultListScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         String searchText = searchTextField.getText().toLowerCase(Locale.ROOT);
-        if(searchText.isEmpty()){
+        if (searchText.isEmpty()) {
             statusLabel.setVisible(false);
             return;
         }
@@ -84,17 +84,12 @@ public class SearchController {
                 textArea.setEditable(false);
                 textArea.setStyle(index, index + searchText.length(), List.of("high-light-text"));
 
-                textArea.setOnMouseClicked(event -> {
-                    mindMap.jumpToSubject(subject.getSubjectId());
-                    SubjectController subjectController = (SubjectController) tab.getUserData();
-                    subjectController.toCenter(mapNode);
-                    subjectController.setSelectedNode(mapNode);
-                });
+                textArea.setOnMouseClicked(event -> mindMap.jump(subject.getSubjectId(), mapNode));
                 children.add(textArea);
                 children.add(new Separator());
             }
         }
-        if(!children.isEmpty()){
+        if (!children.isEmpty()) {
             children.remove(children.size() - 1);
         }
         Platform.runLater(() -> resultListScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED));

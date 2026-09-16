@@ -161,6 +161,7 @@ public class MindMapController {
             titleBarController.setSubjectController(subjectController);
             contextMenuController.setSubjectController(subjectController);
             StyleWheelArcController.setSubjectController(subjectController);
+            mindMap.recordLocation();
         };
         mindMap.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 

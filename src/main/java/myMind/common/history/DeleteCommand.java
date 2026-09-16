@@ -57,7 +57,7 @@ public class DeleteCommand implements Command {
             subjectController.adjustChildrenY(pos);
             subjectController.refreshLines(pos);
             MapNode lastChild = deletedNode.getLastChild(pos);
-            subjectController.setSelectedNode(lastChild);
+            subjectController.setSelectedNode(lastChild, true);
             subjectController.adjustTranslateY(lastChild);
         } else {
             deleteNotRemain();
@@ -108,7 +108,7 @@ public class DeleteCommand implements Command {
             subjectController.adjustChildrenY(pos);
             subjectController.refreshLines(pos);
         }
-        subjectController.setSelectedNode(deletedNode);
+        subjectController.setSelectedNode(deletedNode, true);
         subject.setTranslateY(translateY);
     }
 

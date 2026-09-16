@@ -10,6 +10,7 @@ import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -219,6 +220,9 @@ public class MapNode extends StackPane {
         // 如果在选中文本时，拖到节点外面，不会触发点击事件，因为“按下”一个节点后，拖到到其他地方再“释放”，不会触发 MOUSE_CLICKED
         // MOUSE_PRESSED 保证在按下时，就切换选中节点
         contentBox.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+            if (event.getButton() != MouseButton.PRIMARY) {
+                return;
+            }
             if (event.isShortcutDown()) {
                 onAction.accept(NodeEvent.JUMP);
             } else {

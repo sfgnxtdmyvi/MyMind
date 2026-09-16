@@ -87,6 +87,9 @@ public class FormatUtil {
                 .replace("： ", "：")
                 .replace(": ", ":")
                 .replace(" ", " ")
+                // = 和 + 前后补充空格
+                .replaceAll("(?<!\\s)=", " =")
+                .replaceAll("=(?!\\s)", "= ")
                 .replaceAll("(?<!\\s)\\+", " +")
                 .replaceAll("\\+(?!\\s)", "+ ")
                 // 英文逗号后面不是空格，补上
