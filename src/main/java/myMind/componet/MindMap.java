@@ -2,7 +2,6 @@ package myMind.componet;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
-import javafx.scene.control.IndexRange;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
@@ -12,16 +11,11 @@ import javafx.scene.input.ScrollEvent;
 import lombok.Data;
 import myMind.common.Location;
 import myMind.common.constants.SizeConstants;
-import myMind.common.util.FormatUtil;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
 import org.fxmisc.richtext.StyleClassedTextArea;
-import org.fxmisc.richtext.model.Paragraph;
-import org.fxmisc.richtext.model.TwoDimensional;
-import org.reactfx.collection.LiveList;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Data
@@ -351,108 +345,20 @@ public class MindMap extends TabPane {
 
     //—————————————————————————————————————————文本处理—————————————————————————————————————————
 
-    /**
-     * 格式化
-     */
     public void format() {
-        StyleClassedTextArea textArea = subjectController.getSelectedNode().getTextArea();
-        IndexRange selection = textArea.getSelection();
-        // 没有选中文本则格式化全部，否则只格式化选中的文本
-        if (selection.getLength() == 0) {
-            textArea.selectAll();
-            String selectedText = textArea.getSelectedText();
-            textArea.replaceText(FormatUtil.format(selectedText));
-        } else {
-            String selectedText = textArea.getSelectedText();
-            String formatedText = FormatUtil.format(selectedText);
-            textArea.replaceText(selection.getStart(), selection.getEnd(), formatedText);
-        }
+        subjectController.format();
     }
 
-    /**
-     * 分割节点
-     * 切割选中文本到新节点
-     * 冒号左边的保留在原节点，冒号右边的移到新节点
-     */
     public void split() {
-        MapNode selectedNode = subjectController.getSelectedNode();
-        StyleClassedTextArea textArea = selectedNode.getTextArea();
-        IndexRange selection = textArea.getSelection();
-        String newNodeText;
-
-        if (selection.getLength() != 0) {
-            newNodeText = textArea.getSelectedText();
-            textArea.replaceText(selection.getStart(), selection.getEnd(), "");
-        } else {
-            String[] split = FormatUtil.split(textArea.getText());
-            if (split == null) {
-                return;
-            }
-            textArea.replaceText(split[0]);
-            newNodeText = split[1];
-        }
-
-        subjectController.addChild(selectedNode.getPos());
-        subjectController.getSelectedNode().getTextArea().replaceText(newNodeText);
+        subjectController.split();
     }
 
-    /**
-     * 向下复制一行，或复制选中文本
-     */
     public void copyLine() {
-        MapNode selectedNode = subjectController.getSelectedNode();
-        StyleClassedTextArea textArea = selectedNode.getTextArea();
-        int caretPos = textArea.getCaretPosition();
-        IndexRange selection = textArea.getSelection();
-        if (selection.getLength() == 0) {
-            textArea.selectLine();
-        }
-        selection = textArea.getSelection();
-        String selectedText = textArea.getSelectedText();
-        textArea.replaceText(selection.getStart(), selection.getEnd(), selectedText + "\n" + selectedText);
-        textArea.moveTo(caretPos + selectedText.length() + 1);
+        subjectController.copyLine();
     }
 
-    /**
-     * 删除当前行
-     */
     public void deleteLine() {
-        MapNode selectedNode = subjectController.getSelectedNode();
-        StyleClassedTextArea textArea = selectedNode.getTextArea();
-
-        int caretPos = textArea.getCaretPosition();
-        TwoDimensional.Position pos = textArea.offsetToPosition(caretPos, TwoDimensional.Bias.Forward);
-        int rowIndex = pos.getMajor();
-        int columnIndex = pos.getMinor();
-
-        LiveList<Paragraph<Collection<String>, String, Collection<String>>> paragraphs = textArea.getParagraphs();
-        // 当前行的起始偏移量
-        int start = 0;
-        for (int i = 0; i < rowIndex; i++) {
-            start += paragraphs.get(i).length();
-        }
-        // 当前行的结束偏移量（包含换行符）
-        int end = start + paragraphs.get(rowIndex).length() + 1;
-
-        if (paragraphs.size() - 1 == rowIndex) {
-            // 当前是最后一行，移动到上一行
-            rowIndex = rowIndex - 1;
-            // 上一行的长度小于当前列索引，将列列索引设为上一行的末尾
-            if (paragraphs.size() != 1 && paragraphs.get(rowIndex).length() < columnIndex) {
-                columnIndex = paragraphs.get(rowIndex).length();
-            }
-        }
-        // 下一行的长度小于当前列索引，将列列索引设为下一行的末尾
-        else if (paragraphs.size() != 1 && paragraphs.get(rowIndex + 1).length() < columnIndex) {
-            columnIndex = paragraphs.get(rowIndex + 1).length();
-        }
-
-        textArea.deleteText(start, end);
-
-        if (textArea.getLength() == 0) {
-            return;
-        }
-        textArea.moveTo(rowIndex, columnIndex);
+        subjectController.deleteLine();
     }
 
 }

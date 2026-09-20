@@ -14,13 +14,18 @@ import myMind.common.history.CommandHistory;
 import myMind.common.history.DeleteCommand;
 import myMind.common.manager.ReferenceManager;
 import myMind.common.util.CloneNodeUtil;
+import myMind.common.util.FormatUtil;
 import myMind.common.util.IdGenerator;
 import myMind.componet.MapNode;
 import myMind.componet.MapTextArea;
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.TwoDimensional;
+import org.reactfx.collection.LiveList;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -558,7 +563,120 @@ public class SubjectController {
         refreshLines();
     }
 
+    //—————————————————————————————————————————文本处理—————————————————————————————————————————
+
+    /**
+     * 格式化
+     */
+    public void format() {
+        StyleClassedTextArea textArea = selectedNode.getTextArea();
+        IndexRange selection = textArea.getSelection();
+        // 没有选中文本则格式化全部，否则只格式化选中的文本
+        if (selection.getLength() == 0) {
+            textArea.selectAll();
+            String selectedText = textArea.getSelectedText();
+            textArea.replaceText(FormatUtil.format(selectedText));
+        } else {
+            String selectedText = textArea.getSelectedText();
+            String formatedText = FormatUtil.format(selectedText);
+            textArea.replaceText(selection.getStart(), selection.getEnd(), formatedText);
+        }
+    }
+
+    /**
+     * 分割节点
+     * 切割选中文本到新节点
+     * 冒号左边的保留在原节点，冒号右边的移到新节点
+     */
+    public void split() {
+        StyleClassedTextArea textArea = selectedNode.getTextArea();
+        IndexRange selection = textArea.getSelection();
+        String newNodeText;
+
+        if (selection.getLength() != 0) {
+            newNodeText = textArea.getSelectedText();
+            textArea.replaceText(selection.getStart(), selection.getEnd(), "");
+        } else {
+            String[] split = FormatUtil.split(textArea.getText());
+            if (split == null) {
+                return;
+            }
+            textArea.replaceText(split[0]);
+            newNodeText = split[1];
+        }
+
+        MapTextArea childTextArea = new MapTextArea();
+        childTextArea.replaceText(newNodeText);
+        byte pos = selectedNode.getPos();
+        MapNode newNode = new MapNode(pos, calculateChildX(selectedNode, pos), calculateChildY(selectedNode), childTextArea);
+        newNode.adjustSize();
+
+        selectedNode.addChild(newNode, pos);
+        addNode(newNode);
+        refreshLines(pos);
+    }
+
+    /**
+     * 向下复制一行，或复制选中文本
+     */
+    public void copyLine() {
+        StyleClassedTextArea textArea = selectedNode.getTextArea();
+        int caretPos = textArea.getCaretPosition();
+
+        IndexRange selection = textArea.getSelection();
+        if (selection.getLength() == 0) {
+            textArea.selectLine();
+        }
+        selection = textArea.getSelection();
+
+        String selectedText = textArea.getSelectedText();
+        textArea.replaceText(selection.getStart(), selection.getEnd(), selectedText + "\n" + selectedText);
+        textArea.moveTo(caretPos + selectedText.length() + 1);
+    }
+
+    /**
+     * 删除当前行，保持光标不变
+     */
+    public void deleteLine() {
+        StyleClassedTextArea textArea = selectedNode.getTextArea();
+
+        int caretPos = textArea.getCaretPosition();
+        TwoDimensional.Position pos = textArea.offsetToPosition(caretPos, TwoDimensional.Bias.Forward);
+        int rowIndex = pos.getMajor();
+        int columnIndex = pos.getMinor();
+
+        LiveList<Paragraph<Collection<String>, String, Collection<String>>> paragraphs = textArea.getParagraphs();
+        // 当前行的起始偏移量
+        int start = 0;
+        for (int i = 0; i < rowIndex; i++) {
+            start += paragraphs.get(i).length();
+        }
+        // 当前行的结束偏移量（包含换行符）
+        int end = start + paragraphs.get(rowIndex).length() + 1;
+
+        if (paragraphs.size() - 1 == rowIndex) {
+            // 当前是最后一行，移动到上一行
+            rowIndex = rowIndex - 1;
+            // 上一行的长度小于当前列索引，将列索引设为上一行的末尾
+            if (paragraphs.size() != 1 && paragraphs.get(rowIndex).length() < columnIndex) {
+                columnIndex = paragraphs.get(rowIndex).length();
+            }
+        }
+        // 下一行的长度小于当前列索引，将列索引设为下一行的末尾
+        else if (paragraphs.size() != 1 && paragraphs.get(rowIndex + 1).length() < columnIndex) {
+            columnIndex = paragraphs.get(rowIndex + 1).length();
+        }
+
+        textArea.deleteText(start, end);
+
+        if (textArea.getLength() == 0) {
+            return;
+        }
+        textArea.moveTo(rowIndex, columnIndex);
+    }
+
     //———————————————————————————————————————————调整———————————————————————————————————————————
+
     public void adjustXY() {
         adjustChildrenXY(rootNode, PosConstants.RIGHT);
         adjustChildrenXY(rootNode, PosConstants.LEFT);
@@ -887,6 +1005,9 @@ public class SubjectController {
             // 没有相邻兄弟，需要跨层找“祖先的兄弟”
             int depth = 1;
             MapNode ancestor = parentNode;
+            if (ancestor == rootNode) {
+                return;
+            }
             // 祖先和祖先的兄弟的共同祖先
             MapNode commoAncestor = ancestor.getParentNode();
             List<MapNode> childrenOfAncestor = commoAncestor.getChildren(pos);

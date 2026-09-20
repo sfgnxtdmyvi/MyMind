@@ -45,7 +45,7 @@ public class FormatUtil {
      * 符号与文字匹配，中文后跟中文符号，英文后跟英文符号
      */
     private static String punctuation(String string) {
-        string = string.replace("…", "……")
+        string = string.replace("...", "……")
                 .replaceAll("\"(\\p{IsHan}+)\"", "“$1”")
                 .replaceAll("([a-zA-z])，", "$1,");
 

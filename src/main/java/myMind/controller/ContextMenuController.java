@@ -93,12 +93,16 @@ public class ContextMenuController {
         MapNode outgoingNode;
         if ((outgoingNode = selectedNode.getOutgoingReference()) == null) {
             ReferenceManager.setSrcNode(selectedNode);
+            ReferenceManager.setReferencing(true);
         } else {
             selectedNode.setOutgoingReference(null);
             StyleClassedTextArea textArea = selectedNode.getTextArea();
             textArea.clearStyle(0, textArea.getText().length());
+
             outgoingNode.removeIncomingReference(selectedNode);
-            outgoingNode.setSubjectId(0);
+            if (outgoingNode.getIncomingReferences().isEmpty()) {
+                outgoingNode.setSubjectId(0);
+            }
         }
     }
 
