@@ -51,8 +51,7 @@ public class Subject extends StackPane {
         translateXProperty().addListener((observable, oldValue, newValue) -> {
             double dx = 0;
             // 父容器视口大小
-            Bounds parentBounds = getParent().getLayoutBounds();
-            double parentWidth = parentBounds.getWidth();
+            double parentWidth = getParent().getLayoutBounds().getWidth();
             // Subject（包含所有子节点）在父容器中的实际边界
             Bounds subjectBounds = getBoundsInParent();
 
@@ -61,6 +60,7 @@ public class Subject extends StackPane {
             //         |                    |
             //  Subject 的左边缘（10） Subject 的右边缘（parentWidth+10）
             // - subjectBounds.getMinX()后 Subject 左边缘与视口的左边缘重合
+
             //        |        |            |
             // 视口的左边缘（0） 200 视口的右边缘（parentWidth）
             //                  |                     |
@@ -82,8 +82,7 @@ public class Subject extends StackPane {
 
         translateYProperty().addListener((observable, oldValue, newValue) -> {
             double dy = 0;
-            Bounds parentBounds = getParent().getLayoutBounds();
-            double parentHeight = parentBounds.getHeight();
+            double parentHeight = getParent().getLayoutBounds().getHeight();
             Bounds subjectBounds = getBoundsInParent();
 
             double translateOffset = SizeConstants.SUBJECT_MARGIN / getScaleX();

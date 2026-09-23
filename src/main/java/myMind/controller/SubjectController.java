@@ -1,5 +1,6 @@
 package myMind.controller;
 
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
@@ -234,7 +235,10 @@ public class SubjectController {
                     if (node.getOutgoingReference() != null) {
                         setSelectedNode(node, true);
                         MapNode targetNode = node.getOutgoingReference();
-                        getMindMap().jump(targetNode.getSubjectId(), targetNode);
+                        // 不延迟会有 bug，node 的 textArea 会获得两次焦点
+                        // node 获取（因为点击） -> node 失去（targetNode 获取）->
+                        // targetNode 获取（跳转） -> targetNode 失去（node 再次获取） -> node 再次获取（未知 bug）
+                        Platform.runLater(() -> getMindMap().jump(targetNode.getSubjectId(), targetNode));
                     }
                 }
 
@@ -372,7 +376,7 @@ public class SubjectController {
     }
 
     /**
-     * @param index -1表示添加到最后
+     * @param index -1 表示添加到最后
      * @param pos   粘到目标的左边还是右边，跟 cloneNode 的 pos 可以不一致
      */
     private void paste(MapNode parentNode, MapNode cloneNode, int index, byte pos) {
@@ -389,6 +393,11 @@ public class SubjectController {
         setOnActionChildren(cloneNode, pos);
         subject.addClone(cloneNode);
         setSelectedNode(cloneNode, true);
+
+        // 如果有节点引用 cloneNode，更新 subjectId
+        if (cloneNode.getSubjectId() != 0) {
+            cloneNode.setSubjectId(subject.getSubjectId());
+        }
 
         adjustChildrenXY(parentNode, pos);
         adjustTranslateY(cloneNode);
@@ -613,6 +622,8 @@ public class SubjectController {
 
         selectedNode.addChild(newNode, pos);
         addNode(newNode);
+        adjustChildrenX(selectedNode, pos);
+        adjustChildrenY(pos);
         refreshLines(pos);
     }
 
@@ -788,53 +799,46 @@ public class SubjectController {
     /**
      * 调整节点与 scene 下面和上面的间距
      */
-    public void adjustTranslateY(MapNode node) {
+    public void adjustTranslateY(MapNode mapNode) {
         // 定位到 tabHeaderArea 下面的位置
         MindMap mindMap = getMindMap();
         StackPane tabHeaderArea = (StackPane) mindMap.lookup(".tab-header-area");
         Point2D mindMapPoint = mindMap.localToScene(0, tabHeaderArea.getHeight());
 
-        Point2D sceneCoords = node.localToScene(0, 0);
-        double nodeY = sceneCoords.getY();
-        if (nodeY < mindMapPoint.getY()) {
-            setSubjectTranslateY(mindMapPoint.getY() - nodeY);
-        } else if (node.getScene().getHeight() < nodeY + node.getPrefHeight()) {
-            double dy = nodeY + node.getPrefHeight() - node.getScene().getHeight();
+        Point2D sceneCoords = mapNode.localToScene(0, 0);
+        double mapNodeY = sceneCoords.getY();
+        if (mapNodeY < mindMapPoint.getY()) {
+            setSubjectTranslateY(mindMapPoint.getY() - mapNodeY);
+        } else if (mapNode.getScene().getHeight() < mapNodeY + mapNode.getPrefHeight()) {
+            double dy = mapNodeY + mapNode.getPrefHeight() - mapNode.getScene().getHeight();
             setSubjectTranslateY(-dy);
         }
     }
 
-    public void adjustTranslateX(MapNode node) {
-        Point2D sceneCoords = node.localToScene(0, 0);
-        double nodeX = sceneCoords.getX();
-        if (nodeX < 0) {
-            setSubjectTranslateX(-nodeX);
-        } else if (node.getScene().getWidth() < nodeX + node.getPrefWidth()) {
-            double dx = nodeX + node.getPrefWidth() - node.getScene().getWidth();
+    public void adjustTranslateX(MapNode mapNode) {
+        Point2D sceneCoords = mapNode.localToScene(0, 0);
+        double mapNodeX = sceneCoords.getX();
+        if (mapNodeX < 0) {
+            setSubjectTranslateX(-mapNodeX);
+        } else if (mapNode.getScene().getWidth() < mapNodeX + mapNode.getPrefWidth()) {
+            double dx = mapNodeX + mapNode.getPrefWidth() - mapNode.getScene().getWidth();
             setSubjectTranslateX(-dx);
         }
     }
 
-    public void toCenter(MapNode node) {
-        Point2D sceneCoords = node.localToScene(0, 0);
-        double nodeX = sceneCoords.getX();
-        double nodeY = sceneCoords.getY();
+    public void toCenter(MapNode mapNode) {
+        Point2D sceneCoords = mapNode.localToScene(0, 0);
+        double mapNodeX = sceneCoords.getX();
+        double mapNodeY = sceneCoords.getY();
+
         MindMap mindMap = getMindMap();
         StackPane tabHeaderArea = (StackPane) mindMap.lookup(".tab-header-area");
-        double mindMapHeight = node.getScene().getHeight() - tabHeaderArea.getHeight();
-        double centerX = (node.getScene().getWidth() - node.getPrefWidth()) / 2;
-        double centerY = (mindMapHeight - node.getPrefHeight()) / 2;
+        double mindMapHeight = mapNode.getScene().getHeight() - tabHeaderArea.getHeight();
+        double centerX = (mapNode.getScene().getWidth() - mapNode.getPrefWidth()) / 2;
+        double centerY = (mindMapHeight - mapNode.getPrefHeight()) / 2;
 
-        if (nodeX < centerX) {
-            setSubjectTranslateX(centerX - nodeX);
-        } else {
-            setSubjectTranslateX(-(nodeX - centerX));
-        }
-        if (nodeY < centerY) {
-            setSubjectTranslateY(centerY - nodeY);
-        } else {
-            setSubjectTranslateY(-(nodeY - centerY));
-        }
+        setSubjectTranslateX(centerX - mapNodeX);
+        setSubjectTranslateY(centerY - mapNodeY);
     }
 
     public void setSubjectTranslateY(double translateY) {

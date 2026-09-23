@@ -220,7 +220,7 @@ public class MapNode extends StackPane {
         // 如果在选中文本时，拖到节点外面，不会触发点击事件，因为“按下”一个节点后，拖到到其他地方再“释放”，不会触发 MOUSE_CLICKED
         // MOUSE_PRESSED 保证在按下时，就切换选中节点
         contentBox.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
-            if (event.getButton() != MouseButton.PRIMARY) {
+            if (event.getButton() != MouseButton.PRIMARY && event.getButton() != MouseButton.SECONDARY) {
                 return;
             }
             if (event.isShortcutDown()) {
@@ -433,18 +433,16 @@ public class MapNode extends StackPane {
         setSubjectTranslateY.accept(-(getPrefHeight() - oldHeight) * 0.5);
 
         // 调整位置
+        Point2D sceneCoords = localToScene(0, 0);
+        double nodeX = sceneCoords.getX();
         if (pos == PosConstants.LEFT) {
             setLayoutX(getLayoutX() - (getPrefWidth() - oldWidth));
             // 与 scene 左边的距离
-            Point2D sceneCoords = localToScene(0, 0);
-            double nodeX = sceneCoords.getX();
             if (nodeX < 0) {
                 setSubjectTranslateX.accept(-nodeX);
             }
             onAction.accept(NodeEvent.ADJUST_L);
         } else {
-            Point2D sceneCoords = localToScene(0, 0);
-            double nodeX = sceneCoords.getX();
             if (getScene().getWidth() < nodeX + getPrefWidth()) {
                 double dx = nodeX + getPrefWidth() - getScene().getWidth();
                 setSubjectTranslateX.accept(-dx);
@@ -620,14 +618,6 @@ public class MapNode extends StackPane {
         }
     }
 
-    public void removeChildren(byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            childrenR = null;
-        } else {
-            childrenL = null;
-        }
-    }
-
     public MapNode getLastChild(byte pos) {
         List<MapNode> children = getChildren(pos);
         return children.get(children.size() - 1);
@@ -709,7 +699,12 @@ public class MapNode extends StackPane {
         for (MapNode child : getChildren(srcPos)) {
             child.transPosAt(-1, srcPos, targetPos);
         }
-        removeChildren(srcPos);
+
+        if (pos == PosConstants.RIGHT) {
+            childrenR = null;
+        } else {
+            childrenL = null;
+        }
     }
 
     //———————————————————————————————————————————其他———————————————————————————————————————————
