@@ -25,7 +25,7 @@ import myMind.common.util.FileUtil;
 import myMind.common.util.IdGenerator;
 import myMind.common.util.MeasureTextUtil;
 import myMind.common.util.MessageUtil;
-import org.fxmisc.richtext.StyleClassedTextArea;
+import myMind.componet.styledArea.StyleClassedTextArea;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
@@ -79,7 +79,7 @@ public class MapNode extends StackPane {
     private double ratio;
 
     public MapNode(byte pos) {
-        this(pos, IdGenerator.nextId(), new MapTextArea());
+        this(pos, IdGenerator.nextId(), new StyleClassedTextArea());
         textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
     }
 
@@ -275,7 +275,7 @@ public class MapNode extends StackPane {
             if (!newVal) {
                 // 清除选区，恢复背景色
                 textArea.deselect();
-                adjust();
+                adjustSize();
             }
         });
     }
@@ -663,7 +663,7 @@ public class MapNode extends StackPane {
 
         int length = originalDoc.getLength();
         if (length == 0) {
-            StyleClassedTextArea cloneTextArea = new MapTextArea(true);
+            StyleClassedTextArea cloneTextArea = new StyleClassedTextArea(true);
             cloneTextArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
             return cloneTextArea;
         }
@@ -675,7 +675,7 @@ public class MapNode extends StackPane {
 
         // 基于快照构造新的可编辑文档
         StyleClassedTextArea cloneTextArea
-                = new MapTextArea(new SimpleEditableStyledDocument<>(snapshot), true);
+                = new StyleClassedTextArea(new SimpleEditableStyledDocument<>(snapshot), true);
         cloneTextArea.setPrefHeight(cloneTextArea.getPrefHeight());
         cloneTextArea.setMaxWidth(textArea.getMaxWidth());
         cloneTextArea.layout();
@@ -700,7 +700,7 @@ public class MapNode extends StackPane {
             child.transPosAt(-1, srcPos, targetPos);
         }
 
-        if (pos == PosConstants.RIGHT) {
+        if (srcPos == PosConstants.RIGHT) {
             childrenR = null;
         } else {
             childrenL = null;

@@ -78,14 +78,6 @@ public class TitleBarController {
         title.textProperty().bind(titleProperty);
     }
 
-    @FXML
-    public void openNote() {
-        if (mindMap.isEmpty()) {
-            Event.fireEvent(stage, new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
-        }
-        NoteController.createNote(new Stage());
-    }
-
     //—————————————————————————————————————————文件—————————————————————————————————————————
     @FXML
     public void newMindMap() {

@@ -36,6 +36,7 @@ import java.util.List;
 
 @Data
 public class MindMapController {
+
     private Stage stage;
     private Scene scene;
 
@@ -271,4 +272,5 @@ public class MindMapController {
         }
         return false;
     }
+
 }

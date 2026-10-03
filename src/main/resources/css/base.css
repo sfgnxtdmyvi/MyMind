@@ -46,11 +46,11 @@
 }
 
 .tab-label {
-    -fx-pref-width: 150px;
+    -fx-pref-width: 132px;
 }
 
 .tab:selected .tab-label {
-    -fx-pref-width: 135px;
+    -fx-pref-width: 128px;
 }
 
 /* 消息提示 */

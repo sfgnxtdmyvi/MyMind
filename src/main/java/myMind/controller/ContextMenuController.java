@@ -6,7 +6,7 @@ import javafx.scene.control.MenuItem;
 import lombok.Setter;
 import myMind.common.manager.ReferenceManager;
 import myMind.componet.MapNode;
-import org.fxmisc.richtext.StyleClassedTextArea;
+import myMind.componet.styledArea.StyleClassedTextArea;
 
 import java.util.List;
 

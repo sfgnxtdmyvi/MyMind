@@ -12,7 +12,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Popup;
 import lombok.Setter;
-import org.fxmisc.richtext.StyleClassedTextArea;
+import myMind.componet.styledArea.StyleClassedTextArea;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -2,6 +2,8 @@ package myMind.componet;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
@@ -11,12 +13,13 @@ import javafx.scene.input.ScrollEvent;
 import lombok.Data;
 import myMind.common.Location;
 import myMind.common.constants.SizeConstants;
+import myMind.componet.styledArea.StyleClassedTextArea;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
-import org.fxmisc.richtext.StyleClassedTextArea;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 public class MindMap extends TabPane {
@@ -205,6 +208,19 @@ public class MindMap extends TabPane {
         StyleWheelArcController.setSubjectController(subjectController);
 
         Tab tab = new Tab();
+        tab.setOnCloseRequest(event -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("删除确认");
+            alert.setHeaderText(null);
+            alert.setContentText("确定要删除「" + tab.getText() + "」吗？");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            // 点了取消/关闭对话框 → 阻止删除
+            if (result.isEmpty() || result.get() != ButtonType.OK) {
+                event.consume();
+            }
+        });
+
         tab.setContent(subject);
         tab.setUserData(subjectController);
         getTabs().add(tab);

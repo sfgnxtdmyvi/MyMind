@@ -14,10 +14,10 @@ import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.manager.ReferenceManager;
 import myMind.componet.MapNode;
-import myMind.componet.MapTextArea;
+
 import myMind.componet.MindMap;
+import myMind.componet.styledArea.StyleClassedTextArea;
 import myMind.controller.SubjectController;
-import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
@@ -162,7 +162,7 @@ public class FileUtil {
             }
         }
 
-        StyleClassedTextArea textArea = new MapTextArea(doc, true);
+        StyleClassedTextArea textArea = new StyleClassedTextArea(doc, true);
         // 解决奇怪 bug，如果没有手动换行，只有前两行能看到，其他是空白的，点击后，才能正常显示
         textArea.layout();
         return textArea;

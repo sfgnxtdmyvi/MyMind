@@ -18,10 +18,10 @@ import myMind.common.util.CloneNodeUtil;
 import myMind.common.util.FormatUtil;
 import myMind.common.util.IdGenerator;
 import myMind.componet.MapNode;
-import myMind.componet.MapTextArea;
+
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
-import org.fxmisc.richtext.StyleClassedTextArea;
+import myMind.componet.styledArea.StyleClassedTextArea;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.TwoDimensional;
 import org.reactfx.collection.LiveList;
@@ -34,6 +34,7 @@ import java.util.function.Function;
 
 @Data
 public class SubjectController {
+
     private final Subject subject;
     private MapNode rootNode;
     private MapNode selectedNode;
@@ -79,7 +80,7 @@ public class SubjectController {
             StyleClassedTextArea selectedTextArea = selectedNode.getTextArea();
             IndexRange selection = selectedTextArea.getSelection();
             if (selection.getLength() != 0) {
-                MapTextArea textArea = new MapTextArea();
+                StyleClassedTextArea textArea = new StyleClassedTextArea();
                 textArea.replaceText(selectedTextArea.getSelectedText());
                 insertNode = new MapNode(pos, calculateChildX(parentNode, pos), calculateChildY(parentNode), textArea);
                 insertNode.adjustSize();
@@ -614,7 +615,7 @@ public class SubjectController {
             newNodeText = split[1];
         }
 
-        MapTextArea childTextArea = new MapTextArea();
+        StyleClassedTextArea childTextArea = new StyleClassedTextArea();
         childTextArea.replaceText(newNodeText);
         byte pos = selectedNode.getPos();
         MapNode newNode = new MapNode(pos, calculateChildX(selectedNode, pos), calculateChildY(selectedNode), childTextArea);
@@ -939,14 +940,14 @@ public class SubjectController {
 
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
     public void setSelectedNode(MapNode node, boolean needRecording) {
+        // 保证文本框在任何情况下都能获得焦点
+        node.getTextArea().requestFocus();
         if (selectedNode == node) {
             return;
         }
         selectedNode.getStyleClass().remove("selected-node");
         selectedNode = node;
         selectedNode.getStyleClass().add("selected-node");
-        // 保证在通过快捷键切换选中节点后，文本框获得焦点
-        selectedNode.getTextArea().requestFocus();
         if (needRecording) {
             onSelect.run();
         }

@@ -14,10 +14,10 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import lombok.Setter;
 import myMind.componet.MapNode;
-import myMind.componet.MapTextArea;
+
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
-import org.fxmisc.richtext.StyleClassedTextArea;
+import myMind.componet.styledArea.StyleClassedTextArea;
 
 import java.util.List;
 import java.util.Locale;
@@ -79,7 +79,7 @@ public class SearchController {
                     continue;
                 }
 
-                MapTextArea textArea = new MapTextArea();
+                StyleClassedTextArea textArea = new StyleClassedTextArea();
                 textArea.replaceText(nodeText);
                 textArea.setEditable(false);
                 textArea.setStyle(index, index + searchText.length(), List.of("high-light-text"));
