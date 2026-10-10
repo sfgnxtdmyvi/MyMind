@@ -23,7 +23,6 @@ import myMind.common.constants.NodeEvent;
 import myMind.common.constants.PosConstants;
 import myMind.common.util.FileUtil;
 import myMind.common.util.IdGenerator;
-import myMind.common.util.MeasureTextUtil;
 import myMind.common.util.MessageUtil;
 import myMind.componet.styledArea.StyleClassedTextArea;
 import org.fxmisc.richtext.model.EditableStyledDocument;
@@ -80,7 +79,6 @@ public class MapNode extends StackPane {
 
     public MapNode(byte pos) {
         this(pos, IdGenerator.nextId(), new StyleClassedTextArea());
-        textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
     }
 
     public MapNode(byte pos, double x, double y) {
@@ -116,8 +114,6 @@ public class MapNode extends StackPane {
         }
 
         getStyleClass().add("node");
-        setPrefWidth(NodeConstants.MIN_NODE_WIDTH);
-        setPrefHeight(NodeConstants.MIN_NODE_HEIGHT);
 
         addListener();
     }
@@ -256,8 +252,6 @@ public class MapNode extends StackPane {
                         imageView.setFitHeight(imageHeight / ConfigConstants.SCALE);
                         ratio = imageWidth / imageHeight;
                         imageName = FileUtil.saveImage(bufferedImage, imageName);
-
-                        adjust();
                     } catch (UnsupportedFlavorException | IOException ex) {
                         MessageUtil.showMessage("粘贴失败：" + ex.getMessage());
                     }
@@ -267,15 +261,44 @@ public class MapNode extends StackPane {
             }
         });
 
-        // 文本变化调整节点大小
-        textArea.textProperty()
-                .addListener((obs, oldText, newText) -> adjust());
+        heightProperty().addListener((obs, oldVal, newVal) -> {
+            double oldHeight = oldVal.doubleValue();
+            // 跳过第一次固定的高度
+            if (oldHeight == 0) {
+                return;
+            }
+            setSubjectTranslateY.accept(-(newVal.doubleValue() - oldHeight) * 0.5);
+            onAction.accept(NodeEvent.ADJUST_Y);
+        });
+
+        widthProperty().addListener((obs, oldVal, newVal) -> {
+            double oldWidth = oldVal.doubleValue();
+            if (oldWidth == 0) {
+                return;
+            }
+            Point2D sceneCoords = localToScene(0, 0);
+            double nodeX = sceneCoords.getX();
+            double newWidth = newVal.doubleValue();
+            if (pos == PosConstants.LEFT) {
+                setLayoutX(getLayoutX() - (newWidth - oldWidth));
+                // 与 scene 左边的距离
+                if (nodeX < 0) {
+                    setSubjectTranslateX.accept(-nodeX);
+                }
+            } else if (getScene().getWidth() < nodeX + newWidth) {
+                double dx = nodeX + newWidth - getScene().getWidth();
+                setSubjectTranslateX.accept(-dx);
+            }
+            onAction.accept(NodeEvent.ADJUST_X);
+        });
 
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
                 // 清除选区，恢复背景色
                 textArea.deselect();
-                adjustSize();
+                if (textArea.getText().isEmpty() && imageName != null) {
+                    textArea.setVisible(false);
+                }
             }
         });
     }
@@ -373,7 +396,6 @@ public class MapNode extends StackPane {
             FileUtil.deleteImage(imageName);
             imageName = null;
             textArea.setVisible(true);
-            adjust();
         });
 
         // 缩放
@@ -394,7 +416,6 @@ public class MapNode extends StackPane {
                 imageView.setFitWidth(imageWidth);
                 // 根据宽度的变化量，按宽高比计算高度
                 imageView.setFitHeight(imageWidth / ratio);
-                adjust();
             }
         });
 
@@ -405,100 +426,10 @@ public class MapNode extends StackPane {
             }
             // 点击有图片没有文字的节点显示 textArea
             else if (!textArea.isVisible()) {
-                // setVisible(false) 后，maxWidth 就变成0了
-                textArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
                 textArea.setVisible(true);
                 textArea.requestFocus();
-                setPrefHeight(getPrefHeight() + NodeConstants.MIN_TEXTAREA_HEIGHT);
-                setLayoutY(getLayoutY() - NodeConstants.HALF_MIN_TEXTAREA_HEIGHT);
-
-                if (pos == PosConstants.RIGHT) {
-                    onAction.accept(NodeEvent.ADJUST_YR);
-                } else {
-                    onAction.accept(NodeEvent.ADJUST_YL);
-                }
             }
         });
-    }
-
-    //———————————————————————————————————————————调整———————————————————————————————————————————
-
-    /**
-     * 调整尺寸和位置
-     */
-    public void adjust() {
-        double oldWidth = getPrefWidth();
-        double oldHeight = getPrefHeight();
-        adjustSize();
-        setSubjectTranslateY.accept(-(getPrefHeight() - oldHeight) * 0.5);
-
-        // 调整位置
-        Point2D sceneCoords = localToScene(0, 0);
-        double nodeX = sceneCoords.getX();
-        if (pos == PosConstants.LEFT) {
-            setLayoutX(getLayoutX() - (getPrefWidth() - oldWidth));
-            // 与 scene 左边的距离
-            if (nodeX < 0) {
-                setSubjectTranslateX.accept(-nodeX);
-            }
-            onAction.accept(NodeEvent.ADJUST_L);
-        } else {
-            if (getScene().getWidth() < nodeX + getPrefWidth()) {
-                double dx = nodeX + getPrefWidth() - getScene().getWidth();
-                setSubjectTranslateX.accept(-dx);
-            }
-            onAction.accept(NodeEvent.ADJUST_R);
-        }
-    }
-
-    /**
-     * 根据内容调整尺寸
-     */
-    public void adjustSize() {
-        String text = textArea.getText();
-        boolean imageVisible = imageName != null;
-        double nodeWidth;
-        double nodeHeight;
-        double textWidth;
-        double textHeight;
-
-        boolean textEmpty = text.isEmpty();
-        if (!imageVisible && textEmpty) {
-            textWidth = NodeConstants.EMPTY_TEXTAREA_WIDTH;
-            textHeight = NodeConstants.MIN_TEXTAREA_HEIGHT;
-            nodeWidth = NodeConstants.MIN_NODE_WIDTH;
-            nodeHeight = NodeConstants.MIN_NODE_HEIGHT;
-        } else {
-            // textArea 宽度 + padding
-            textWidth = MeasureTextUtil.getTextWidth(text);
-            textWidth = Math.min(textWidth, NodeConstants.MAX_TEXTAREA_WIDTH) * 1.01;
-            nodeWidth = Math.max(NodeConstants.MIN_NODE_WIDTH, textWidth + NodeConstants.PADDING_2);
-            if (imageVisible) {
-                // 文本宽度 < 图片宽度时，宽度 = 图片宽度 + padding
-                nodeWidth = Math.max(nodeWidth, imageView.getFitWidth() + NodeConstants.PADDING_2);
-            }
-
-            // textArea 高度 + padding [+ image 高度]
-            if (getPrefWidth() >= NodeConstants.MAX_TEXTAREA_WIDTH && !text.contains("\n")) {
-                textHeight = MeasureTextUtil.getTextHeight() * 1.06;
-            } else {
-                textHeight = MeasureTextUtil.getTextHeight() * 1.022;
-            }
-            nodeHeight = textHeight + NodeConstants.PADDING_2;
-            if (imageVisible) {
-                nodeHeight += imageView.getFitHeight();
-                if (textEmpty) {
-                    textArea.setVisible(false);
-                    nodeHeight -= textHeight;
-                }
-            }
-        }
-        // y 轴 - 高度变动的一半，让中心保持不变
-        setLayoutY(getLayoutY() - (nodeHeight - getPrefHeight()) / 2.0);
-        textArea.setMaxWidth(textWidth);
-        textArea.setPrefHeight(textHeight);
-        setPrefWidth(nodeWidth);
-        setPrefHeight(nodeHeight);
     }
 
     //—————————————————————————————————————————增—————————————————————————————————————————
@@ -538,7 +469,7 @@ public class MapNode extends StackPane {
         child.setParentNode(parentNode);
     }
 
-    //———————————————————————————————————————————宽高计算———————————————————————————————————————————
+    //———————————————————————————————————————————位置———————————————————————————————————————————
 
     /**
      * 子节点的总高度
@@ -564,12 +495,10 @@ public class MapNode extends StackPane {
     public double getHeight(byte pos) {
         // 每个调用的地方都可见，不用判断 isVisible
         if (getChildren(pos).isEmpty()) {
-            return getPrefHeight();
+            return getHeight();
         }
-        return Math.max(getPrefHeight(), getChildrenHeight(pos));
+        return Math.max(getHeight(), getChildrenHeight(pos));
     }
-
-    //———————————————————————————————————————————位置计算———————————————————————————————————————————
 
     public double getStartY(byte pos) {
         List<MapNode> children = getChildren(pos);
@@ -597,7 +526,7 @@ public class MapNode extends StackPane {
         for (int i = children.size() - 2; i >= 0 && !lastNode.isVisible(); i--) {
             lastNode = children.get(i);
         }
-        double selfEndY = lastNode.getLayoutY() + lastNode.getPrefHeight();
+        double selfEndY = lastNode.getLayoutY() + lastNode.getHeight();
         if (!lastNode.isVisible()) {
             return Integer.MIN_VALUE;
         }
@@ -631,8 +560,8 @@ public class MapNode extends StackPane {
             cloneNode.setImage(imageName, imageView.getFitWidth(), imageView.getFitHeight());
             cloneNode.getTextArea().setVisible(textArea.isVisible());
         }
-        cloneNode.setPrefWidth(getPrefWidth());
-        cloneNode.setPrefHeight(getPrefHeight());
+        cloneNode.setWidth(getWidth());
+        cloneNode.setHeight(getHeight());
         // 克隆子节点
         for (MapNode childNode : getChildren(pos)) {
             cloneNode.addChild(childNode.clone(), pos);
@@ -664,7 +593,6 @@ public class MapNode extends StackPane {
         int length = originalDoc.getLength();
         if (length == 0) {
             StyleClassedTextArea cloneTextArea = new StyleClassedTextArea(true);
-            cloneTextArea.setMaxWidth(NodeConstants.EMPTY_TEXTAREA_WIDTH);
             return cloneTextArea;
         }
 
@@ -676,8 +604,6 @@ public class MapNode extends StackPane {
         // 基于快照构造新的可编辑文档
         StyleClassedTextArea cloneTextArea
                 = new StyleClassedTextArea(new SimpleEditableStyledDocument<>(snapshot), true);
-        cloneTextArea.setPrefHeight(cloneTextArea.getPrefHeight());
-        cloneTextArea.setMaxWidth(textArea.getMaxWidth());
         cloneTextArea.layout();
 
         return cloneTextArea;
@@ -687,7 +613,6 @@ public class MapNode extends StackPane {
      * 改变方向到指定索引
      *
      * @param index -1表示添加到最后
-     *
      */
     public void transPosAt(int index, byte srcPos, byte targetPos) {
         // 父节点粘到选中节点的上面，子节点继续跟着父节点
@@ -707,17 +632,7 @@ public class MapNode extends StackPane {
         }
     }
 
-    //———————————————————————————————————————————其他———————————————————————————————————————————
-
-    public boolean isEmpty() {
-        return childrenR.isEmpty() && childrenL.isEmpty() &&
-                textArea.getText().isEmpty() && imageName == null;
-    }
-
-    @Override
-    public String toString() {
-        return textArea.getText();
-    }
+    //———————————————————————————————————————————引用———————————————————————————————————————————
 
     public void addIncomingReference(MapNode node) {
         if (incomingReferences == null) {
@@ -728,6 +643,18 @@ public class MapNode extends StackPane {
 
     public void removeIncomingReference(MapNode node) {
         incomingReferences.remove(node);
+    }
+
+    //———————————————————————————————————————————其他———————————————————————————————————————————
+
+    public boolean isEmpty() {
+        return childrenR.isEmpty() && childrenL.isEmpty() &&
+                textArea.getText().isEmpty() && imageName == null;
+    }
+
+    @Override
+    public String toString() {
+        return textArea.getText();
     }
 
 }

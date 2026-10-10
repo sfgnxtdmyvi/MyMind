@@ -71,6 +71,7 @@ class GenericStyledAreaBehavior {
 
     private static final boolean isMac;
     private static final boolean isWindows;
+
     static {
         String os = System.getProperty("os.name");
         isMac = os.startsWith("Mac");
@@ -93,24 +94,24 @@ class GenericStyledAreaBehavior {
          * KeyCharacterCombination however does keyboard translation before matching.
          * This resolves issue #799
          */
-        KeyCharacterCombination SHORTCUT_A = new KeyCharacterCombination( "a", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_C = new KeyCharacterCombination( "c", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_V = new KeyCharacterCombination( "v", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_X = new KeyCharacterCombination( "x", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_Y = new KeyCharacterCombination( "y", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN );
-        KeyCharacterCombination SHORTCUT_SHIFT_Z = new KeyCharacterCombination( "z", SHORTCUT_DOWN, SHIFT_DOWN );
+        KeyCharacterCombination SHORTCUT_A = new KeyCharacterCombination("a", SHORTCUT_DOWN);
+        KeyCharacterCombination SHORTCUT_C = new KeyCharacterCombination("c", SHORTCUT_DOWN);
+        KeyCharacterCombination SHORTCUT_V = new KeyCharacterCombination("v", SHORTCUT_DOWN);
+        KeyCharacterCombination SHORTCUT_X = new KeyCharacterCombination("x", SHORTCUT_DOWN);
+        KeyCharacterCombination SHORTCUT_Y = new KeyCharacterCombination("y", SHORTCUT_DOWN);
+        KeyCharacterCombination SHORTCUT_Z = new KeyCharacterCombination("z", SHORTCUT_DOWN);
+        KeyCharacterCombination SHORTCUT_SHIFT_Z = new KeyCharacterCombination("z", SHORTCUT_DOWN, SHIFT_DOWN);
 
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> editsBase = sequence(
                 // deletion
-                consume(keyPressed(DELETE),                     GenericStyledAreaBehavior::deleteForward),
-                consume(keyPressed(BACK_SPACE),                 GenericStyledAreaBehavior::deleteBackward),
-                consume(keyPressed(BACK_SPACE, SHIFT_DOWN),     GenericStyledAreaBehavior::deleteBackward),
-                consume(keyPressed(DELETE,     SHORTCUT_DOWN),  GenericStyledAreaBehavior::deleteNextWord),
-                consume(keyPressed(BACK_SPACE, SHORTCUT_DOWN),  GenericStyledAreaBehavior::deletePrevWord),
+                consume(keyPressed(DELETE), GenericStyledAreaBehavior::deleteForward),
+                consume(keyPressed(BACK_SPACE), GenericStyledAreaBehavior::deleteBackward),
+                consume(keyPressed(BACK_SPACE, SHIFT_DOWN), GenericStyledAreaBehavior::deleteBackward),
+                consume(keyPressed(DELETE, SHORTCUT_DOWN), GenericStyledAreaBehavior::deleteNextWord),
+                consume(keyPressed(BACK_SPACE, SHORTCUT_DOWN), GenericStyledAreaBehavior::deletePrevWord),
                 // cut
                 consume(
-                        anyOf(keyPressed(CUT),   keyPressed(SHORTCUT_X), keyPressed(DELETE, SHIFT_DOWN)),
+                        anyOf(keyPressed(CUT), keyPressed(SHORTCUT_X), keyPressed(DELETE, SHIFT_DOWN)),
                         (b, e) -> b.view.cut()),
                 // paste
                 consume(
@@ -118,7 +119,7 @@ class GenericStyledAreaBehavior {
                         (b, e) -> b.view.paste()),
                 // tab & newline
                 consume(keyPressed(ENTER), (b, e) -> b.view.replaceSelection("\n")),
-                consume(keyPressed(TAB),   (b, e) -> b.view.replaceSelection("\t")),
+                consume(keyPressed(TAB), (b, e) -> b.view.replaceSelection("\t")),
                 // undo/redo
                 consume(keyPressed(SHORTCUT_Z), (b, e) -> b.view.undo()),
                 consume(
@@ -137,61 +138,61 @@ class GenericStyledAreaBehavior {
                 consume(
                         anyOf(keyPressed(DOWN), keyPressed(KP_DOWN)),
                         (b, e) -> b.nextLine(SelectionPolicy.CLEAR)),
-                consume(keyPressed(PAGE_UP),    (b, e) -> b.view.prevPage(SelectionPolicy.CLEAR)),
-                consume(keyPressed(PAGE_DOWN),  (b, e) -> b.view.nextPage(SelectionPolicy.CLEAR)),
+                consume(keyPressed(PAGE_UP), (b, e) -> b.view.prevPage(SelectionPolicy.CLEAR)),
+                consume(keyPressed(PAGE_DOWN), (b, e) -> b.view.nextPage(SelectionPolicy.CLEAR)),
                 // vertical selection
                 consume(
-                        anyOf(keyPressed(UP,   SHIFT_DOWN), keyPressed(KP_UP, SHIFT_DOWN)),
+                        anyOf(keyPressed(UP, SHIFT_DOWN), keyPressed(KP_UP, SHIFT_DOWN)),
                         (b, e) -> b.prevLine(SelectionPolicy.ADJUST)),
                 consume(
                         anyOf(keyPressed(DOWN, SHIFT_DOWN), keyPressed(KP_DOWN, SHIFT_DOWN)),
                         (b, e) -> b.nextLine(SelectionPolicy.ADJUST)),
-                consume(keyPressed(PAGE_UP,   SHIFT_DOWN),  (b, e) -> b.view.prevPage(SelectionPolicy.ADJUST)),
-                consume(keyPressed(PAGE_DOWN, SHIFT_DOWN),  (b, e) -> b.view.nextPage(SelectionPolicy.ADJUST))
+                consume(keyPressed(PAGE_UP, SHIFT_DOWN), (b, e) -> b.view.prevPage(SelectionPolicy.ADJUST)),
+                consume(keyPressed(PAGE_DOWN, SHIFT_DOWN), (b, e) -> b.view.nextPage(SelectionPolicy.ADJUST))
         );
 
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> otherNavigation = sequence(
                 // caret movement
                 consume(anyOf(keyPressed(RIGHT), keyPressed(KP_RIGHT)), GenericStyledAreaBehavior::right),
-                consume(anyOf(keyPressed(LEFT),  keyPressed(KP_LEFT)),  GenericStyledAreaBehavior::left),
+                consume(anyOf(keyPressed(LEFT), keyPressed(KP_LEFT)), GenericStyledAreaBehavior::left),
                 consume(keyPressed(HOME), (b, e) -> b.view.lineStart(SelectionPolicy.CLEAR)),
-                consume(keyPressed(END),  (b, e) -> b.view.lineEnd(SelectionPolicy.CLEAR)),
+                consume(keyPressed(END), (b, e) -> b.view.lineEnd(SelectionPolicy.CLEAR)),
                 consume(
                         anyOf(
-                                keyPressed(RIGHT,    SHORTCUT_DOWN),
+                                keyPressed(RIGHT, SHORTCUT_DOWN),
                                 keyPressed(KP_RIGHT, SHORTCUT_DOWN)
                         ), (b, e) -> b.skipToNextWord(SelectionPolicy.CLEAR)),
                 consume(
                         anyOf(
-                                keyPressed(LEFT,     SHORTCUT_DOWN),
-                                keyPressed(KP_LEFT,  SHORTCUT_DOWN)
+                                keyPressed(LEFT, SHORTCUT_DOWN),
+                                keyPressed(KP_LEFT, SHORTCUT_DOWN)
                         ), (b, e) -> b.skipToPrevWord(SelectionPolicy.CLEAR)),
                 consume(keyPressed(HOME, SHORTCUT_DOWN), (b, e) -> b.view.start(SelectionPolicy.CLEAR)),
-                consume(keyPressed(END,  SHORTCUT_DOWN), (b, e) -> b.view.end(SelectionPolicy.CLEAR)),
+                consume(keyPressed(END, SHORTCUT_DOWN), (b, e) -> b.view.end(SelectionPolicy.CLEAR)),
                 // selection
                 consume(
                         anyOf(
-                                keyPressed(RIGHT,    SHIFT_DOWN),
+                                keyPressed(RIGHT, SHIFT_DOWN),
                                 keyPressed(KP_RIGHT, SHIFT_DOWN)
                         ), GenericStyledAreaBehavior::selectRight),
                 consume(
                         anyOf(
-                                keyPressed(LEFT,     SHIFT_DOWN),
-                                keyPressed(KP_LEFT,  SHIFT_DOWN)
+                                keyPressed(LEFT, SHIFT_DOWN),
+                                keyPressed(KP_LEFT, SHIFT_DOWN)
                         ), GenericStyledAreaBehavior::selectLeft),
-                consume(keyPressed(HOME, SHIFT_DOWN),                (b, e) -> b.view.lineStart(selPolicy)),
-                consume(keyPressed(END,  SHIFT_DOWN),                (b, e) -> b.view.lineEnd(selPolicy)),
+                consume(keyPressed(HOME, SHIFT_DOWN), (b, e) -> b.view.lineStart(selPolicy)),
+                consume(keyPressed(END, SHIFT_DOWN), (b, e) -> b.view.lineEnd(selPolicy)),
                 consume(keyPressed(HOME, SHIFT_DOWN, SHORTCUT_DOWN), (b, e) -> b.view.start(selPolicy)),
-                consume(keyPressed(END,  SHIFT_DOWN, SHORTCUT_DOWN), (b, e) -> b.view.end(selPolicy)),
+                consume(keyPressed(END, SHIFT_DOWN, SHORTCUT_DOWN), (b, e) -> b.view.end(selPolicy)),
                 consume(
                         anyOf(
-                                keyPressed(RIGHT,    SHIFT_DOWN, SHORTCUT_DOWN),
+                                keyPressed(RIGHT, SHIFT_DOWN, SHORTCUT_DOWN),
                                 keyPressed(KP_RIGHT, SHIFT_DOWN, SHORTCUT_DOWN)
                         ), (b, e) -> b.skipToNextWord(selPolicy)),
                 consume(
                         anyOf(
-                                keyPressed(LEFT,     SHIFT_DOWN, SHORTCUT_DOWN),
-                                keyPressed(KP_LEFT,  SHIFT_DOWN, SHORTCUT_DOWN)
+                                keyPressed(LEFT, SHIFT_DOWN, SHORTCUT_DOWN),
+                                keyPressed(KP_LEFT, SHIFT_DOWN, SHORTCUT_DOWN)
                         ), (b, e) -> b.skipToPrevWord(selPolicy)),
                 consume(keyPressed(SHORTCUT_A), (b, e) -> b.view.selectAll())
         );
@@ -213,17 +214,17 @@ class GenericStyledAreaBehavior {
                 // (For example: ALT + CONTROL + E prints the euro symbol in the spanish keyboard while ALT + CONTROL + L has assigned an accelerator.)
                 //Note that this is how several IDEs such JetBrains IDEs or Eclipse behave.
                 if (e.isControlDown() && e.isAltDown() && !e.isMetaDown() && e.getCharacter().length() == 1
-                	    && e.getCharacter().getBytes()[0] != 0) return true;
+                        && e.getCharacter().getBytes()[0] != 0) return true;
 
                 return !e.isControlDown() && !e.isAltDown() && !e.isMetaDown();
             }
-        	return !e.isControlDown() && !e.isMetaDown();
+            return !e.isControlDown() && !e.isMetaDown();
         };
 
         Predicate<KeyEvent> isChar = e ->
                 e.getCode().isLetterKey() ||
-                e.getCode().isDigitKey() ||
-                e.getCode().isWhitespaceKey();
+                        e.getCode().isDigitKey() ||
+                        e.getCode().isWhitespaceKey();
 
         InputMapTemplate<GenericStyledAreaBehavior, KeyEvent> charPressConsumer = consume(keyPressed().onlyIf(isChar.and(controlKeysFilter)));
 
@@ -318,13 +319,19 @@ class GenericStyledAreaBehavior {
      * Possible dragging states.
      */
     private enum DragState {
-        /** No dragging is happening. */
+        /**
+         * No dragging is happening.
+         */
         NO_DRAG,
 
-        /** Mouse has been pressed inside of selected text, but drag has not been detected yet. */
+        /**
+         * Mouse has been pressed inside of selected text, but drag has not been detected yet.
+         */
         POTENTIAL_DRAG,
 
-        /** Drag in progress. */
+        /**
+         * Drag in progress.
+         */
         DRAG,
     }
 
@@ -338,7 +345,10 @@ class GenericStyledAreaBehavior {
      * Indicates weather the area is in overwrite or insert mode.
      */
     private final ReadOnlyBooleanWrapper overwriteMode = new ReadOnlyBooleanWrapper(this, "overwriteMode", false);
-    final ReadOnlyBooleanProperty overwriteModeProperty() { return overwriteMode.getReadOnlyProperty(); }
+
+    final ReadOnlyBooleanProperty overwriteModeProperty() {
+        return overwriteMode.getReadOnlyProperty();
+    }
 
     /**
      * Indicates whether an existing selection is being dragged by the user.
@@ -374,12 +384,12 @@ class GenericStyledAreaBehavior {
                 .emitBothOnEach(animationFrames())
                 .map(t -> t.map((ds, nanos) -> ds.multiply(nanos / 100_000_000.0)));
         valuesOf(autoscrollTo).flatMap(p -> p == null
-                ? never() // automatically stops the scroll animation
-                : deltas)
-            .subscribe(ds -> {
-                area.scrollBy(ds);
-                projection.ifPresent(this::dragTo);
-            });
+                        ? never() // automatically stops the scroll animation
+                        : deltas)
+                .subscribe(ds -> {
+                    area.scrollBy(ds);
+                    projection.ifPresent(this::dragTo);
+                });
     }
 
     /* ********************************************************************** *
@@ -390,7 +400,7 @@ class GenericStyledAreaBehavior {
         String text = event.getCharacter();
         int n = text.length();
 
-        if(n == 0) {
+        if (n == 0) {
             return;
         }
 
@@ -399,7 +409,7 @@ class GenericStyledAreaBehavior {
         int end = range.getEnd();
 
         if (overwriteMode.get() && start == end) {
-            end = Math.min(end+1, view.getLength());
+            end = Math.min(end + 1, view.getLength());
         }
 
         view.replaceText(start, end, text);
@@ -411,7 +421,7 @@ class GenericStyledAreaBehavior {
 
     private void deleteBackward(KeyEvent ignore) {
         IndexRange selection = view.getSelection();
-        if(selection.getLength() == 0) {
+        if (selection.getLength() == 0) {
             view.deletePreviousChar();
         } else {
             view.replaceSelection("");
@@ -420,7 +430,7 @@ class GenericStyledAreaBehavior {
 
     private void deleteForward(KeyEvent ignore) {
         IndexRange selection = view.getSelection();
-        if(selection.getLength() == 0) {
+        if (selection.getLength() == 0) {
             view.deleteNextChar();
         } else {
             view.replaceSelection("");
@@ -429,7 +439,7 @@ class GenericStyledAreaBehavior {
 
     private void left(KeyEvent ignore) {
         IndexRange sel = view.getSelection();
-        if(sel.getLength() == 0) {
+        if (sel.getLength() == 0) {
             view.previousChar(SelectionPolicy.CLEAR);
         } else {
             view.moveTo(sel.getStart(), SelectionPolicy.CLEAR);
@@ -438,7 +448,7 @@ class GenericStyledAreaBehavior {
 
     private void right(KeyEvent ignore) {
         IndexRange sel = view.getSelection();
-        if(sel.getLength() == 0) {
+        if (sel.getLength() == 0) {
             view.nextChar(SelectionPolicy.CLEAR);
         } else {
             view.moveTo(sel.getEnd(), SelectionPolicy.CLEAR);
@@ -476,7 +486,7 @@ class GenericStyledAreaBehavior {
     private void downLines(SelectionPolicy selectionPolicy, int nLines) {
         Position currentLine = view.currentLine();
         Position targetLine = currentLine.offsetBy(nLines, Forward).clamp();
-        if(!currentLine.sameAs(targetLine)) {
+        if (!currentLine.sameAs(targetLine)) {
             // compute new caret position
             CharacterHit hit = view.hit(view.getTargetCaretOffset(), targetLine);
 
@@ -497,7 +507,7 @@ class GenericStyledAreaBehavior {
         int caretPos = view.getCaretPosition();
 
         // if (0 == caretPos), do nothing as can't move to the left anyway
-        if (1 <= caretPos ) {
+        if (1 <= caretPos) {
             boolean prevCharIsWhiteSpace = isWhitespace(view.getText(caretPos - 1, caretPos).charAt(0));
             view.wordBreaksBackwards(prevCharIsWhiteSpace ? 2 : 1, selectionPolicy);
         }
@@ -520,11 +530,11 @@ class GenericStyledAreaBehavior {
 
     private void showContextMenu(ContextMenuEvent e) {
         view.requestFocus();
-        if ( view.isContextMenuPresent() ) {
+        if (view.isContextMenuPresent()) {
             ContextMenu menu = view.getContextMenu();
             double x = e.getScreenX() + view.getContextMenuXOffset();
             double y = e.getScreenY() + view.getContextMenuYOffset();
-            menu.show( view, x, y );
+            menu.show(view, x, y);
         }
     }
 
@@ -547,7 +557,7 @@ class GenericStyledAreaBehavior {
 
         view.clearTargetCaretOffset();
         IndexRange selection = view.getSelection();
-        if(view.isEditable() &&
+        if (view.isEditable() &&
                 selection.getLength() != 0 &&
                 hit.getCharacterIndex().isPresent() &&
                 hit.getCharacterIndex().getAsInt() >= selection.getStart() &&
@@ -573,13 +583,12 @@ class GenericStyledAreaBehavior {
     private void handlePrimaryOnlyDragDetected() {
         if (dragSelection == DragState.POTENTIAL_DRAG) {
             dragSelection = DragState.DRAG;
-        }
-        else dragNewSelection = DragState.DRAG;
+        } else dragNewSelection = DragState.DRAG;
     }
 
     private Result processPrimaryOnlyMouseDragged(MouseEvent e) {
         Point2D p = new Point2D(e.getX(), e.getY());
-        if(view.getLayoutBounds().contains(p)) {
+        if (view.getLayoutBounds().contains(p)) {
             dragTo(p);
         }
         view.setAutoScrollOnDragDesired(true);
@@ -593,7 +602,7 @@ class GenericStyledAreaBehavior {
         }
 
         Point2D p = new Point2D(e.getX(), e.getY());
-        if(view.getLayoutBounds().contains(p)) {
+        if (view.getLayoutBounds().contains(p)) {
             autoscrollTo.setValue(null); // stops auto-scroll
         } else {
             autoscrollTo.setValue(p);    // starts auto-scroll
@@ -601,7 +610,7 @@ class GenericStyledAreaBehavior {
     }
 
     private void dragTo(Point2D point) {
-        if(dragSelection == DragState.DRAG ||
+        if (dragSelection == DragState.DRAG ||
                 dragSelection == DragState.POTENTIAL_DRAG) { // MOUSE_DRAGGED may arrive even before DRAG_DETECTED
             view.getOnSelectionDrag().accept(point);
         } else {
@@ -614,16 +623,17 @@ class GenericStyledAreaBehavior {
             return Result.IGNORE;
         }
 
-        switch(dragSelection) {
+        switch (dragSelection) {
             case POTENTIAL_DRAG:
                 // selection was not dragged, but clicked
                 view.getOnInsideSelectionMousePressReleased().handle(e);
             case DRAG:
                 view.getOnSelectionDropped().handle(e);
                 break;
-            case NO_DRAG: if ( dragNewSelection == DragState.DRAG ) {
-                view.getOnNewSelectionDragFinished().handle(e);
-            }
+            case NO_DRAG:
+                if (dragNewSelection == DragState.DRAG) {
+                    view.getOnNewSelectionDragFinished().handle(e);
+                }
         }
         dragNewSelection = DragState.NO_DRAG;
         dragSelection = DragState.NO_DRAG;
@@ -642,16 +652,17 @@ class GenericStyledAreaBehavior {
     }
 
     static boolean isControlKeyEvent(KeyEvent event) {
-    	return controlKeysFilter.test(event);
+        return controlKeysFilter.test(event);
     }
 
     private static boolean isLegal(String text) {
         int n = text.length();
-        for(int i = 0; i < n; ++i) {
-            if(Character.isISOControl(text.charAt(i))) {
+        for (int i = 0; i < n; ++i) {
+            if (Character.isISOControl(text.charAt(i))) {
                 return false;
             }
         }
         return true;
     }
+
 }

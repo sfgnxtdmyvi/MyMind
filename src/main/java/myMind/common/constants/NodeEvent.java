@@ -7,8 +7,6 @@ public enum NodeEvent {
     ADD_BUTTON_R,
     ADD_BUTTON_L,
 
-    ADJUST_R,
-    ADJUST_L,
-    ADJUST_YR,
-    ADJUST_YL,
+    ADJUST_X,
+    ADJUST_Y,
 }

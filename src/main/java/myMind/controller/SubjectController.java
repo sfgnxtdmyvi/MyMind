@@ -18,7 +18,6 @@ import myMind.common.util.CloneNodeUtil;
 import myMind.common.util.FormatUtil;
 import myMind.common.util.IdGenerator;
 import myMind.componet.MapNode;
-
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
 import myMind.componet.styledArea.StyleClassedTextArea;
@@ -70,6 +69,8 @@ public class SubjectController {
         byte pos = selectedNode.getPos();
         List<MapNode> children = selectedNode.getChildren(pos);
         MapNode insertNode;
+        // y 轴 + 高度的一半 = selectedNode 的中间，- 新增节点高度的一半 = 新增节点的 y轴
+        double y = selectedNode.getLayoutY() + (selectedNode.getHeight() - NodeConstants.MIN_NODE_HEIGHT) / 2.0;
         if (children.isEmpty()) {
             if (selectedNode == rootNode) {
                 return;
@@ -82,10 +83,9 @@ public class SubjectController {
             if (selection.getLength() != 0) {
                 StyleClassedTextArea textArea = new StyleClassedTextArea();
                 textArea.replaceText(selectedTextArea.getSelectedText());
-                insertNode = new MapNode(pos, calculateChildX(parentNode, pos), calculateChildY(parentNode), textArea);
-                insertNode.adjustSize();
+                insertNode = new MapNode(pos, calculateChildX(parentNode, pos), y, textArea);
             } else {
-                insertNode = new MapNode(pos, calculateChildX(parentNode, pos), calculateChildY(parentNode));
+                insertNode = new MapNode(pos, calculateChildX(parentNode, pos), y);
             }
 
             // 插入节点替代当前节点的位置
@@ -94,7 +94,7 @@ public class SubjectController {
             parentNode.removeChild(selectedNode, pos);
             insertNode.addChild(selectedNode, pos);
         } else {
-            insertNode = new MapNode(pos, calculateChildX(selectedNode, pos), calculateChildY(selectedNode));
+            insertNode = new MapNode(pos, calculateChildX(selectedNode, pos), y);
             // 当前节点的子节点变成插入节点的子节点
             Iterator<MapNode> iterator = children.iterator();
             while (iterator.hasNext()) {
@@ -117,10 +117,6 @@ public class SubjectController {
         MapNode childNode = new MapNode(pos, calculateChildX(selectedNode, pos), 0);
         selectedNode.addChild(childNode, pos);
         addNodeAndSelect(childNode);
-
-        adjustChildrenY(pos);
-        refreshLines(pos);
-        adjustTranslateY(childNode);
     }
 
     public void addSibling() {
@@ -140,9 +136,6 @@ public class SubjectController {
 
         parentNode.addChildAt(parentNode.getChildren(pos).indexOf(selectedNode) + 1, siblingNode, pos);
         addNodeAndSelect(siblingNode);
-        adjustChildrenY(pos);
-        refreshLines(pos);
-        adjustTranslateY(siblingNode);
     }
 
     /**
@@ -160,8 +153,6 @@ public class SubjectController {
         }
         setSelectedNode(firstNode, true);
 
-        adjustChildrenY(pos);
-        refreshLines(pos);
         adjustTranslateY(firstNode.getParentNode().getLastChild(pos));
     }
 
@@ -183,8 +174,6 @@ public class SubjectController {
         }
         setSelectedNode(firstNode, true);
 
-        adjustChildrenY(pos);
-        refreshLines(pos);
         adjustTranslateY(firstNode.getParentNode().getLastChild(pos));
     }
 
@@ -211,6 +200,7 @@ public class SubjectController {
 
     private void setOnAction(MapNode node) {
         node.setOnAction(event -> {
+            final byte pos = node.getPos();
             switch (event) {
                 case CLICK -> {
                     setSelectedNode(node, true);
@@ -228,7 +218,7 @@ public class SubjectController {
                     } else {
                         MapNode cloneNode = CloneNodeUtil.getCloneNode();
                         if (cloneNode != null) {
-                            pasteSibling(cloneNode, node.getPos());
+                            pasteSibling(cloneNode, pos);
                         }
                     }
                 }
@@ -276,15 +266,19 @@ public class SubjectController {
                     }
                 }
 
-                case ADJUST_R -> adjustChildrenXY(node, PosConstants.RIGHT);
-                case ADJUST_L -> adjustChildrenXY(node, PosConstants.LEFT);
-                case ADJUST_YR -> {
-                    adjustChildrenY(PosConstants.RIGHT);
-                    refreshLines(PosConstants.RIGHT);
+                case ADJUST_X -> {
+                    if (pos == PosConstants.MIDDLE) {
+                        adjustChildrenX(node, PosConstants.RIGHT);
+                        adjustChildrenX(node, PosConstants.LEFT);
+                        refreshLines();
+                    } else {
+                        adjustChildrenX(node, pos);
+                        refreshLines(pos);
+                    }
                 }
-                case ADJUST_YL -> {
-                    adjustChildrenY(PosConstants.LEFT);
-                    refreshLines(PosConstants.LEFT);
+                case ADJUST_Y -> {
+                    adjustChildrenY(pos);
+                    refreshLines(pos);
                 }
             }
         });
@@ -303,15 +297,11 @@ public class SubjectController {
     private double calculateChildX(MapNode parentNode, byte pos) {
         if (pos == PosConstants.RIGHT) {
             // 父节点 X 轴 + 父节点宽度 + 节点间隔
-            return parentNode.getLayoutX() + parentNode.getPrefWidth() + NodeConstants.GAP_X;
+            return parentNode.getLayoutX() + parentNode.getWidth() + NodeConstants.GAP_X;
         } else {
             // 父节点 X 轴 - 节点间隔 - 节点最小宽度
             return parentNode.getLayoutX() - NodeConstants.ADD_LEFT_NODE_GAP_X;
         }
-    }
-
-    private double calculateChildY(MapNode parentNode) {
-        return parentNode.getLayoutY() + (parentNode.getPrefHeight() - NodeConstants.MIN_NODE_HEIGHT) / 2.0;
     }
 
     /**
@@ -618,8 +608,7 @@ public class SubjectController {
         StyleClassedTextArea childTextArea = new StyleClassedTextArea();
         childTextArea.replaceText(newNodeText);
         byte pos = selectedNode.getPos();
-        MapNode newNode = new MapNode(pos, calculateChildX(selectedNode, pos), calculateChildY(selectedNode), childTextArea);
-        newNode.adjustSize();
+        MapNode newNode = new MapNode(pos, calculateChildX(selectedNode, pos), 0, childTextArea);
 
         selectedNode.addChild(newNode, pos);
         addNode(newNode);
@@ -720,7 +709,7 @@ public class SubjectController {
             // 父节点的 X 坐标 - 节点间隔 - 子节点的宽度
             double childX = parentNode.getLayoutX() - NodeConstants.GAP_X;
             for (MapNode child : children) {
-                child.setLayoutX(childX - child.getPrefWidth());
+                child.setLayoutX(childX - child.getWidth());
                 adjustChildrenX(child, pos);
             }
         }
@@ -749,7 +738,7 @@ public class SubjectController {
         double childY;
         if (y == null) {
             double totalHeight = parentNode.getChildrenHeight(pos);
-            double parentMidY = parentNode.getLayoutY() + parentNode.getPrefHeight() / 2.0;
+            double parentMidY = parentNode.getLayoutY() + parentNode.getHeight() / 2.0;
             childY = parentMidY - totalHeight / 2.0;
         } else {
             childY = y;
@@ -761,7 +750,7 @@ public class SubjectController {
             }
             List<MapNode> childrenOfChild = childNode.getChildren(pos);
 
-            double selfHeight = childNode.getPrefHeight();
+            double selfHeight = childNode.getHeight();
             if (childrenOfChild.isEmpty()) {
                 childNode.setLayoutY(childY);
                 // 当前Y + 当前节点高度 + 间距
@@ -784,19 +773,6 @@ public class SubjectController {
         }
     }
 
-    public void adjustChildrenSize() {
-        rootNode.adjustSize();
-        adjustChildrenSize(rootNode, PosConstants.RIGHT);
-        adjustChildrenSize(rootNode, PosConstants.LEFT);
-    }
-
-    private void adjustChildrenSize(MapNode MapNode, byte pos) {
-        for (MapNode childNode : MapNode.getChildren(pos)) {
-            childNode.adjustSize();
-            adjustChildrenSize(childNode, pos);
-        }
-    }
-
     /**
      * 调整节点与 scene 下面和上面的间距
      */
@@ -810,8 +786,8 @@ public class SubjectController {
         double mapNodeY = sceneCoords.getY();
         if (mapNodeY < mindMapPoint.getY()) {
             setSubjectTranslateY(mindMapPoint.getY() - mapNodeY);
-        } else if (mapNode.getScene().getHeight() < mapNodeY + mapNode.getPrefHeight()) {
-            double dy = mapNodeY + mapNode.getPrefHeight() - mapNode.getScene().getHeight();
+        } else if (mapNode.getScene().getHeight() < mapNodeY + mapNode.getHeight()) {
+            double dy = mapNodeY + mapNode.getHeight() - mapNode.getScene().getHeight();
             setSubjectTranslateY(-dy);
         }
     }
@@ -821,8 +797,8 @@ public class SubjectController {
         double mapNodeX = sceneCoords.getX();
         if (mapNodeX < 0) {
             setSubjectTranslateX(-mapNodeX);
-        } else if (mapNode.getScene().getWidth() < mapNodeX + mapNode.getPrefWidth()) {
-            double dx = mapNodeX + mapNode.getPrefWidth() - mapNode.getScene().getWidth();
+        } else if (mapNode.getScene().getWidth() < mapNodeX + mapNode.getWidth()) {
+            double dx = mapNodeX + mapNode.getWidth() - mapNode.getScene().getWidth();
             setSubjectTranslateX(-dx);
         }
     }
@@ -835,8 +811,8 @@ public class SubjectController {
         MindMap mindMap = getMindMap();
         StackPane tabHeaderArea = (StackPane) mindMap.lookup(".tab-header-area");
         double mindMapHeight = mapNode.getScene().getHeight() - tabHeaderArea.getHeight();
-        double centerX = (mapNode.getScene().getWidth() - mapNode.getPrefWidth()) / 2;
-        double centerY = (mindMapHeight - mapNode.getPrefHeight()) / 2;
+        double centerX = (mapNode.getScene().getWidth() - mapNode.getWidth()) / 2;
+        double centerY = (mindMapHeight - mapNode.getHeight()) / 2;
 
         setSubjectTranslateX(centerX - mapNodeX);
         setSubjectTranslateY(centerY - mapNodeY);
@@ -892,7 +868,7 @@ public class SubjectController {
         double x;
         if (pos == PosConstants.RIGHT) {
             //最大值 - min（从左数第几个， 从右数第几个）
-            x = node.getLayoutX() + node.getPrefWidth() - getLevel(maxIndex - Math.min(i, maxIndex - i));
+            x = node.getLayoutX() + node.getWidth() - getLevel(maxIndex - Math.min(i, maxIndex - i));
         } else {
             //最大值 + min（从左数第几个，从右数第几个）
             x = node.getLayoutX() + getLevel(maxIndex - Math.min(i, maxIndex - i));
@@ -904,12 +880,12 @@ public class SubjectController {
         if (pos == PosConstants.RIGHT) {
             return new Point2D(node.getLayoutX(), getMidY(node));
         } else {
-            return new Point2D(node.getLayoutX() + node.getPrefWidth(), getMidY(node));
+            return new Point2D(node.getLayoutX() + node.getWidth(), getMidY(node));
         }
     }
 
     private double getMidY(MapNode node) {
-        return node.getLayoutY() + node.getPrefHeight() / 2;
+        return node.getLayoutY() + node.getHeight() / 2;
     }
 
     private int getLevel(int i) {

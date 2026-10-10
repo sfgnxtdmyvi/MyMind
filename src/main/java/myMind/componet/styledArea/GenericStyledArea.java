@@ -103,188 +103,123 @@ import static org.reactfx.EventStreams.merge;
 import static org.reactfx.util.Tuples.t;
 
 /**
- * Text editing control that renders and edits a {@link EditableStyledDocument}.
- * <p>
- * Accepts user input (keyboard, mouse) and provides API to assign style to text ranges. It is suitable for
- * syntax highlighting and rich-text editors.
+ * 渲染并编辑 {@link EditableStyledDocument} 的文本编辑控件。提供 API 为一段文本指定样式，适用于语法高亮和富文本编辑器
  *
- * <h3>Adding Scrollbars to the Area</h3>
- * <p>
- * By default, scroll bars do not appear when the content spans outside of the viewport.
- * To add scroll bars, the area needs to be wrapped in a {@link VirtualizedScrollPane}. For example,
- * <pre><code>
- * // shows area without scroll bars
- * InlineCssTextArea area = new InlineCssTextArea();
+ * <h3>设置 {@link UndoManager}</h3>
+ * 默认的 UndoManager 可以撤销/重做 {@link PlainTextChange} 或 {@link RichTextChange}。
+ * 如果要创建自己的专用版本，撤销/重做其他的 TextChange，请使用 {@link UndoUtils} 中便捷的工厂方法
  *
- * // add scroll bars that will display as needed
- * VirtualizedScrollPane&lt;InlineCssTextArea&gt; vsPane = new VirtualizedScrollPane&lt;&gt;(area);
- *
- * Parent parent = // creation code
- * parent.getChildren().add(vsPane)
- * </code></pre>
- *
- * <h3>Auto-Scrolling to the Caret</h3>
- * <p>
- * Every time the underlying {@link EditableStyledDocument} changes via user interaction (e.g. typing) through
- * the {@code GenericStyledArea}, the area will scroll to insure the caret is kept in view. However, this does not
- * occur if changes are done programmatically. For example, let's say the area is displaying the bottom part
- * of the area's {@link EditableStyledDocument} and some code changes something in the top part of the document
- * that is not currently visible. If there is no call to {@link #requestFollowCaret()} at the end of that code,
- * the area will not auto-scroll to that section of the document. The change will occur, and the user will continue
- * to see the bottom part of the document as before. If such a call is there, then the area will scroll
- * to the top of the document and no longer display the bottom part of it.
- * For example...
- * <pre><code>
- * // assuming the user is currently seeing the top of the area
- *
- * // then changing the bottom, currently not visible part of the area...
- * int startParIdx = 40;
- * int startColPosition = 2;
- * int endParIdx = 42;
- * int endColPosition = 10;
- *
- * // ...by itself will not scroll the viewport to where the change occurs
- * area.replaceText(startParIdx, startColPosition, endParIdx, endColPosition, "replacement text");
- *
- * // adding this line after the last modification to the area will cause the viewport to scroll to that change
- * // leaving the following line out will leave the viewport unaffected and the user will not notice any difference
- * area.requestFollowCaret();
- * </code></pre>
- * <p>
- * Additionally, when overriding the default user-interaction behavior, remember to include a call
- * to {@link #requestFollowCaret()}.
- *
- * <h3>Setting the area's {@link UndoManager}</h3>
- * <p>
- * <p>
- * The default UndoManager can undo/redo either {@link PlainTextChange}s or {@link RichTextChange}s. To create
- * your own specialized version that may use changes different than these (or a combination of these changes
- * with others), create them using the convenient factory methods in {@link UndoUtils}.
- *
- *
- * <h3>Overriding default keyboard behavior</h3>
- * <p>
- * {@code GenericStyledArea} uses {@link javafx.scene.input.KeyEvent#KEY_TYPED KEY_TYPED} to handle ordinary
- * character input and {@link javafx.scene.input.KeyEvent#KEY_PRESSED KEY_PRESSED} to handle control key
- * combinations (including Enter and Tab). To add or override some keyboard
- * shortcuts, while keeping the rest in place, you would combine the default
- * event handler with a new one that adds or overrides some of the default
- * key combinations.
- * <p>
- * For example, this is how to bind {@code Ctrl+S} to the {@code save()} operation:
- *
+ * <h3>重写默认键盘行为</h3>
+ * 本类使用 {@link javafx.scene.input.KeyEvent#KEY_TYPED KEY_TYPED} 处理普通字符输入，
+ * 使用 {@link javafx.scene.input.KeyEvent#KEY_PRESSED KEY_PRESSED} 处理控制键组合（包括 Enter 和 Tab）。
+ * 如果要添加或重写某些键盘快捷键（其余快捷键不变），
+ * 你需要将默认事件处理器与一个新的处理器组合起来，由新处理器添加或重写某些默认键组合
+ * <p>例如：将 Ctrl+S 绑定到 save()</p>
  * <pre><code>
  * import static javafx.scene.input.KeyCode.*;
  * import static javafx.scene.input.KeyCombination.*;
  * import static org.fxmisc.wellbehaved.event.EventPattern.*;
  * import static org.fxmisc.wellbehaved.event.InputMap.*;
- *
  * import org.fxmisc.wellbehaved.event.Nodes;
  *
- * // installs the following consume InputMap,
- * // so that a CTRL+S event saves the document and consumes the event
- * Nodes.addInputMap(area, consume(keyPressed(S, CONTROL_DOWN), event -&gt; save()));
+ * Nodes.addInputMap(area, consume(keyPressed(S, CONTROL_DOWN), event -> save()));
  * </code></pre>
  *
- * <h3>Overriding default mouse behavior</h3>
+ * <h3>重写默认鼠标行为</h3>
+ * 默认鼠标行为会处理自动滚动和将选中文本拖拽到新位置，因此，某些部分无法在不影响其他行为的情况下部分重写。
  * <p>
- * The area's default mouse behavior properly handles auto-scrolling and dragging the selected text to a new location.
- * As such, some parts cannot be partially overridden without it affecting other behavior.
- * <p>
- * The following lists either {@link org.fxmisc.wellbehaved.event.EventPattern}s that cannot be
- * overridden without negatively affecting the default mouse behavior or describe how to safely override things
- * in a special way without disrupting the auto scroll behavior.
+ * 以下列出了一些 {@link org.fxmisc.wellbehaved.event.EventPattern}，无法在不对默认鼠标行为造成负面影响的情况下重写它们，
+ * 以及描述了如何以特殊方式安全地重写它们，而不破坏自动滚动
  * <ul>
  *     <li>
- *         <em>First (1 click count) Primary Button Mouse Pressed Events:</em>
- *         (<code>EventPattern.mousePressed(MouseButton.PRIMARY).onlyIf(e -&gt; e.getClickCount() == 1)</code>).
- *         Do not override. Instead, use {@link #onOutsideSelectionMousePressed},
- *         {@link #onInsideSelectionMousePressReleased}, or see next item.
- *     </li>
- *     <li>(
- *         <em>All Other Mouse Pressed Events (e.g., Primary with 2+ click count):</em>
- *         Aside from hiding the context menu if it is showing (use {@link #hideContextMenu()} some((where in your
- *         overriding InputMap to maintain this behavior), these can be safely overridden via any of the
- *         {@link org.fxmisc.wellbehaved.event.template.InputMapTemplate InputMapTemplate's factory methods} or
- *         {@link org.fxmisc.wellbehaved.event.InputMap InputMap's factory methods}.
+ *         <em>左键单击事件：</em>
+ *         (<code>EventPattern.mousePressed(MouseButton.PRIMARY).onlyIf(e -> e.getClickCount() == 1)</code>)不要重写，
+ *         改用{@link #onOutsideSelectionMousePressed}, {@link #onInsideSelectionMousePressReleased}，或参见下一项
  *     </li>
  *     <li>
- *         <em>Primary-Button-only Mouse Drag Detection Events:</em>
- *         (<code>EventPattern.eventType(MouseEvent.DRAG_DETECTED).onlyIf(e -&gt; e.getButton() == MouseButton.PRIMARY &amp;&amp; !e.isMiddleButtonDown() &amp;&amp; !e.isSecondaryButtonDown())</code>).
- *         Do not override. Instead, use {@link #onNewSelectionDrag} or {@link #onSelectionDrag}.
+ *         <em>所有其他鼠标按下事件 (例如，双击左键)：</em>
+ *         除了隐藏上下文菜单外（请在重写 InputMap 的适当位置使用 hideContextMenu() 以维持此行为），
+ *         其他的都可以通过{@link org.fxmisc.wellbehaved.event.template.InputMapTemplate InputMapTemplate 的工厂方法}，
+ *         或{@link org.fxmisc.wellbehaved.event.InputMap InputMap 的工厂方法}安全地重写
  *     </li>
  *     <li>
- *         <em>Primary-Button-only Mouse Drag Events:</em>
- *         (<code>EventPattern.mouseDragged().onlyIf(e -&gt; e.getButton() == MouseButton.PRIMARY &amp;&amp; !e.isMiddleButtonDown() &amp;&amp; !e.isSecondaryButtonDown())</code>)
- *         Do not override, but see next item.
+ *         <em>纯粹的左键拖拽检测事件（仅点击左键，而不是左键跟右键或滚轮一起点击）：</em>
+ *         (<code>
+ *             EventPattern.eventType(MouseEvent.DRAG_DETECTED).onlyIf(e -> e.getButton() == MouseButton.PRIMARY && !e.isMiddleButtonDown() && !e.isSecondaryButtonDown())
+ *         </code>)
+ *         不要重写，改用{@link #onNewSelectionDrag}或{@link #onSelectionDrag}.
  *     </li>
  *     <li>
- *         <em>All Other Mouse Drag Events:</em>
- *         You may safely override other Mouse Drag Events using different
- *         {@link org.fxmisc.wellbehaved.event.EventPattern}s without affecting default behavior only if
- *         process InputMaps (
+ *         <em>纯粹的左键拖拽事件：</em>
+ *         (<code>
+ *             EventPattern.mouseDragged().onlyIf(e -> e.getButton() == MouseButton.PRIMARY && !e.isMiddleButtonDown() && !e.isSecondaryButtonDown())
+ *         </code>)
+ *         不要重写，但请参见下一项
+ *     </li>
+ *     <li>
+ *         <em>其他鼠标拖拽事件：</em>
+ *         仅当使用 process InputMaps (
  *         {@link org.fxmisc.wellbehaved.event.template.InputMapTemplate#process(javafx.event.EventType, BiFunction)},
  *         {@link org.fxmisc.wellbehaved.event.template.InputMapTemplate#process(org.fxmisc.wellbehaved.event.EventPattern, BiFunction)},
- *         {@link org.fxmisc.wellbehaved.event.InputMap#process(javafx.event.EventType, Function)}, or
- *         {@link org.fxmisc.wellbehaved.event.InputMap#process(org.fxmisc.wellbehaved.event.EventPattern, Function)}
- *         ) are used and {@link org.fxmisc.wellbehaved.event.InputHandler.Result#PROCEED} is returned.
- *         The area has a "catch all" Mouse Drag InputMap that will auto scroll towards the mouse drag event when it
- *         occurs outside the bounds of the area and will stop auto scrolling when the mouse event occurs within the
- *         area. However, this only works if the event is not consumed before the event reaches that InputMap.
- *         To insure the auto scroll feature is enabled, set {@link #isAutoScrollOnDragDesired()} to true in your
- *         process InputMap. If the feature is not desired for that specific drag event, set it to false in the
- *         process InputMap.
- *         <em>Note: Due to this "catch-all" nature, all Mouse Drag Events are consumed.</em>
+ *         {@link org.fxmisc.wellbehaved.event.InputMap#process(javafx.event.EventType, Function)}，
+ *         或{@link org.fxmisc.wellbehaved.event.InputMap#process(org.fxmisc.wellbehaved.event.EventPattern, Function)})
+ *         并且返回{@link org.fxmisc.wellbehaved.event.InputHandler.Result#PROCEED}时，
+ *         才能使用不同的 {@link org.fxmisc.wellbehaved.event.EventPattern} 安全地重写其他鼠标拖拽事件，而不影响默认行为。
+ *         <p>
+ *         本类有一个兜底的鼠标拖拽 InputMap：当鼠标拖拽事件发生在组件边界之外时，会朝鼠标位置自动滚动；
+ *         当事件发生在组件内部时，它会停止自动滚动。
+ *         但是，只有当事件在到达该 InputMap 之前未被消费时，才能起作用。
+ *         为确保自动滚动功能启用，请在你的 process InputMap 中将 {@link #isAutoScrollOnDragDesired()} 设置为 true。
+ *         如果不需要该功能，请在 process InputMap 中将其设置为 false。
+ *         <em>注意：由于这个 InputMap，所有鼠标拖拽事件都会被消费</em>
+ *         <p>
+ *         InputMap 有三种：consume，把事件消费掉，不再向下传递；
+ *         ignore，忽略事件，不消费，继续传递；
+ *         process，交给 action 处理，action 返回一个 Result 来决定事件是否继续传递
  *     </li>
  *     <li>
- *         <em>Primary-Button-only Mouse Released Events:</em>
- *         (<code>EventPattern.mouseReleased().onlyIf(e -&gt; e.getButton() == MouseButton.PRIMARY &amp;&amp; !e.isMiddleButtonDown() &amp;&amp; !e.isSecondaryButtonDown())</code>).
- *         Do not override. Instead, use {@link #onNewSelectionDragFinished}, {@link #onSelectionDropped}, or see next item.
+ *         <em>纯粹的左键释放事件：</em>
+ *         (<code>
+ *             EventPattern.mouseReleased().onlyIf(e -> e.getButton() == MouseButton.PRIMARY && !e.isMiddleButtonDown() && !e.isSecondaryButtonDown())
+ *         </code>)
+ *         不要重写，改用{@link #onNewSelectionDragFinished}, {@link #onSelectionDropped}，或参见下一项
  *     </li>
  *     <li>
- *         <em>All other Mouse Released Events:</em>
- *         You may override other Mouse Released Events using different
- *         {@link org.fxmisc.wellbehaved.event.EventPattern}s without affecting default behavior only if
- *         process InputMaps (
+ *         <em>其他的鼠标释放事件：</em>
+ *         仅当使用 process InputMaps (
  *         {@link org.fxmisc.wellbehaved.event.template.InputMapTemplate#process(javafx.event.EventType, BiFunction)},
  *         {@link org.fxmisc.wellbehaved.event.template.InputMapTemplate#process(org.fxmisc.wellbehaved.event.EventPattern, BiFunction)},
- *         {@link org.fxmisc.wellbehaved.event.InputMap#process(javafx.event.EventType, Function)}, or
- *         {@link org.fxmisc.wellbehaved.event.InputMap#process(org.fxmisc.wellbehaved.event.EventPattern, Function)}
- *         ) are used and {@link org.fxmisc.wellbehaved.event.InputHandler.Result#PROCEED} is returned.
- *         The area has a "catch-all" InputMap that will consume all mouse released events and stop auto scroll if it
- *         was scrolling. However, this only works if the event is not consumed before the event reaches that InputMap.
- *         <em>Note: Due to this "catch-all" nature, all Mouse Released Events are consumed.</em>
+ *         {@link org.fxmisc.wellbehaved.event.InputMap#process(javafx.event.EventType, Function)}，
+ *         或{@link org.fxmisc.wellbehaved.event.InputMap#process(org.fxmisc.wellbehaved.event.EventPattern, Function)})
+ *         并且返回{@link org.fxmisc.wellbehaved.event.InputHandler.Result#PROCEED}时，
+ *         才能使用不同的 {@link org.fxmisc.wellbehaved.event.EventPattern} 安全地重写其他鼠标释放事件，而不影响默认行为
+ *         <p>
+ *         本类有一个兜底的鼠标释放 InputMap：在滚动时停止自动滚动
+ *         但是，只有当事件在到达该 InputMap 之前未被消费时，才能起作用。
+ *         <em>注意：由于这个 InputMap，所有鼠标释放事件都会被消费</em>
  *     </li>
  * </ul>
  *
- * <h3>CSS, Style Classes, and Pseudo Classes</h3>
- * <p>
- *     Refer to the <a href="https://github.com/FXMisc/RichTextFX/wiki/RichTextFX-CSS-Reference-Guide">
- *         RichTextFX CSS Reference Guide
- *     </a>.
- *
+ * <h3>CSS、样式类和伪类</h3>
+ * 请参阅
+ * <a
+ * href="https://github.com/FXMisc/RichTextFX/wiki/RichTextFX-CSS-Reference-Guide">RichTextFX CSS 参考指南
+ * </a>
  *
  * <h3>Area Actions and Other Operations</h3>
- * <p>
- *     To distinguish the actual operations one can do on this area from the boilerplate methods
- *     within this area (e.g. properties and their getters/setters, etc.), look at the interfaces
- *     this area implements. Each lists and documents methods that fall under that category.
- * <p>
- * <p>
- *     To update multiple portions of the area's underlying document in one call, see {@link #createMultiChange()}.
+ * 为了区分可以在此组件上执行的实际操作与样板方法（例如属性的 getter/setter 等），
+ * 看本类实现的接口，每个接口都列出了一类方法
+ * <p>要在一次调用中更新底层文档的多个部分，看{@link #createMultiChange()}</p>
  *
+ * <h3>计算位置</h3>
+ * 要计算位置或索引，请阅读{@link org.fxmisc.richtext.model.TwoDimensional} and {@link org.fxmisc.richtext.model.TwoDimensional.Bias}。
+ * 另外，请阅读{@link org.fxmisc.richtext.model.StyledDocument#getAbsolutePosition(int, int)} 中“position”和“index”之间的区别。
  *
- * <h3>Calculating a Position Within the Area</h3>
- * <p>
- *     To calculate a position or index within the area, read through the javadoc of
- *     {@link org.fxmisc.richtext.model.TwoDimensional} and {@link org.fxmisc.richtext.model.TwoDimensional.Bias}.
- *     Also, read the difference between "position" and "index" in
- *     {@link org.fxmisc.richtext.model.StyledDocument#getAbsolutePosition(int, int)}.
- *
- * @param <PS>  type of style that can be applied to paragraphs (e.g. {@link TextFlow}.
- * @param <SEG> type of segment used in {@link Paragraph}. Can be only text (plain or styled) or
- *              a type that combines text and other {@link Node}s.
- * @param <S>   type of style that can be applied to a segment.
+ * @param <PS>  段落样式 (e.g. {@link TextFlow})
+ * @param <SEG> {@link Paragraph} 中的‌分段类型，
+ *              要么是文本（纯文本或带样式），要么是文本与其他 {@link Node} 组合的类型
+ *              把“内容”与“样式”都参数化，使得同一套渲染逻辑既支持纯文本，也支持带 CSS 类名的富文本，甚至支持嵌入 Node 的复杂段落
+ * @param <S>   段的样式
  * @see EditableStyledDocument
  * @see TwoDimensional
  * @see org.fxmisc.richtext.model.TwoDimensional.Bias
@@ -305,6 +240,22 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         ViewActions<PS, SEG, S>,
         TwoDimensional,
         Virtualized {
+
+    //———————————————————————————————————————————CSS———————————————————————————————————————————
+
+    private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_TEXT_FILL = new CustomCssMetaData<>(
+            "-fx-highlight-text-fill", StyleConverter.getPaintConverter(), Color.WHITE, s -> s.highlightTextFill
+    );
+
+    private static final List<CssMetaData<? extends Styleable, ?>> CSS_META_DATA_LIST;
+
+    static {
+        List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(Region.getClassCssMetaData());
+
+        styleables.add(HIGHLIGHT_TEXT_FILL);
+
+        CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
+    }
 
     /**
      * Index range [0, 0).
@@ -342,6 +293,110 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     };
 
+    private final ReadOnlyBooleanProperty overwriteMode;
+
+    private final BooleanProperty wrapText = new SimpleBooleanProperty(this, "wrapText");
+
+    private UndoManager undoManager;
+
+    private Locale textLocale = Locale.getDefault();
+
+    private final ObjectProperty<Duration> mouseOverTextDelay = new SimpleObjectProperty<>(null);
+
+    private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
+
+    private ObjectProperty<Node> placeHolderProp = new SimpleObjectProperty<>(this, "placeHolder", null);
+
+    private Pos placeHolderPos = Pos.CENTER;
+
+    private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
+
+    private DoubleProperty contextMenuXOffset = new SimpleDoubleProperty(2);
+
+    private DoubleProperty contextMenuYOffset = new SimpleDoubleProperty(2);
+
+    private final BooleanProperty useInitialStyleForInsertion = new SimpleBooleanProperty();
+
+    private Optional<Tuple2<Codec<PS>, Codec<StyledSegment<SEG, S>>>> styleCodecs = Optional.empty();
+
+    private final ObjectProperty<EventHandler<MouseEvent>> onOutsideSelectionMousePressed = new SimpleObjectProperty<>(
+            e -> moveTo(hit(e.getX(), e.getY()).getInsertionIndex(), SelectionPolicy.CLEAR));
+
+    private final ObjectProperty<EventHandler<MouseEvent>> onInsideSelectionMousePressReleased = new SimpleObjectProperty<>(
+            e -> moveTo(hit(e.getX(), e.getY()).getInsertionIndex(), SelectionPolicy.CLEAR));
+
+    private final ObjectProperty<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
+        CharacterHit hit = hit(p.getX(), p.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+    });
+
+    private final ObjectProperty<EventHandler<MouseEvent>> onNewSelectionDragFinished = new SimpleObjectProperty<>(e -> {
+        CharacterHit hit = hit(e.getX(), e.getY());
+        moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
+    });
+
+    private final ObjectProperty<Consumer<Point2D>> onSelectionDrag = new SimpleObjectProperty<>(p -> {
+        CharacterHit hit = hit(p.getX(), p.getY());
+        displaceCaret(hit.getInsertionIndex());
+    });
+
+    private final ObjectProperty<EventHandler<MouseEvent>> onSelectionDropped = new SimpleObjectProperty<>(e -> {
+        moveSelectedText(hit(e.getX(), e.getY()).getInsertionIndex());
+    });
+
+    // not a hook, but still plays a part in the default mouse behavior
+    private final BooleanProperty autoScrollOnDragDesired = new SimpleBooleanProperty(true);
+
+    // 收集所有事件订阅，dispose() 时一次性取消，避免泄漏
+    private Subscription subscriptions = () -> {
+    };
+
+    // 虚拟化滚动容器，它只为可见的段落创建 ParagraphBox，不在视口内，则不创建
+    private final VirtualFlow<Paragraph<PS, SEG, S>, Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> virtualFlow;
+
+    // ‌用于两级导航，上层是段落，下层是段落内的行‌，用于上下移动光标
+    private final TwoLevelNavigator paragraphLineNavigator;
+
+    // 可见段落的响应式列表，layoutChildren() 和滚动时使用
+    private boolean paging, followCaretRequested = false;
+
+    //———————————————————————————————————————————光标———————————————————————————————————————————
+
+    // 主光标 + 主选择的绑定
+    private CaretSelectionBind<PS, SEG, S> caretSelectionBind;
+    // 支持多个光标/选择（多光标编辑），集合变化会通知到所有 ParagraphBox，让它们按需添加/移除光标路径
+    private final SubscribeableContentsObsSet<CaretNode> caretSet;
+    private final SubscribeableContentsObsSet<Selection<PS, SEG, S>> selectionSet;
+
+    private final SuspendableList<Paragraph<PS, SEG, S>> visibleParagraphs;
+
+    // 批量更新（如 undo/redo）的标志，期间暂停 UI 响应
+    private final SuspendableNo beingUpdated = new SuspendableNo();
+
+    private final SuspendableEventStream<?> viewportDirty;
+
+    //———————————————————————————————————————————clone 必需要用的字段———————————————————————————————————————————
+
+    // 数据源，所有文本、样式、段落都存放在这里
+    private final EditableStyledDocument<PS, SEG, S> content;
+
+    private final PS initialParagraphStyle;
+    private final S initialTextStyle;
+    // 把段落样式 PS 应用到整段的 TextFlow 上
+    private final BiConsumer<TextFlow, PS> applyParagraphStyle;
+
+    // undo/redo 涉及这个字段
+    private final boolean preserveStyle;
+
+    //———————————————————————————————————————————其他———————————————————————————————————————————
+
+    // 定义了“段”的操作语义（合并、样式处理、Codec 等）
+    private final TextOps<SEG, S> segmentOps;
+
+    private final EventStream<Boolean> autoCaretBlinksSteam;
+
+    //———————————————————————————————————————————getter、setter———————————————————————————————————————————
+
     @Override
     public final BooleanProperty editableProperty() {
         return editable;
@@ -358,8 +413,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return editable.get();
     }
 
-    private final ReadOnlyBooleanProperty overwriteMode;
-
     /**
      * Indicates weather the area is in overwrite or insert mode.
      */
@@ -370,9 +423,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public boolean isOverwriteMode() {
         return overwriteMode.get();
     }
-
-    // wrapText property
-    private final BooleanProperty wrapText = new SimpleBooleanProperty(this, "wrapText");
 
     @Override
     public final BooleanProperty wrapTextProperty() {
@@ -390,25 +440,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return wrapText.get();
     }
 
-    // undo manager
-    private UndoManager undoManager;
-
-    @Override
-    public UndoManager getUndoManager() {
-        return undoManager;
-    }
-
-    /**
-     * @param undoManager may be null in which case a no op undo manager will be set.
-     */
-    @Override
-    public void setUndoManager(UndoManager undoManager) {
-        this.undoManager.close();
-        this.undoManager = undoManager != null ? undoManager : UndoUtils.noOpUndoManager();
-    }
-
-    private Locale textLocale = Locale.getDefault();
-
     /**
      * This is used to determine word and sentence breaks while navigating or selecting.
      * Override this method if your paragraph or text style accommodates Locales as well.
@@ -424,45 +455,15 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         textLocale = editorLocale;
     }
 
-    private final ObjectProperty<Duration> mouseOverTextDelay = new SimpleObjectProperty<>(null);
-
     @Override
     public ObjectProperty<Duration> mouseOverTextDelayProperty() {
         return mouseOverTextDelay;
     }
 
-    private final ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactory = new SimpleObjectProperty<>(null);
-
     @Override
     public ObjectProperty<IntFunction<? extends Node>> paragraphGraphicFactoryProperty() {
         return paragraphGraphicFactory;
     }
-
-    public void recreateParagraphGraphic(int parNdx) {
-        ObjectProperty<IntFunction<? extends Node>> gProp;
-        gProp = getCell(parNdx).graphicFactoryProperty();
-        gProp.unbind();
-        gProp.bind(paragraphGraphicFactoryProperty());
-    }
-
-    public Node getParagraphGraphic(int parNdx) {
-        return getCell(parNdx).getGraphic();
-    }
-
-    /**
-     * This Node is shown to the user, centered over the area, when the area has no text content.
-     * <br>To customize the placeholder's layout override {@link #configurePlaceholder(Node)}
-     */
-    public final void setPlaceholder(Node value) {
-        setPlaceholder(value, Pos.CENTER);
-    }
-
-    public void setPlaceholder(Node value, Pos where) {
-        placeHolderProp.set(value);
-        placeHolderPos = Objects.requireNonNull(where);
-    }
-
-    private ObjectProperty<Node> placeHolderProp = new SimpleObjectProperty<>(this, "placeHolder", null);
 
     public final ObjectProperty<Node> placeholderProperty() {
         return placeHolderProp;
@@ -471,10 +472,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public final Node getPlaceholder() {
         return placeHolderProp.get();
     }
-
-    private Pos placeHolderPos = Pos.CENTER;
-
-    private ObjectProperty<ContextMenu> contextMenu = new SimpleObjectProperty<>(null);
 
     @Override
     public final ObjectProperty<ContextMenu> contextMenuObjectProperty() {
@@ -496,50 +493,54 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return contextMenu.get() != null;
     }
 
-    private DoubleProperty contextMenuXOffset = new SimpleDoubleProperty(2);
-
     @Override
-    public final DoubleProperty contextMenuXOffsetProperty() {
-        return contextMenuXOffset;
+    public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
+        return CSS_META_DATA_LIST;
     }
 
-    // Don't remove as FXMLLoader doesn't recognise default methods !
-    @Override
-    public void setContextMenuXOffset(double offset) {
-        contextMenuXOffset.set(offset);
+    public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
+        return CSS_META_DATA_LIST;
     }
 
-    @Override
-    public double getContextMenuXOffset() {
-        return contextMenuXOffset.get();
+    //———————————————————————————————————————————复杂 getter、setter———————————————————————————————————————————
+
+    public void recreateParagraphGraphic(int parNdx) {
+        ObjectProperty<IntFunction<? extends Node>> gProp;
+        gProp = getCell(parNdx).graphicFactoryProperty();
+        gProp.unbind();
+        gProp.bind(paragraphGraphicFactoryProperty());
     }
 
-    private DoubleProperty contextMenuYOffset = new SimpleDoubleProperty(2);
-
-    @Override
-    public final DoubleProperty contextMenuYOffsetProperty() {
-        return contextMenuYOffset;
-    }
-
-    // Don't remove as FXMLLoader doesn't recognise default methods !
-    @Override
-    public void setContextMenuYOffset(double offset) {
-        contextMenuYOffset.set(offset);
+    public Node getParagraphGraphic(int parNdx) {
+        return getCell(parNdx).getGraphic();
     }
 
     @Override
-    public double getContextMenuYOffset() {
-        return contextMenuYOffset.get();
+    public UndoManager getUndoManager() {
+        return undoManager;
     }
 
-    private final BooleanProperty useInitialStyleForInsertion = new SimpleBooleanProperty();
-
+    /**
+     * @param undoManager may be null in which case a no op undo manager will be set.
+     */
     @Override
-    public BooleanProperty useInitialStyleForInsertionProperty() {
-        return useInitialStyleForInsertion;
+    public void setUndoManager(UndoManager undoManager) {
+        this.undoManager.close();
+        this.undoManager = undoManager != null ? undoManager : UndoUtils.noOpUndoManager();
     }
 
-    private Optional<Tuple2<Codec<PS>, Codec<StyledSegment<SEG, S>>>> styleCodecs = Optional.empty();
+    /**
+     * This Node is shown to the user, centered over the area, when the area has no text content.
+     * <br>To customize the placeholder's layout override {@link #configurePlaceholder(Node)}
+     */
+    public final void setPlaceholder(Node value) {
+        setPlaceholder(value, Pos.CENTER);
+    }
+
+    public void setPlaceholder(Node value, Pos where) {
+        placeHolderProp.set(value);
+        placeHolderPos = Objects.requireNonNull(where);
+    }
 
     @Override
     public void setStyleCodecs(Codec<PS> paragraphStyleCodec, Codec<StyledSegment<SEG, S>> styledSegCodec) {
@@ -560,9 +561,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public Var<Double> estimatedScrollYProperty() {
         return virtualFlow.estimatedScrollYProperty();
     }
-
-    private final SubscribeableContentsObsSet<CaretNode> caretSet;
-    private final SubscribeableContentsObsSet<Selection<PS, SEG, S>> selectionSet;
 
     public final boolean addCaret(CaretNode caret) {
         if (caret.getArea() != this) {
@@ -598,13 +596,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    /* ********************************************************************** *
-     *                                                                        *
-     * Mouse Behavior Hooks                                                   *
-     *                                                                        *
-     * Hooks for overriding some of the default mouse behavior                *
-     *                                                                        *
-     * ********************************************************************** */
+    //———————————————————————————————————————————修改默认鼠标行为的钩子———————————————————————————————————————————
 
     @Override
     public final EventHandler<MouseEvent> getOnOutsideSelectionMousePressed() {
@@ -621,10 +613,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return onOutsideSelectionMousePressed;
     }
 
-    private final ObjectProperty<EventHandler<MouseEvent>> onOutsideSelectionMousePressed = new SimpleObjectProperty<>(e -> {
-        moveTo(hit(e.getX(), e.getY()).getInsertionIndex(), SelectionPolicy.CLEAR);
-    });
-
     @Override
     public final EventHandler<MouseEvent> getOnInsideSelectionMousePressReleased() {
         return onInsideSelectionMousePressReleased.get();
@@ -640,14 +628,42 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return onInsideSelectionMousePressReleased;
     }
 
-    private final ObjectProperty<EventHandler<MouseEvent>> onInsideSelectionMousePressReleased = new SimpleObjectProperty<>(e -> {
-        moveTo(hit(e.getX(), e.getY()).getInsertionIndex(), SelectionPolicy.CLEAR);
-    });
+    @Override
+    public final DoubleProperty contextMenuXOffsetProperty() {
+        return contextMenuXOffset;
+    }
 
-    private final ObjectProperty<Consumer<Point2D>> onNewSelectionDrag = new SimpleObjectProperty<>(p -> {
-        CharacterHit hit = hit(p.getX(), p.getY());
-        moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
-    });
+    // Don't remove as FXMLLoader doesn't recognise default methods !
+    @Override
+    public void setContextMenuXOffset(double offset) {
+        contextMenuXOffset.set(offset);
+    }
+
+    @Override
+    public double getContextMenuXOffset() {
+        return contextMenuXOffset.get();
+    }
+
+    @Override
+    public final DoubleProperty contextMenuYOffsetProperty() {
+        return contextMenuYOffset;
+    }
+
+    // Don't remove as FXMLLoader doesn't recognise default methods !
+    @Override
+    public void setContextMenuYOffset(double offset) {
+        contextMenuYOffset.set(offset);
+    }
+
+    @Override
+    public double getContextMenuYOffset() {
+        return contextMenuYOffset.get();
+    }
+
+    @Override
+    public BooleanProperty useInitialStyleForInsertionProperty() {
+        return useInitialStyleForInsertion;
+    }
 
     @Override
     public final ObjectProperty<Consumer<Point2D>> onNewSelectionDragProperty() {
@@ -669,16 +685,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return onNewSelectionDragFinished;
     }
 
-    private final ObjectProperty<EventHandler<MouseEvent>> onNewSelectionDragFinished = new SimpleObjectProperty<>(e -> {
-        CharacterHit hit = hit(e.getX(), e.getY());
-        moveTo(hit.getInsertionIndex(), SelectionPolicy.ADJUST);
-    });
-
-    private final ObjectProperty<Consumer<Point2D>> onSelectionDrag = new SimpleObjectProperty<>(p -> {
-        CharacterHit hit = hit(p.getX(), p.getY());
-        displaceCaret(hit.getInsertionIndex());
-    });
-
     @Override
     public final ObjectProperty<Consumer<Point2D>> onSelectionDragProperty() {
         return onSelectionDrag;
@@ -698,13 +704,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     public final ObjectProperty<EventHandler<MouseEvent>> onSelectionDroppedProperty() {
         return onSelectionDropped;
     }
-
-    private final ObjectProperty<EventHandler<MouseEvent>> onSelectionDropped = new SimpleObjectProperty<>(e -> {
-        moveSelectedText(hit(e.getX(), e.getY()).getInsertionIndex());
-    });
-
-    // not a hook, but still plays a part in the default mouse behavior
-    private final BooleanProperty autoScrollOnDragDesired = new SimpleBooleanProperty(true);
 
     @Override
     public final BooleanProperty autoScrollOnDragDesiredProperty() {
@@ -744,8 +743,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return content;
     }
 
-    private CaretSelectionBind<PS, SEG, S> caretSelectionBind;
-
     @Override
     public final CaretSelectionBind<PS, SEG, S> getCaretSelectionBind() {
         return caretSelectionBind;
@@ -757,21 +754,15 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return content.lengthProperty();
     }
 
-    // paragraphs
     @Override
     public LiveList<Paragraph<PS, SEG, S>> getParagraphs() {
         return content.getParagraphs();
     }
 
-    private final SuspendableList<Paragraph<PS, SEG, S>> visibleParagraphs;
-
     @Override
     public final LiveList<Paragraph<PS, SEG, S>> getVisibleParagraphs() {
         return visibleParagraphs;
     }
-
-    // beingUpdated
-    private final SuspendableNo beingUpdated = new SuspendableNo();
 
     @Override
     public final SuspendableNo beingUpdatedProperty() {
@@ -790,11 +781,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return virtualFlow.totalHeightEstimateProperty();
     }
 
-    /* ********************************************************************** *
-     *                                                                        *
-     * Event streams                                                          *
-     *                                                                        *
-     * ********************************************************************** */
+    //———————————————————————————————————————————Event streams———————————————————————————————————————————
 
     @Override
     public EventStream<List<RichTextChange<PS, SEG, S>>> multiRichChanges() {
@@ -818,96 +805,46 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return content.richChanges();
     }
 
-    private final SuspendableEventStream<?> viewportDirty;
-
     @Override
     public final EventStream<?> viewportDirtyEvents() {
         return viewportDirty;
     }
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * Private fields                                                         *
-     *                                                                        *
-     * ********************************************************************** */
-
-    private Subscription subscriptions = () -> {
-    };
-
-    private final VirtualFlow<Paragraph<PS, SEG, S>, Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>>> virtualFlow;
-
-    // used for two-level navigation, where on the higher level are
-    // paragraphs and on the lower level are lines within a paragraph
-    private final TwoLevelNavigator paragraphLineNavigator;
-
-    private boolean paging, followCaretRequested = false;
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * Fields necessary for Cloning                                           *
-     *                                                                        *
-     * ********************************************************************** */
-
-    private final EditableStyledDocument<PS, SEG, S> content;
 
     @Override
     public final EditableStyledDocument<PS, SEG, S> getContent() {
         return content;
     }
 
-    private final S initialTextStyle;
-
     @Override
     public final S getInitialTextStyle() {
         return initialTextStyle;
     }
-
-    private final PS initialParagraphStyle;
 
     @Override
     public final PS getInitialParagraphStyle() {
         return initialParagraphStyle;
     }
 
-    private final BiConsumer<TextFlow, PS> applyParagraphStyle;
-
     @Override
     public final BiConsumer<TextFlow, PS> getApplyParagraphStyle() {
         return applyParagraphStyle;
     }
-
-    // TODO: Currently, only undo/redo respect this flag.
-    private final boolean preserveStyle;
 
     @Override
     public final boolean isPreserveStyle() {
         return preserveStyle;
     }
 
-    /* ********************************************************************** *
-     *                                                                        *
-     * Miscellaneous                                                          *
-     *                                                                        *
-     * ********************************************************************** */
-
-    private final TextOps<SEG, S> segmentOps;
-
     @Override
     public final TextOps<SEG, S> getSegOps() {
         return segmentOps;
     }
 
-    private final EventStream<Boolean> autoCaretBlinksSteam;
-
     final EventStream<Boolean> autoCaretBlink() {
         return autoCaretBlinksSteam;
     }
 
-    /* ********************************************************************** *
-     *                                                                        *
-     * Constructors                                                           *
-     *                                                                        *
-     * ********************************************************************** */
+    //———————————————————————————————————————————构造器———————————————————————————————————————————
 
     /**
      * Creates a text area with empty text content.
@@ -982,7 +919,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      * @param segmentOps            The operations which are defined on the text segment objects.
      * @param preserveStyle         whether to use an undo manager that can undo/redo {@link RichTextChange}s or
      *                              {@link PlainTextChange}s
-     * @param nodeFactory           A function which is used to create the JavaFX scene node for a particular segment.
+     * @param nodeFactory           用来为一个特定的 segment 创建 JavaFX scene node
      */
     public GenericStyledArea(
             @NamedArg("initialParagraphStyle") PS initialParagraphStyle,
@@ -1129,14 +1066,14 @@ public class GenericStyledArea<PS, SEG, S> extends Region
     }
 
     // Start/Length of the text under input method composition
-    private int imstart;
-    private int imlength;
+    private int imStart;
+    private int imLength;
 
     protected void handleInputMethodEvent(InputMethodEvent event) {
         if (isEditable() && !isDisabled()) {
             // remove previous input method text (if any) or selected text
-            if (imlength != 0) {
-                selectRange(imstart, imstart + imlength);
+            if (imLength != 0) {
+                selectRange(imStart, imStart + imLength);
             }
 
             // Insert committed text
@@ -1145,7 +1082,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             }
 
             // Replace composed text
-            imstart = getSelection().getStart();
+            imStart = getSelection().getStart();
             StringBuilder composed = new StringBuilder();
 
             for (InputMethodTextRun run : event.getComposed()) {
@@ -1153,10 +1090,10 @@ public class GenericStyledArea<PS, SEG, S> extends Region
             }
 
             replaceText(getSelection(), composed.toString());
-            imlength = composed.length();
+            imLength = composed.length();
 
-            if (imlength != 0) {
-                int pos = imstart;
+            if (imLength != 0) {
+                int pos = imStart;
                 for (InputMethodTextRun run : event.getComposed()) {
                     int endPos = pos + run.getText().length();
                     pos = endPos;
@@ -1164,8 +1101,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
                 // Set caret position in composed text
                 int caretPos = event.getCaretPosition();
-                if (caretPos >= 0 && caretPos < imlength) {
-                    selectRange(imstart + caretPos, imstart + caretPos);
+                if (caretPos >= 0 && caretPos < imLength) {
+                    selectRange(imStart + caretPos, imStart + caretPos);
                 }
             }
         }
@@ -1493,8 +1430,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
      *                                                                        *
      * Actions                                                                *
      *                                                                        *
-     * Actions change the state of this control. They typically cause a       *
-     * change of one or more observables and/or produce an event.             *
+     * Actions change the state of this control.
+     * They typically cause a  change of one or more observables and/or produce an event.             *
      *                                                                        *
      * ********************************************************************** */
 
@@ -1548,6 +1485,8 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         suspendVisibleParsWhile(() -> virtualFlow.showAtOffset(paragraphIndex, offset));
     }
 
+    // 滚动到光标处
+    // 在覆盖默认用户交互行为时，要调用它
     @Override
     public void requestFollowCaret() {
         followCaretRequested = true;
@@ -1755,13 +1694,19 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private S insertionTextStyle;
 
+    // 打字插入新文本时，决定新字符的样式
     @Override
     public final S getTextStyleForInsertionAt(int pos) {
+        // 显式指定了插入样式，比如“接下来的输入都用红色”
         if (insertionTextStyle != null) {
             return insertionTextStyle;
-        } else if (useInitialStyleForInsertion.get()) {
+        }
+        // 用构造时的初始样式
+        else if (useInitialStyleForInsertion.get()) {
             return initialTextStyle;
-        } else {
+        }
+        // 继承插入位置已有的样式
+        else {
             return content.getStyleAtPosition(pos);
         }
     }
@@ -1954,11 +1899,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    /* ********************************************************************** *
-     *                                                                        *
-     * Public API                                                             *
-     *                                                                        *
-     * ********************************************************************** */
+    //———————————————————————————————————————————Public API———————————————————————————————————————————
 
     @Override
     public void dispose() {
@@ -1969,43 +1910,44 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         virtualFlow.dispose();
     }
 
-    /* ********************************************************************** *
-     *                                                                        *
-     * Layout                                                                 *
-     *                                                                        *
-     * ********************************************************************** */
-
-    private BooleanProperty autoHeightProp = new SimpleBooleanProperty();
-
-    public BooleanProperty autoHeightProperty() {
-        return autoHeightProp;
-    }
-
-    public void setAutoHeight(boolean value) {
-        autoHeightProp.set(value);
-    }
-
-    public boolean isAutoHeight() {
-        return autoHeightProp.get();
-    }
+    //———————————————————————————————————————————布局———————————————————————————————————————————
 
     @Override
     protected double computePrefHeight(double width) {
-        if (autoHeightProp.get()) {
-            if (getWidth() == 0.0) Platform.runLater(() -> requestLayout());
-            else {
-                double height = 0.0;
-                Insets in = getInsets();
+        if (getWidth() == 0.0) {
+            Platform.runLater(this::requestLayout);
+        } else {
+            double height = 0.0;
+            Insets in = getInsets();
 
-                for (int p = 0; p < getParagraphs().size(); p++) {
-                    height += getCell(p).getHeight();
-                }
-                if (height > 0.0) {
-                    return height + in.getTop() + in.getBottom();
-                }
+            for (int p = 0; p < getParagraphs().size(); p++) {
+                height += getCell(p).prefHeight(-1);
+            }
+            if (height > 0.0) {
+                return height + in.getTop() + in.getBottom();
             }
         }
         return super.computePrefHeight(width);
+    }
+
+    @Override
+    protected double computePrefWidth(double height) {
+        if (getHeight() == 0.0) {
+            // 高度还没确定时，延迟一次重新布局
+            Platform.runLater(this::requestLayout);
+        } else {
+            double maxWidth = 0.0;
+            Insets in = getInsets();
+            for (int p = 0; p < getParagraphs().size(); p++) {
+                double w = getCell(p).prefWidth(-1);
+                maxWidth = Math.max(maxWidth, w);
+            }
+            if (maxWidth > 0.0) {
+                maxWidth = maxWidth + in.getLeft() + in.getRight();
+                return maxWidth;
+            }
+        }
+        return super.computePrefWidth(height);
     }
 
     @Override
@@ -2037,11 +1979,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    /* ********************************************************************** *
-     *                                                                        *
-     * Package-Private methods                                                *
-     *                                                                        *
-     * ********************************************************************** */
+    //———————————————————————————————————————————本包私有———————————————————————————————————————————
 
     /**
      * Returns the current line as a two-level index.
@@ -2137,11 +2075,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         return caretSelectionBind.getTargetOffset();
     }
 
-    /* ********************************************************************** *
-     *                                                                        *
-     * Private methods                                                        *
-     *                                                                        *
-     * ********************************************************************** */
+    //———————————————————————————————————————————私有———————————————————————————————————————————
 
     private Cell<Paragraph<PS, SEG, S>, ParagraphBox<PS, SEG, S>> createCell(
             Paragraph<PS, SEG, S> paragraph,
@@ -2364,35 +2298,6 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     private void suspendVisibleParsWhile(Runnable runnable) {
         Suspendable.combine(beingUpdated, visibleParagraphs).suspendWhile(runnable);
-    }
-
-    /* ********************************************************************** *
-     *                                                                        *
-     * CSS                                                                    *
-     *                                                                        *
-     * ********************************************************************** */
-
-    private static final CssMetaData<GenericStyledArea<?, ?, ?>, Paint> HIGHLIGHT_TEXT_FILL = new CustomCssMetaData<>(
-            "-fx-highlight-text-fill", StyleConverter.getPaintConverter(), Color.WHITE, s -> s.highlightTextFill
-    );
-
-    private static final List<CssMetaData<? extends Styleable, ?>> CSS_META_DATA_LIST;
-
-    static {
-        List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(Region.getClassCssMetaData());
-
-        styleables.add(HIGHLIGHT_TEXT_FILL);
-
-        CSS_META_DATA_LIST = Collections.unmodifiableList(styleables);
-    }
-
-    @Override
-    public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
-        return CSS_META_DATA_LIST;
-    }
-
-    public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
-        return CSS_META_DATA_LIST;
     }
 
 }

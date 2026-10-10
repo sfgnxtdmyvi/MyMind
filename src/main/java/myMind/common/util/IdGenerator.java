@@ -1,6 +1,7 @@
 package myMind.common.util;
 
 public class IdGenerator {
+
     // 序列号位数
     private static final long SEQUENCE_BITS = 4L;
     // 等价于：2^SEQUENCE_BITS - 1

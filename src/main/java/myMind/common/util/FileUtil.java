@@ -88,7 +88,6 @@ public class FileUtil {
             loadChild(subject.getJSONArray(FileConstants.CHILDREN_R), rootNode, subjectController, PosConstants.RIGHT);
             loadChild(subject.getJSONArray(FileConstants.CHILDREN_L), rootNode, subjectController, PosConstants.LEFT);
 
-            subjectController.adjustChildrenSize();
             subjectController.adjustXY();
         }
 

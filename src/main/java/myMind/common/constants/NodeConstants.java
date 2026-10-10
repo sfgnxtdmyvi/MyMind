@@ -2,24 +2,18 @@ package myMind.common.constants;
 
 public class NodeConstants {
 
-    public static final double MIN_NODE_WIDTH = 130;
-    public static final double MIN_NODE_HEIGHT = 50.977;
-
-    public static final double EMPTY_TEXTAREA_WIDTH = 1;
-    public static final double MAX_TEXTAREA_WIDTH = 1000;
-    public static final double MIN_TEXTAREA_HEIGHT = MIN_NODE_HEIGHT - 22;
-    public static final double HALF_MIN_TEXTAREA_HEIGHT = MIN_TEXTAREA_HEIGHT / 2;
-
     public static final int PADDING = 12;
-    public static final int PADDING_2 = PADDING * 2;
+    public static final double MIN_TEXTAREA_WIDTH = 110;
+    public static final double MAX_TEXTAREA_WIDTH = 1000;
+
+    public static final double MIN_NODE_WIDTH = MIN_TEXTAREA_WIDTH + PADDING * 2;
+    public static final double MIN_NODE_HEIGHT = 50.977;
 
     public static final double GAP_X = MIN_NODE_WIDTH / 4;
     public static final double GAP_Y = MIN_NODE_WIDTH / 5;
     public static final double ADD_LEFT_NODE_GAP_X = GAP_X + MIN_NODE_WIDTH;
 
     public static final double TRANSLATE_RATE = 0.7453;
-
-    public static final int FONT_SIZE = 20;
 
     // 拖拽缩放
     public static final double RESIZE_THRESHOLD = 10.0;

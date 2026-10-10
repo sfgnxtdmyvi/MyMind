@@ -80,7 +80,7 @@ public class DeleteCommand implements Command {
     @Override
     public void undo() {
         if (keepChildren) {
-            double selfHeight = deletedNode.getPrefHeight();
+            double selfHeight = deletedNode.getHeight();
             List<MapNode> children = deletedNode.getChildren(pos);
             if (children.isEmpty()) {
                 return;

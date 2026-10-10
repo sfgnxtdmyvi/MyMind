@@ -8,7 +8,6 @@ import org.fxmisc.richtext.model.Codec;
 import org.fxmisc.richtext.model.EditableStyledDocument;
 import org.fxmisc.richtext.model.SegmentOps;
 import org.fxmisc.richtext.model.SimpleEditableStyledDocument;
-import org.fxmisc.richtext.model.StyledSegment;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +32,7 @@ public class StyleClassedTextArea extends GenericStyledArea<Collection<String>, 
         super(Collections.emptyList(),
                 (paragraph, styleClasses) -> paragraph.getStyleClass().addAll(styleClasses),
                 Collections.emptyList(), document, SegmentOps.styledTextOps(), preserveStyle,
-                seg -> createStyledTextNode(seg,
+                seg -> createStyledTextNode(seg.getSegment(), seg.getStyle(),
                         (text, styleClasses) -> text.getStyleClass().addAll(styleClasses))
         );
 
@@ -43,14 +42,6 @@ public class StyleClassedTextArea extends GenericStyledArea<Collection<String>, 
         );
 
         setWrapText(true);
-    }
-
-    /**
-     * Creates a TextExt node using the given styled text
-     */
-    public static <S> Node createStyledTextNode(StyledSegment<String, S> seg,
-                                                BiConsumer<? super TextExt, S> applyStyle) {
-        return createStyledTextNode(seg.getSegment(), seg.getStyle(), applyStyle);
     }
 
     /**

@@ -226,8 +226,8 @@ public class MindMap extends TabPane {
         getTabs().add(tab);
 
         MapNode rootNode = subjectController.getRootNode();
-        rootNode.setLayoutX((getWidth() - rootNode.getPrefWidth()) / 2);
-        rootNode.setLayoutY((getHeight() - rootNode.getPrefHeight()) / 2);
+        rootNode.setLayoutX((getWidth() - rootNode.getWidth()) / 2);
+        rootNode.setLayoutY((getHeight() - rootNode.getHeight()) / 2);
         rootNode.getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty()) {
                 tab.setText(newValue);
