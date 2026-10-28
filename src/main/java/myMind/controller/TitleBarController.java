@@ -28,8 +28,6 @@ import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.manager.CssManager;
 import myMind.common.util.FileUtil;
-import myMind.common.util.MessageUtil;
-import myMind.common.util.ScheduleUtil;
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
 
@@ -94,10 +92,13 @@ public class TitleBarController {
     }
 
     public void load(File file) {
-        if (ScheduleUtil.containsScheduled(file.getAbsolutePath())) {
-            // todo 跳转过去
-            MessageUtil.showMessage("导图已打开");
-            return;
+        String path = file.getAbsolutePath();
+        for (Window window : Stage.getWindows()) {
+            if (path.equals(((MindMap) window.getScene().getRoot().getChildrenUnmodifiable().get(1)).getFilePath())) {
+                // 导图已打开，跳转过去
+                window.requestFocus();
+                return;
+            }
         }
 
         MindMapController mindMapController = new MindMapController();
@@ -177,6 +178,7 @@ public class TitleBarController {
     private void addSubject() {
         mindMap.addSubject();
         subjectController = mindMap.getSubjectController();
+        subjectController.saveLater();
     }
 
     @FXML

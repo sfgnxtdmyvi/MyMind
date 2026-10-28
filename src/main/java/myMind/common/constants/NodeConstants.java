@@ -3,11 +3,11 @@ package myMind.common.constants;
 public class NodeConstants {
 
     public static final int PADDING = 12;
-    public static final double MIN_TEXTAREA_WIDTH = 110;
+    public static final double MIN_TEXTAREA_WIDTH = 1;
     public static final double MAX_TEXTAREA_WIDTH = 1000;
 
-    public static final double MIN_NODE_WIDTH = MIN_TEXTAREA_WIDTH + PADDING * 2;
-    public static final double MIN_NODE_HEIGHT = 50.977;
+    public static final double MIN_NODE_WIDTH = 120;
+    public static final double MIN_NODE_HEIGHT = 51;
 
     public static final double GAP_X = MIN_NODE_WIDTH / 4;
     public static final double GAP_Y = MIN_NODE_WIDTH / 5;

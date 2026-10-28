@@ -3,6 +3,7 @@ package myMind.common.util;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
@@ -14,7 +15,6 @@ import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.manager.ReferenceManager;
 import myMind.componet.MapNode;
-
 import myMind.componet.MindMap;
 import myMind.componet.styledArea.StyleClassedTextArea;
 import myMind.controller.SubjectController;
@@ -88,13 +88,18 @@ public class FileUtil {
             loadChild(subject.getJSONArray(FileConstants.CHILDREN_R), rootNode, subjectController, PosConstants.RIGHT);
             loadChild(subject.getJSONArray(FileConstants.CHILDREN_L), rootNode, subjectController, PosConstants.LEFT);
 
-            subjectController.adjustXY();
+            // 等得到真正的高度
+            ObservableList<Node> children = subjectController.getSubject().getNodesLayer().getChildren();
+            MapNode lastNode = (MapNode) children.get(children.size() - 1);
+            subjectController.adjustAsync(lastNode, () -> {
+                subjectController.adjustXY();
+                children.forEach((node -> ((MapNode) node).addSizeListener()));
+            });
         }
 
         ReferenceManager.link();
         String absolutePath = file.getAbsolutePath();
         mindMap.setFilePath(absolutePath);
-        ScheduleUtil.scheduleAutoSave(absolutePath, mindMap);
         addRecentFile(file);
     }
 
@@ -107,7 +112,7 @@ public class FileUtil {
             JSONObject childrenJson = (JSONObject) o;
             MapNode node = buildNode(childrenJson, pos);
             parentNode.addChild(node, pos);
-            subjectController.addNode(node);
+            subjectController.addNode(node, false);
 
             loadChild(childrenJson.getJSONArray(FileConstants.CHILDREN), node, subjectController, pos);
         }
@@ -186,12 +191,7 @@ public class FileUtil {
         if (file != null) {
             saveFile(file, mindMap, true);
 
-            if (mindMap.getFilePath() != null) {
-                ScheduleUtil.cancelSchedule(mindMap.getFilePath());
-            }
             String absolutePath = file.getAbsolutePath();
-            ScheduleUtil.scheduleAutoSave(absolutePath, mindMap);
-
             addRecentFile(file);
             mindMap.setFilePath(absolutePath);
             Stage stage = (Stage) mindMap.getScene().getWindow();
@@ -200,6 +200,7 @@ public class FileUtil {
     }
 
     public static void saveFile(File file, MindMap mindMap, boolean showMessage) {
+        System.out.println("1");
         JSONObject subjects = saveSubjects(mindMap);
 
         try (FileWriter fw = new FileWriter(file)) {

@@ -99,6 +99,7 @@ public class MapNode extends StackPane {
         nodeId = id;
 
         this.textArea = textArea;
+        textArea.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         contentBox = new VBox(textArea);
         contentBox.setAlignment(Pos.CENTER);
         contentBox.setPadding(new Insets(NodeConstants.PADDING));
@@ -252,6 +253,7 @@ public class MapNode extends StackPane {
                         imageView.setFitHeight(imageHeight / ConfigConstants.SCALE);
                         ratio = imageWidth / imageHeight;
                         imageName = FileUtil.saveImage(bufferedImage, imageName);
+                        onAction.accept(NodeEvent.CHANGE);
                     } catch (UnsupportedFlavorException | IOException ex) {
                         MessageUtil.showMessage("粘贴失败：" + ex.getMessage());
                     }
@@ -261,35 +263,8 @@ public class MapNode extends StackPane {
             }
         });
 
-        heightProperty().addListener((obs, oldVal, newVal) -> {
-            double oldHeight = oldVal.doubleValue();
-            // 跳过第一次固定的高度
-            if (oldHeight == 0) {
-                return;
-            }
-            setSubjectTranslateY.accept(-(newVal.doubleValue() - oldHeight) * 0.5);
-            onAction.accept(NodeEvent.ADJUST_Y);
-        });
-
-        widthProperty().addListener((obs, oldVal, newVal) -> {
-            double oldWidth = oldVal.doubleValue();
-            if (oldWidth == 0) {
-                return;
-            }
-            Point2D sceneCoords = localToScene(0, 0);
-            double nodeX = sceneCoords.getX();
-            double newWidth = newVal.doubleValue();
-            if (pos == PosConstants.LEFT) {
-                setLayoutX(getLayoutX() - (newWidth - oldWidth));
-                // 与 scene 左边的距离
-                if (nodeX < 0) {
-                    setSubjectTranslateX.accept(-nodeX);
-                }
-            } else if (getScene().getWidth() < nodeX + newWidth) {
-                double dx = nodeX + newWidth - getScene().getWidth();
-                setSubjectTranslateX.accept(-dx);
-            }
-            onAction.accept(NodeEvent.ADJUST_X);
+        textArea.textProperty().addListener((obs, oldVal, newVal) -> {
+            onAction.accept(NodeEvent.CHANGE);
         });
 
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
@@ -396,6 +371,7 @@ public class MapNode extends StackPane {
             FileUtil.deleteImage(imageName);
             imageName = null;
             textArea.setVisible(true);
+            onAction.accept(NodeEvent.CHANGE);
         });
 
         // 缩放
@@ -429,6 +405,30 @@ public class MapNode extends StackPane {
                 textArea.setVisible(true);
                 textArea.requestFocus();
             }
+        });
+    }
+
+    public void addSizeListener() {
+        heightProperty().addListener((obs, oldVal, newVal) -> {
+            setSubjectTranslateY.accept(-(newVal.doubleValue() - oldVal.doubleValue()) * 0.5);
+            onAction.accept(NodeEvent.ADJUST_Y);
+        });
+
+        widthProperty().addListener((obs, oldVal, newVal) -> {
+            Point2D sceneCoords = localToScene(0, 0);
+            double nodeX = sceneCoords.getX();
+            double newWidth = newVal.doubleValue();
+            if (pos == PosConstants.LEFT) {
+                setLayoutX(getLayoutX() - (newWidth - oldVal.doubleValue()));
+                // 与 scene 左边的距离
+                if (nodeX < 0) {
+                    setSubjectTranslateX.accept(-nodeX);
+                }
+            } else if (getScene().getWidth() < nodeX + newWidth) {
+                double dx = nodeX + newWidth - getScene().getWidth();
+                setSubjectTranslateX.accept(-dx);
+            }
+            onAction.accept(NodeEvent.ADJUST_X);
         });
     }
 
@@ -467,6 +467,20 @@ public class MapNode extends StackPane {
             childrenL.remove(child);
         }
         child.setParentNode(parentNode);
+    }
+
+    //———————————————————————————————————————————尺寸———————————————————————————————————————————
+
+    @Override
+    protected double computePrefWidth(double height) {
+        double width = super.computePrefWidth(height);
+        return Math.max(width, NodeConstants.MIN_NODE_WIDTH);
+    }
+
+    @Override
+    protected double computePrefHeight(double width) {
+        double height = super.computePrefHeight(width);
+        return Math.max(height, NodeConstants.MIN_NODE_HEIGHT);
     }
 
     //———————————————————————————————————————————位置———————————————————————————————————————————
@@ -562,6 +576,7 @@ public class MapNode extends StackPane {
         }
         cloneNode.setWidth(getWidth());
         cloneNode.setHeight(getHeight());
+        cloneNode.addSizeListener();
         // 克隆子节点
         for (MapNode childNode : getChildren(pos)) {
             cloneNode.addChild(childNode.clone(), pos);

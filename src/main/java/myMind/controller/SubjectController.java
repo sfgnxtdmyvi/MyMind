@@ -1,6 +1,8 @@
 package myMind.controller;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.IndexRange;
@@ -17,6 +19,7 @@ import myMind.common.manager.ReferenceManager;
 import myMind.common.util.CloneNodeUtil;
 import myMind.common.util.FormatUtil;
 import myMind.common.util.IdGenerator;
+import myMind.common.util.saveUtil;
 import myMind.componet.MapNode;
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
@@ -25,6 +28,7 @@ import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.TwoDimensional;
 import org.reactfx.collection.LiveList;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -49,7 +53,7 @@ public class SubjectController {
         subject = new Subject(id);
         rootNode = node;
         rootNode.getStyleClass().add("root-node");
-        addNode(node);
+        addNode(node, false);
         selectedNode = rootNode;
         selectedNode.getStyleClass().add("selected-node");
         this.onSelect = onSelect;
@@ -104,9 +108,14 @@ public class SubjectController {
             }
             selectedNode.addChild(insertNode, pos);
         }
-        addNodeAndSelect(insertNode);
-        adjustChildrenX(insertNode, pos);
-        refreshLines(pos);
+
+        addNode(insertNode, true);
+        adjustAsync(insertNode, () -> {
+            adjustChildrenX(insertNode, pos);
+            refreshLines(pos);
+            insertNode.addSizeListener();
+        });
+        saveLater();
     }
 
     public void addChild(byte pos) {
@@ -116,7 +125,14 @@ public class SubjectController {
 
         MapNode childNode = new MapNode(pos, calculateChildX(selectedNode, pos), 0);
         selectedNode.addChild(childNode, pos);
-        addNodeAndSelect(childNode);
+        addNode(childNode, true);
+        adjustAsync(childNode, () -> {
+            adjustChildrenY(pos);
+            refreshLines(pos);
+            adjustTranslateY(childNode);
+            childNode.addSizeListener();
+        });
+        saveLater();
     }
 
     public void addSibling() {
@@ -135,7 +151,14 @@ public class SubjectController {
         }
 
         parentNode.addChildAt(parentNode.getChildren(pos).indexOf(selectedNode) + 1, siblingNode, pos);
-        addNodeAndSelect(siblingNode);
+        addNode(siblingNode, true);
+        adjustAsync(siblingNode, () -> {
+            adjustChildrenY(pos);
+            refreshLines(pos);
+            adjustTranslateY(siblingNode);
+            siblingNode.addSizeListener();
+        });
+        saveLater();
     }
 
     /**
@@ -146,14 +169,8 @@ public class SubjectController {
             return;
         }
 
-        MapNode firstNode = new MapNode(pos, calculateChildX(selectedNode, pos), 0);
-        addNode(firstNode, pos);
-        for (int i = 0; i < 4; i++) {
-            addNode(new MapNode(pos, calculateChildX(selectedNode, pos), 0), pos);
-        }
-        setSelectedNode(firstNode, true);
-
-        adjustTranslateY(firstNode.getParentNode().getLastChild(pos));
+        int index = selectedNode.getChildren(pos).size() - 1;
+        batchAddNode(selectedNode, pos, index);
     }
 
     public void batchAddSibling() {
@@ -163,44 +180,43 @@ public class SubjectController {
 
         MapNode parentNode = selectedNode.getParentNode();
         byte pos = selectedNode.getPos();
-        double siblingX = calculateChildX(parentNode, pos);
-        MapNode firstNode = new MapNode(pos, siblingX, 0);
-        parentNode.addChildAt(parentNode.getChildren(pos).indexOf(selectedNode) + 1, firstNode, pos);
-        addNode(firstNode);
-        for (int i = 1; i < 5; i++) {
-            MapNode siblingNode = new MapNode(pos, siblingX, 0);
-            parentNode.addChildAt(parentNode.getChildren(pos).indexOf(selectedNode) + 1 + i, siblingNode, pos);
-            addNode(siblingNode);
+        int index = parentNode.getChildren(pos).indexOf(selectedNode);
+        batchAddNode(parentNode, pos, index);
+    }
+
+    private void batchAddNode(MapNode parentNode, byte pos, int index) {
+        List<MapNode> nodeList = new ArrayList<>(5);
+        double x = calculateChildX(parentNode, pos);
+
+        for (int i = 1; i <= 5; i++) {
+            MapNode node = new MapNode(pos, x, 0);
+            parentNode.addChildAt(index + i, node, pos);
+            addNode(node, false);
+            nodeList.add(node);
         }
-        setSelectedNode(firstNode, true);
+        setSelectedNode(nodeList.get(0), true);
 
-        adjustTranslateY(firstNode.getParentNode().getLastChild(pos));
+        MapNode lastNode = nodeList.get(4);
+        adjustAsync(lastNode, () -> {
+            adjustChildrenY(pos);
+            refreshLines(pos);
+            adjustTranslateY(lastNode);
+            nodeList.forEach(MapNode::addSizeListener);
+        });
+        saveLater();
     }
 
-    /**
-     * 添加节点，并设为选中节点
-     */
-    public void addNodeAndSelect(MapNode node) {
-        addNode(node);
-        setSelectedNode(node, true);
-    }
-
-    /**
-     * 给选中节点添加子节点，并且不改变选中节点
-     */
-    private void addNode(MapNode childNode, byte pos) {
-        selectedNode.addChild(childNode, pos);
-        addNode(childNode);
-    }
-
-    public void addNode(MapNode node) {
+    public void addNode(MapNode node, boolean needSelecting) {
         subject.addNode(node);
         setOnAction(node);
+        if (needSelecting) {
+            setSelectedNode(node, true);
+        }
     }
 
     private void setOnAction(MapNode node) {
         node.setOnAction(event -> {
-            final byte pos = node.getPos();
+            byte pos = node.getPos();
             switch (event) {
                 case CLICK -> {
                     setSelectedNode(node, true);
@@ -215,6 +231,7 @@ public class SubjectController {
 
                         node.addIncomingReference(srcNode);
                         node.setSubjectId(subject.getSubjectId());
+                        saveLater();
                     } else {
                         MapNode cloneNode = CloneNodeUtil.getCloneNode();
                         if (cloneNode != null) {
@@ -280,6 +297,8 @@ public class SubjectController {
                     adjustChildrenY(pos);
                     refreshLines(pos);
                 }
+
+                case CHANGE -> saveLater();
             }
         });
 
@@ -340,6 +359,7 @@ public class SubjectController {
         adjustChildrenY(pos);
         refreshLines(pos);
         adjustTranslateY(selectedNode);
+        saveLater();
     }
 
     private void pasteChild(MapNode cloneNode, byte pos) {
@@ -392,12 +412,12 @@ public class SubjectController {
 
         adjustChildrenXY(parentNode, pos);
         adjustTranslateY(cloneNode);
+        saveLater();
     }
 
     //———————————————————————————————————————————删除———————————————————————————————————————————
 
     /**
-     *
      * @param keepChildren true： 删除选中节点及其子节点
      *                     false：删除选中节点，子节点成为父节点的子节点
      */
@@ -429,6 +449,7 @@ public class SubjectController {
             adjustChildrenY(left);
             refreshLines(left);
         }
+        saveLater();
     }
 
     private void deleteEmpty(MapNode node, byte pos) {
@@ -452,12 +473,10 @@ public class SubjectController {
 
     /**
      * 删除节点
-     *
      */
     public void deleteNode(MapNode deletedNode, byte pos) {
         MapNode parent = deletedNode.getParentNode();
         changeSelectedNode(deletedNode, parent, parent.getChildren(pos));
-
         parent.removeChild(deletedNode, pos);
         subject.remove(deletedNode);
     }
@@ -611,7 +630,7 @@ public class SubjectController {
         MapNode newNode = new MapNode(pos, calculateChildX(selectedNode, pos), 0, childTextArea);
 
         selectedNode.addChild(newNode, pos);
-        addNode(newNode);
+        addNode(newNode, false);
         adjustChildrenX(selectedNode, pos);
         adjustChildrenY(pos);
         refreshLines(pos);
@@ -676,7 +695,7 @@ public class SubjectController {
         textArea.moveTo(rowIndex, columnIndex);
     }
 
-    //———————————————————————————————————————————调整———————————————————————————————————————————
+    //———————————————————————————————————————————调整节点坐标———————————————————————————————————————————
 
     public void adjustXY() {
         adjustChildrenXY(rootNode, PosConstants.RIGHT);
@@ -774,6 +793,22 @@ public class SubjectController {
     }
 
     /**
+     * 在 node 得到真正的高度后，进行调整，并添加尺寸监听
+     */
+    public void adjustAsync(MapNode node, final Runnable runnable) {
+        ChangeListener<Number> changeListener = new ChangeListener<>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> obs, Number oldVal, Number newVal) {
+                obs.removeListener(this);
+                runnable.run();
+            }
+        };
+        node.heightProperty().addListener(changeListener);
+    }
+
+    //———————————————————————————————————————————调整 subject 的位置———————————————————————————————————————————
+
+    /**
      * 调整节点与 scene 下面和上面的间距
      */
     public void adjustTranslateY(MapNode mapNode) {
@@ -827,6 +862,7 @@ public class SubjectController {
     }
 
     //———————————————————————————————————————————刷新连线———————————————————————————————————————————
+
     public void refreshLines() {
         refreshLines(PosConstants.RIGHT);
         refreshLines(PosConstants.LEFT);
@@ -915,6 +951,7 @@ public class SubjectController {
     }
 
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
+
     public void setSelectedNode(MapNode node, boolean needRecording) {
         // 保证文本框在任何情况下都能获得焦点
         node.getTextArea().requestFocus();
@@ -1052,12 +1089,14 @@ public class SubjectController {
 
         adjustChildrenY(parentNode, null, pos);
         refreshLines(pos);
+        saveLater();
     }
 
     //———————————————————————————————————————————其他———————————————————————————————————————————
 
     public void undo() {
         commandHistory.undo();
+        saveLater();
     }
 
     public void redo() {
@@ -1066,5 +1105,9 @@ public class SubjectController {
 
     public MindMap getMindMap() {
         return (MindMap) getSubject().getParent().getParent();
+    }
+
+    public void saveLater() {
+        saveUtil.saveLater(getMindMap());
     }
 }

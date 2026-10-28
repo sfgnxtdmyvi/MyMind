@@ -14,14 +14,11 @@ import myMind.common.util.MessageUtil;
 
 @Data
 public class Subject extends StackPane {
+
     private final long subjectId;
-    /**
-     * 节点层
-     */
+    // 节点层
     private final Pane nodesLayer = new Pane();
-    /**
-     * 连线层
-     */
+    // 连线层
     private final Pane linesLayerR = new Pane();
     private final Pane linesLayerL = new Pane();
 
@@ -158,4 +155,5 @@ public class Subject extends StackPane {
         linesLayerR.resizeRelocate(0, 0, width, height);
         linesLayerL.resizeRelocate(0, 0, width, height);
     }
+
 }

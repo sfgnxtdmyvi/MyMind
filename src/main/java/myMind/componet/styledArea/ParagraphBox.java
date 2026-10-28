@@ -16,7 +16,6 @@ import javafx.scene.Node;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextFlow;
-import myMind.common.constants.NodeConstants;
 import org.fxmisc.richtext.CharacterHit;
 import org.fxmisc.richtext.event.MouseStationaryHelper;
 import org.fxmisc.richtext.model.Paragraph;
@@ -254,8 +253,7 @@ class ParagraphBox<PS, SEG, S> extends Region {
     @Override
     protected double computePrefWidth(double ignoredHeight) {
         Insets insets = getInsets();
-        double width = getGraphicPrefWidth() + text.prefWidth(-1) + insets.getLeft() + insets.getRight();
-        return Math.max(width, NodeConstants.MIN_TEXTAREA_WIDTH);
+        return getGraphicPrefWidth() + text.prefWidth(-1) + insets.getLeft() + insets.getRight();
     }
 
     @Override

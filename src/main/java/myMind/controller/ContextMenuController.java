@@ -12,6 +12,7 @@ import java.util.List;
 
 
 public class ContextMenuController {
+
     @Setter
     private SubjectController subjectController;
 
@@ -103,6 +104,7 @@ public class ContextMenuController {
             if (outgoingNode.getIncomingReferences().isEmpty()) {
                 outgoingNode.setSubjectId(0);
             }
+            subjectController.saveLater();
         }
     }
 

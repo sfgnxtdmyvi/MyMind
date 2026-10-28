@@ -89,6 +89,7 @@ public class StyleWheelArcController {
         }
         textArea.setStyle(start, selection.getEnd(), styles);
         styleWheel.hide();
+        subjectController.saveLater();
     }
 
     //—————————————————————————————————————————轮盘悬浮行为—————————————————————————————————————————

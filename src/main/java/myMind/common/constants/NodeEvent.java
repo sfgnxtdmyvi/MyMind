@@ -9,4 +9,6 @@ public enum NodeEvent {
 
     ADJUST_X,
     ADJUST_Y,
+
+    CHANGE,
 }

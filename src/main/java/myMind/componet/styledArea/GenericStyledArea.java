@@ -40,6 +40,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextFlow;
 import myMind.common.constants.ConfigConstants;
+import myMind.common.constants.NodeConstants;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualFlowHit;
@@ -1914,40 +1915,23 @@ public class GenericStyledArea<PS, SEG, S> extends Region
 
     @Override
     protected double computePrefHeight(double width) {
-        if (getWidth() == 0.0) {
-            Platform.runLater(this::requestLayout);
-        } else {
-            double height = 0.0;
-            Insets in = getInsets();
-
-            for (int p = 0; p < getParagraphs().size(); p++) {
-                height += getCell(p).prefHeight(-1);
-            }
-            if (height > 0.0) {
-                return height + in.getTop() + in.getBottom();
-            }
+        double height = 0.0;
+        Insets in = getInsets();
+        for (int p = 0; p < getParagraphs().size(); p++) {
+            height += getCell(p).prefHeight(-1);
         }
-        return super.computePrefHeight(width);
+        return height + in.getTop() + in.getBottom();
     }
 
     @Override
     protected double computePrefWidth(double height) {
-        if (getHeight() == 0.0) {
-            // 高度还没确定时，延迟一次重新布局
-            Platform.runLater(this::requestLayout);
-        } else {
-            double maxWidth = 0.0;
-            Insets in = getInsets();
-            for (int p = 0; p < getParagraphs().size(); p++) {
-                double w = getCell(p).prefWidth(-1);
-                maxWidth = Math.max(maxWidth, w);
-            }
-            if (maxWidth > 0.0) {
-                maxWidth = maxWidth + in.getLeft() + in.getRight();
-                return maxWidth;
-            }
+        double maxWidth = NodeConstants.MIN_TEXTAREA_WIDTH;
+        Insets in = getInsets();
+        for (int p = 0; p < getParagraphs().size(); p++) {
+            double w = getCell(p).prefWidth(-1);
+            maxWidth = Math.max(maxWidth, w);
         }
-        return super.computePrefWidth(height);
+        return maxWidth + in.getLeft() + in.getRight();
     }
 
     @Override

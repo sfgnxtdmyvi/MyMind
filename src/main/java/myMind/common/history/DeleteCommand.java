@@ -62,6 +62,7 @@ public class DeleteCommand implements Command {
         } else {
             deleteNotRemain();
         }
+        subjectController.saveLater();
     }
 
     private void deleteNotRemain() {
@@ -108,6 +109,7 @@ public class DeleteCommand implements Command {
             subjectController.adjustChildrenY(pos);
             subjectController.refreshLines(pos);
         }
+
         subjectController.setSelectedNode(deletedNode, true);
         subject.setTranslateY(translateY);
     }

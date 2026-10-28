@@ -25,7 +25,7 @@ import myMind.common.manager.StyleWheelManager;
 import myMind.common.manager.shortcut.ShortcutManager;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MessageUtil;
-import myMind.common.util.ScheduleUtil;
+import myMind.common.util.saveUtil;
 import myMind.componet.MapNode;
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
@@ -188,6 +188,7 @@ public class MindMapController {
                         new ButtonType("不保存", ButtonBar.ButtonData.NO),
                         new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE));
                 ButtonBar.ButtonData buttonData = alert.showAndWait().get().getButtonData();
+
                 switch (buttonData) {
                     case YES -> titleBarController.saveAs();
                     case NO -> {
@@ -205,13 +206,10 @@ public class MindMapController {
                     }
                 }
             }
+
             if (Stage.getWindows().size() <= 1) {
-                ScheduleUtil.cancelSchedule();
+                saveUtil.shutdown();
                 FileUtil.addRecentFile(new File(mindMap.getFilePath()));
-            } else {
-                if (mindMap.getFilePath() != null) {
-                    ScheduleUtil.cancelSchedule(mindMap.getFilePath());
-                }
             }
 
             styleWheel.hide();

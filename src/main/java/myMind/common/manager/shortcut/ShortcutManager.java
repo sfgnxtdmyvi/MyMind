@@ -46,6 +46,7 @@ import static javafx.scene.input.KeyCombination.SHIFT_DOWN;
 import static javafx.scene.input.KeyCombination.SHORTCUT_DOWN;
 
 public class ShortcutManager {
+
     private Scene scene;
 
     private Map<KeyCombination, ShortcutBinding> keyMap;
