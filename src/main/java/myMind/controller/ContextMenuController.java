@@ -80,15 +80,6 @@ public class ContextMenuController {
     }
 
     @FXML
-    public void collapseOrExpand() {
-        if (collapseOrExpandItem.getUserData().equals("collapse")) {
-            subjectController.collapse();
-        } else {
-            subjectController.expand();
-        }
-    }
-
-    @FXML
     public void reference() {
         MapNode selectedNode = subjectController.getSelectedNode();
         MapNode outgoingNode;
@@ -108,7 +99,22 @@ public class ContextMenuController {
         }
     }
 
+    @FXML
+    public void addTemplate() {
+        TemplateController.addTemplate(subjectController.getSelectedNode());
+    }
+
+    @FXML
+    public void collapseOrExpand() {
+        if (collapseOrExpandItem.getUserData().equals("collapse")) {
+            subjectController.collapse();
+        } else {
+            subjectController.expand();
+        }
+    }
+
     public void dispose() {
         subjectController = null;
     }
+
 }

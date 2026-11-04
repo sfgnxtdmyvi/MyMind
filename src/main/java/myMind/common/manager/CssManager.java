@@ -25,7 +25,7 @@ public class CssManager {
     private static String tabStyle;
 
     static {
-        try (InputStream input = new FileInputStream(ConfigConstants.DIR_CSS_PROPERTIES)) {
+        try (InputStream input = new FileInputStream(ConfigConstants.FILE_CSS_PROPERTIES)) {
             props = new Properties();
             props.load(input);
         } catch (IOException e) {
@@ -41,7 +41,7 @@ public class CssManager {
     }
 
     public static void setCss(String style, String value) {
-        try (OutputStream output = new FileOutputStream(ConfigConstants.DIR_CSS_PROPERTIES)) {
+        try (OutputStream output = new FileOutputStream(ConfigConstants.FILE_CSS_PROPERTIES)) {
             props.setProperty(style, value);
             props.store(output, "");
         } catch (IOException e) {

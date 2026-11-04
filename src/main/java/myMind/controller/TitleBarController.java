@@ -11,7 +11,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
@@ -45,10 +44,10 @@ public class TitleBarController {
     private StringProperty titleProperty = new SimpleStringProperty();
 
     @FXML
+    private Menu recentFilesMenu;
+    @FXML
     private MenuItem collapseOrExpandItem;
 
-    @FXML
-    private Menu recentFilesMenu;
     @FXML
     private Button maximizeBtn;
     @FXML
@@ -72,11 +71,11 @@ public class TitleBarController {
 
     @FXML
     public void initialize() {
-        Tooltip.install(icon, new Tooltip("打开笔记"));
         title.textProperty().bind(titleProperty);
     }
 
     //—————————————————————————————————————————文件—————————————————————————————————————————
+
     @FXML
     public void newMindMap() {
         new MindMapController().createMindMap(new Stage(), true);
@@ -305,4 +304,5 @@ public class TitleBarController {
         this.mindMap = null;
         this.subjectController = null;
     }
+
 }

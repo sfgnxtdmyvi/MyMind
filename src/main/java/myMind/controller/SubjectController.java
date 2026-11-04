@@ -19,7 +19,7 @@ import myMind.common.manager.ReferenceManager;
 import myMind.common.util.CloneNodeUtil;
 import myMind.common.util.FormatUtil;
 import myMind.common.util.IdGenerator;
-import myMind.common.util.saveUtil;
+import myMind.common.util.SaveUtil;
 import myMind.componet.MapNode;
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
@@ -1108,6 +1108,6 @@ public class SubjectController {
     }
 
     public void saveLater() {
-        saveUtil.saveLater(getMindMap());
+        SaveUtil.saveLater(getMindMap());
     }
 }

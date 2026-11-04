@@ -60,20 +60,31 @@
         </MenuItem>
         <SeparatorMenuItem/>
 
-        <MenuItem fx:id="collapseOrExpandItem" onAction="#collapseOrExpand" userData="collapse">
-            <graphic>
-                <Label text="收起 ▲">
-                    <tooltip>
-                        <Tooltip text="Alt + -"/>
-                    </tooltip>
-                </Label>
-            </graphic>
-        </MenuItem>
         <MenuItem fx:id="referenceItem" onAction="#reference">
             <graphic>
                 <Label text="引用">
                     <tooltip>
                         <Tooltip text="引用其他节点"/>
+                    </tooltip>
+                </Label>
+            </graphic>
+        </MenuItem>
+        <MenuItem onAction="#addTemplate">
+            <graphic>
+                <Label text="添加为模板">
+                    <tooltip>
+                        <Tooltip text="可以在任何地方使用此节点"/>
+                    </tooltip>
+                </Label>
+            </graphic>
+        </MenuItem>
+        <SeparatorMenuItem/>
+
+        <MenuItem fx:id="collapseOrExpandItem" onAction="#collapseOrExpand" userData="collapse">
+            <graphic>
+                <Label text="收起 ▲">
+                    <tooltip>
+                        <Tooltip text="Alt + -"/>
                     </tooltip>
                 </Label>
             </graphic>

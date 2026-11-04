@@ -25,7 +25,7 @@ import myMind.common.manager.StyleWheelManager;
 import myMind.common.manager.shortcut.ShortcutManager;
 import myMind.common.util.FileUtil;
 import myMind.common.util.MessageUtil;
-import myMind.common.util.saveUtil;
+import myMind.common.util.SaveUtil;
 import myMind.componet.MapNode;
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
@@ -176,7 +176,7 @@ public class MindMapController {
 
         stage.setOnCloseRequest(event -> {
             if (mindMap.getFilePath() != null) {
-                FileUtil.saveFile(new File(mindMap.getFilePath()), mindMap, false);
+                SaveUtil.saveNow(mindMap);
             }
             // 未保存且不为空
             else if (!mindMap.isEmpty()) {
@@ -208,8 +208,11 @@ public class MindMapController {
             }
 
             if (Stage.getWindows().size() <= 1) {
-                saveUtil.shutdown();
-                FileUtil.addRecentFile(new File(mindMap.getFilePath()));
+                SaveUtil.shutdown();
+                // 关闭导图且不保存时，filePath 为 null
+                if (mindMap.getFilePath() != null) {
+                    FileUtil.addRecentFile(new File(mindMap.getFilePath()));
+                }
             }
 
             styleWheel.hide();
@@ -242,15 +245,14 @@ public class MindMapController {
                 SubjectController subjectController = (SubjectController) tab.getUserData();
                 ObservableList<Node> children = subjectController.getSubject().getNodesLayer().getChildren();
                 for (Node child : children) {
-                    MapNode node = (MapNode) child;
-                    node.getTextArea().clear();
-                    node.getTextArea().dispose();
+                    ((MapNode) child).getTextArea().dispose();
                 }
                 subjectController.getSubject().getNodesLayer().getChildren().removeAll();
                 subjectController.getSubject().getLinesLayerR().getChildren().removeAll();
                 subjectController.getSubject().getLinesLayerL().getChildren().removeAll();
             }
             tabs.clear();
+
             mindMap = null;
             root = null;
             scene = null;

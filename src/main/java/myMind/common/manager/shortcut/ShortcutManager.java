@@ -142,7 +142,7 @@ public class ShortcutManager {
             MessageUtil.showMessage("快捷键已存在");
         } else {
             List<String> shortcutList = new ArrayList<>();
-            File file = new File(ConfigConstants.DIR_SHORTCUTS);
+            File file = new File(ConfigConstants.FILE_SHORTCUTS);
             // 如果存在，则替换，否则添加
             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                 String line;
@@ -177,7 +177,7 @@ public class ShortcutManager {
     }
 
     public void load() {
-        try (BufferedReader br = new BufferedReader(new FileReader(ConfigConstants.DIR_SHORTCUTS))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(ConfigConstants.FILE_SHORTCUTS))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] split = line.split("=");

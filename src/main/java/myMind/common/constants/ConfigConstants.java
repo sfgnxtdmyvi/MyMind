@@ -9,9 +9,12 @@ public class ConfigConstants {
     public static final String DIR_FILES;
     public static final String DIR_IMAGE;
     public static final String DIR_DELETE_IMAGES;
-    public static final String DIR_RECENT_FILES;
-    public static final String DIR_SHORTCUTS;
-    public static final String DIR_CSS_PROPERTIES;
+
+    public static final String FILE_CSS_PROPERTIES;
+
+    public static final String FILE_RECENT_FILES;
+    public static final String FILE_SHORTCUTS;
+    public static final String FILE_TEMPLATES;
 
     public static final double SCALE = Screen.getPrimary().getOutputScaleX();
 
@@ -20,8 +23,11 @@ public class ConfigConstants {
         DIR_FILES = config.getString("dir.files");
         DIR_IMAGE = config.getString("dir.images");
         DIR_DELETE_IMAGES = config.getString("dir.deleteImages");
-        DIR_RECENT_FILES = config.getString("dir.recent_files");
-        DIR_SHORTCUTS = config.getString("dir.shortcuts");
-        DIR_CSS_PROPERTIES = config.getString("dir.css.properties");
+
+        FILE_CSS_PROPERTIES = config.getString("file.css.properties");
+
+        FILE_RECENT_FILES = config.getString("file.recent_files");
+        FILE_SHORTCUTS = config.getString("file.shortcuts");
+        FILE_TEMPLATES = config.getString("file.templates");
     }
 }

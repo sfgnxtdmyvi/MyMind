@@ -13,6 +13,7 @@ import javafx.scene.input.ScrollEvent;
 import lombok.Data;
 import myMind.common.Location;
 import myMind.common.constants.SizeConstants;
+import myMind.common.util.SaveUtil;
 import myMind.componet.styledArea.StyleClassedTextArea;
 import myMind.controller.StyleWheelArcController;
 import myMind.controller.SubjectController;
@@ -34,10 +35,10 @@ public class MindMap extends TabPane {
     private boolean needRecording = true;
 
     public MindMap(Boolean addSubject) {
-        //关闭按钮的显示策略
-        //SELECTED_TAB：只在当前被选中的标签页显示
-        //ALL_TABS：在所有标签页上都显示
-        //UNAVAILABLE：完全不显示
+        // 关闭按钮的显示策略
+        // SELECTED_TAB：只在当前被选中的标签页显示
+        // ALL_TABS：在所有标签页上都显示
+        // UNAVAILABLE：完全不显示
         setTabClosingPolicy(TabClosingPolicy.SELECTED_TAB);
         setTabDragPolicy(TabDragPolicy.REORDER);
         getStyleClass().addAll("workspace");
@@ -219,6 +220,7 @@ public class MindMap extends TabPane {
             if (result.isEmpty() || result.get() != ButtonType.OK) {
                 event.consume();
             }
+            SaveUtil.saveLater(this);
         });
 
         tab.setContent(subject);

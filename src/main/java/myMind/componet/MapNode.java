@@ -263,9 +263,8 @@ public class MapNode extends StackPane {
             }
         });
 
-        textArea.textProperty().addListener((obs, oldVal, newVal) -> {
-            onAction.accept(NodeEvent.CHANGE);
-        });
+        textArea.textProperty().addListener(
+                (obs, oldVal, newVal) -> onAction.accept(NodeEvent.CHANGE));
 
         textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {

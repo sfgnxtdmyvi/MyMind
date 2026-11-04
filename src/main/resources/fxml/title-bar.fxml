@@ -64,6 +64,8 @@
                       onAction="#collapseOrExpand" userData="collapse" accelerator="Ctrl+Shift+-"/>
             <MenuItem onAction="#change" text="样式"/>
         </Menu>
+
+        <fx:include source="tmepate-menu.fxml" />
     </MenuBar>
 
     <!-- 弹性占位符：占据所有剩余空间，把 topRight 推到右侧 -->

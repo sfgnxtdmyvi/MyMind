@@ -1,5 +1,7 @@
 package myMind.common.util;
 
+import java.util.concurrent.locks.LockSupport;
+
 public class IdGenerator {
 
     // 序列号位数
@@ -19,15 +21,32 @@ public class IdGenerator {
 
     public static synchronized long nextId() {
         long timestamp = System.currentTimeMillis();
+
+        // 时钟回拨
+        if (timestamp < lastTimestamp) {
+            // 回拨幅度
+            long offset = lastTimestamp - timestamp;
+
+            if (offset <= 5) {
+                // 轻微(<5ms)：短暂自旋等待，精度高
+                timestamp = waitUntilNextMillis(lastTimestamp);
+            } else if (offset <= 100) {
+                // 中度(5~100ms)：让出CPU，parkNanos等待
+                LockSupport.parkNanos(offset * 1_000_000L);
+                timestamp = System.currentTimeMillis();
+            } else {
+                // 严重(>100ms)：抛异常/报警，拒绝服务
+                throw new RuntimeException("Clock moved backwards by " + offset + "ms");
+            }
+        }
+
         // 同一毫秒内，序列号递增
         if (timestamp == lastTimestamp) {
             // 当 sequence 比 MAX_SEQUENCE 大1时，结果为0，即序列号用尽
             sequence = (sequence + 1) & MAX_SEQUENCE;
             if (sequence == 0L) {
                 // 等待下一毫秒
-                while (timestamp <= lastTimestamp) {
-                    timestamp = System.currentTimeMillis();
-                }
+                timestamp = waitUntilNextMillis(lastTimestamp);
             }
         } else {
             sequence = 0L;
@@ -36,6 +55,16 @@ public class IdGenerator {
 
         // (时间戳 - 起始时间) << 序列号位数 | 序列号
         return ((timestamp - EPOCH) << SEQUENCE_BITS) | sequence;
+    }
+
+    // 等待时间最多只有 1 毫秒，sleep 精度不够，本该等 1ms 却可能睡 1~15ms
+    // sleep 会触发线程上下文切换，开销反而更大
+    private static long waitUntilNextMillis(long lastTimestamp) {
+        long timestamp = System.currentTimeMillis();
+        while (timestamp <= lastTimestamp) {
+            timestamp = System.currentTimeMillis();
+        }
+        return timestamp;
     }
 
 }
