@@ -95,7 +95,7 @@ public class MapNode extends StackPane {
 
     public MapNode(byte pos, long id, StyleClassedTextArea textArea) {
         this.pos = pos;
-        initChildren(pos);
+        initChildren();
         nodeId = id;
 
         this.textArea = textArea;
@@ -119,7 +119,7 @@ public class MapNode extends StackPane {
         addListener();
     }
 
-    private void initChildren(byte pos) {
+    private void initChildren() {
         if (pos != PosConstants.LEFT) {
             childrenR = new ArrayList<>();
         }
@@ -183,7 +183,7 @@ public class MapNode extends StackPane {
 
     public void setImage(String imageName, double imageWidth, double imageHeight) {
         buildImageContainer();
-        imageView.setImage(new Image(new File(ConfigConstants.DIR_IMAGE + imageName).toURI().toString()));
+        imageView.setImage(new Image(new File(ConfigConstants.DIR_IMAGES + imageName).toURI().toString()));
         imageView.setFitWidth(imageWidth);
         imageView.setFitHeight(imageHeight);
         ratio = imageWidth / imageHeight;
@@ -625,13 +625,12 @@ public class MapNode extends StackPane {
 
     /**
      * 改变方向到指定索引
-     *
      * @param index -1表示添加到最后
      */
     public void transPosAt(int index, byte srcPos, byte targetPos) {
         // 父节点粘到选中节点的上面，子节点继续跟着父节点
         pos = targetPos;
-        initChildren(pos);
+        initChildren();
         parentNode.addChildAt(index, this, targetPos);
         transBtn(targetPos);
 

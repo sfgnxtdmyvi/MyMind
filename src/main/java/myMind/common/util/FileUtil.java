@@ -373,7 +373,7 @@ public class FileUtil {
         if (imageName == null) {
             imageName = System.currentTimeMillis() + ".png";
         }
-        String imagePath = ConfigConstants.DIR_IMAGE + imageName;
+        String imagePath = ConfigConstants.DIR_IMAGES + imageName;
 
         File output = new File(imagePath);
         try {
@@ -385,7 +385,7 @@ public class FileUtil {
     }
 
     public static void deleteImage(String imageName) {
-        File file = new File(ConfigConstants.DIR_IMAGE + imageName);
+        File file = new File(ConfigConstants.DIR_IMAGES + imageName);
         if (file.exists()) {
             file.delete();
         }
@@ -402,7 +402,7 @@ public class FileUtil {
         addFileImage(new File(ConfigConstants.DIR_FILES), fileNameSet);
 
         int count = 0;
-        File dirImage = new File(ConfigConstants.DIR_IMAGE);
+        File dirImage = new File(ConfigConstants.DIR_IMAGES);
         for (File file : dirImage.listFiles()) {
             if (!fileNameSet.contains(file.getName())) {
                 try {

@@ -7,7 +7,7 @@ import java.util.ResourceBundle;
 public class ConfigConstants {
 
     public static final String DIR_FILES;
-    public static final String DIR_IMAGE;
+    public static final String DIR_IMAGES;
     public static final String DIR_DELETE_IMAGES;
 
     public static final String FILE_CSS_PROPERTIES;
@@ -21,7 +21,7 @@ public class ConfigConstants {
     static {
         ResourceBundle config = ResourceBundle.getBundle("properties/config");
         DIR_FILES = config.getString("dir.files");
-        DIR_IMAGE = config.getString("dir.images");
+        DIR_IMAGES = config.getString("dir.images");
         DIR_DELETE_IMAGES = config.getString("dir.deleteImages");
 
         FILE_CSS_PROPERTIES = config.getString("file.css.properties");

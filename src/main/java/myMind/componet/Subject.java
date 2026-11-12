@@ -33,7 +33,7 @@ public class Subject extends StackPane {
         nodesLayer.setMouseTransparent(false);
         getChildren().addAll(linesLayerL, linesLayerR, nodesLayer);
 
-        // 阻止焦点从 textArea 转移出去，导致清空选区，进行无法唤出样式轮盘
+        // 阻止焦点从 textArea 转移出去，导致清空选区，进而无法唤出样式轮盘
         // 不能用空处理器，如果事件冒泡给 TabPane，在 setOnMousePressed 之前就会获取焦点
         setOnMousePressed(e -> {
             //PRIMARY = 左键

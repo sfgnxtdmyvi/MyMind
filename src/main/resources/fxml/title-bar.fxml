@@ -14,6 +14,7 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="myMind.controller.TitleBarController"
       onMouseClicked="#clickBar"
+      fx:id="titleBar"
       styleClass="title-bar">
 
     <!-- 图标、标题 -->

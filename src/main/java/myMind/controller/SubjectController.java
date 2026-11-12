@@ -45,6 +45,10 @@ public class SubjectController {
 
     private Runnable onSelect;
 
+    public SubjectController() {
+        subject = new Subject(0);
+    }
+
     public SubjectController(Runnable onSelect) {
         this(new MapNode(PosConstants.MIDDLE), IdGenerator.nextId(), onSelect);
     }
@@ -214,7 +218,7 @@ public class SubjectController {
         }
     }
 
-    private void setOnAction(MapNode node) {
+    public void setOnAction(MapNode node) {
         node.setOnAction(event -> {
             byte pos = node.getPos();
             switch (event) {
@@ -306,7 +310,7 @@ public class SubjectController {
         node.setSetSubjectTranslateX(this::setSubjectTranslateX);
     }
 
-    private void setOnActionChildren(MapNode cloneNode, byte pos) {
+    public void setOnActionChildren(MapNode cloneNode, byte pos) {
         for (MapNode node : cloneNode.getChildren(pos)) {
             setOnAction(node);
             setOnActionChildren(node, pos);
@@ -631,9 +635,12 @@ public class SubjectController {
 
         selectedNode.addChild(newNode, pos);
         addNode(newNode, false);
-        adjustChildrenX(selectedNode, pos);
-        adjustChildrenY(pos);
-        refreshLines(pos);
+        adjustAsync(newNode, () -> {
+            adjustChildrenX(selectedNode, pos);
+            adjustChildrenY(pos);
+            refreshLines(pos);
+            newNode.addSizeListener();
+        });
     }
 
     /**

@@ -36,6 +36,10 @@ import java.util.LinkedList;
 
 @Setter
 public class TitleBarController {
+
+    @FXML
+    private HBox titleBar;
+
     @FXML
     @Getter
     private ImageView icon;
@@ -50,8 +54,6 @@ public class TitleBarController {
 
     @FXML
     private Button maximizeBtn;
-    @FXML
-    private HBox titleBar;
 
     private AnchorPane root;
     private Stage stage;
