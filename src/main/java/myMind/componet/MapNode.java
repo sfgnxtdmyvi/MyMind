@@ -21,7 +21,7 @@ import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.NodeConstants;
 import myMind.common.constants.NodeEvent;
 import myMind.common.constants.PosConstants;
-import myMind.common.util.FileUtil;
+import myMind.common.util.IOUtil;
 import myMind.common.util.IdGenerator;
 import myMind.common.util.MessageUtil;
 import myMind.componet.styledArea.StyleClassedTextArea;
@@ -252,7 +252,7 @@ public class MapNode extends StackPane {
                         imageView.setFitWidth(imageWidth / ConfigConstants.SCALE);
                         imageView.setFitHeight(imageHeight / ConfigConstants.SCALE);
                         ratio = imageWidth / imageHeight;
-                        imageName = FileUtil.saveImage(bufferedImage, imageName);
+                        imageName = IOUtil.saveImage(bufferedImage, imageName);
                         onAction.accept(NodeEvent.CHANGE);
                     } catch (UnsupportedFlavorException | IOException ex) {
                         MessageUtil.showMessage("粘贴失败：" + ex.getMessage());
@@ -367,7 +367,7 @@ public class MapNode extends StackPane {
             imageView.setImage(null);
             imageContainer.setVisible(false);
             imageContainer.setManaged(false);
-            FileUtil.deleteImage(imageName);
+            IOUtil.deleteImage(imageName);
             imageName = null;
             textArea.setVisible(true);
             onAction.accept(NodeEvent.CHANGE);

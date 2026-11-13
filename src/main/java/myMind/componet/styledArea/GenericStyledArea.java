@@ -1046,7 +1046,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                     return getCaretBounds()
                             .or(() -> getCharacterBoundsOnScreen(offset, offset))
                             .map(cb -> new Point2D((cb.getMaxX() - 5) * ConfigConstants.SCALE, cb.getMaxY() * ConfigConstants.SCALE))
-                            .orElseGet(() -> new Point2D(10, 10));
+                            .orElse(new Point2D(10, 10));
                 }
 
                 @Override

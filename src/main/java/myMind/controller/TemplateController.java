@@ -1,6 +1,7 @@
 package myMind.controller;
 
 import com.alibaba.fastjson2.JSONObject;
+import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
@@ -14,28 +15,37 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CustomMenuItem;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
 import myMind.common.constants.ConfigConstants;
-import myMind.common.constants.FileConstants;
+import myMind.common.constants.IOConstants;
 import myMind.common.constants.PosConstants;
+import myMind.common.constants.StyleSheetConstants;
 import myMind.common.constants.TemplateConstants;
 import myMind.common.pojo.Template;
 import myMind.common.util.CloneNodeUtil;
-import myMind.common.util.FileUtil;
+import myMind.common.util.IOUtil;
+import myMind.common.util.MessageUtil;
 import myMind.componet.MapNode;
 import myMind.componet.Subject;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class TemplateController {
@@ -43,31 +53,27 @@ public class TemplateController {
     public static final ListProperty<Template> templates =
             new SimpleListProperty<>(FXCollections.observableList(new ArrayList<>()));
 
-    private static final List<String> STYLE_SHEETS = List.of(
-            MindMapController.class.getResource("/css/base.css").toExternalForm(),
-            MindMapController.class.getResource("/css/node.css").toExternalForm()
-    );
-
     @FXML
     public Menu templatesMenu;
 
+    static {
+        File file = new File(ConfigConstants.FILE_TEMPLATES);
+        JSONObject templateJson = IOUtil.readJson(file);
+        for (Map.Entry<String, Object> entry : templateJson.entrySet()) {
+            JSONObject jsonObject = (JSONObject) entry.getValue();
+            MapNode parentNode = IOUtil.buildNode(jsonObject, PosConstants.RIGHT);
+            IOUtil.loadChild(jsonObject.getJSONArray(IOConstants.CHILDREN), parentNode, PosConstants.RIGHT);
+            Template template = new Template(parentNode,
+                    entry.getKey(),
+                    jsonObject.getString(TemplateConstants.PREVIEW),
+                    jsonObject.getDoubleValue(TemplateConstants.RATIO));
+            templates.add(template);
+        }
+    }
+
     @FXML
     public void initialize() {
-        // 加载
         File file = new File(ConfigConstants.FILE_TEMPLATES);
-        if (templates.isEmpty()) {
-            JSONObject templateJson = FileUtil.readJson(file);
-            for (Map.Entry<String, Object> entry : templateJson.entrySet()) {
-                JSONObject jsonObject = (JSONObject) entry.getValue();
-                MapNode parentNode = FileUtil.buildNode(jsonObject, PosConstants.RIGHT);
-                FileUtil.loadChild(jsonObject.getJSONArray(FileConstants.CHILDREN), parentNode, PosConstants.RIGHT);
-                Template template = new Template(parentNode,
-                        entry.getKey(),
-                        jsonObject.getString(TemplateConstants.PREVIEW),
-                        jsonObject.getDoubleValue(TemplateConstants.RATIO));
-                templates.add(template);
-            }
-        }
         refresh();
 
         // 当唯一数据源变动时，更新所有导图
@@ -78,13 +84,13 @@ public class TemplateController {
             JSONObject toSaveJson = new JSONObject();
             for (Template template : templates) {
                 MapNode mapNode = template.getMapNode();
-                JSONObject parentJson = FileUtil.saveNode(mapNode);
-                FileUtil.saveChildren(parentJson, mapNode.getChildrenR(), FileConstants.CHILDREN, PosConstants.RIGHT);
+                JSONObject parentJson = IOUtil.saveNode(mapNode);
+                IOUtil.saveChildren(parentJson, mapNode.getChildrenR(), IOConstants.CHILDREN, PosConstants.RIGHT);
                 parentJson.put(TemplateConstants.PREVIEW, template.getPreview());
                 parentJson.put(TemplateConstants.RATIO, template.getRatio());
                 toSaveJson.put(template.getName(), parentJson);
             }
-            FileUtil.saveJson(file, toSaveJson, false);
+            IOUtil.saveJson(file, toSaveJson, false);
         });
     }
 
@@ -94,15 +100,12 @@ public class TemplateController {
 
         if (templates.isEmpty()) {
             items.add(new MenuItem("无模板"));
-            templatesMenu.setUserData("");
             return;
-        } else if (templatesMenu.getUserData() != null) {
-            items.remove(0);
-            templatesMenu.setUserData(null);
         }
 
         for (int i = 0; i < templates.size(); i++) {
-            Template template = templates.get(i);
+            int index = i;
+            Template template = templates.get(index);
             Menu templateMenu = new Menu(template.getName());
             templateMenu.setOnAction((event) -> {
                 CloneNodeUtil.setCloneNode(template.getMapNode().clone());
@@ -113,19 +116,18 @@ public class TemplateController {
             File imageFile = new File(ConfigConstants.DIR_IMAGES + preview);
             // 转换为 file: 开头的合法 URI
             String imageUrl = imageFile.toURI().toString();
-            Menu previewMenu = buildPreviewMenu(templateMenu, imageUrl, template.getRatio(), items.size() + 1);
+            Menu previewMenu = buildPreviewMenu(templateMenu, imageUrl, template.getRatio(), index + 1);
 
             MenuItem deleteItem = new MenuItem("删除");
             deleteItem.setOnAction((event -> {
-                items.remove(templateMenu);
-                templates.remove(template);
-                FileUtil.deleteImage(preview);
+                templates.remove(index);
+                IOUtil.deleteImage(preview);
                 CloneNodeUtil.setCloneNode(null);
             }));
 
             MenuItem renameItem = new MenuItem("重命名");
             renameItem.setOnAction((event -> {
-
+                renameTemplate(template, index);
                 CloneNodeUtil.setCloneNode(null);
             }));
 
@@ -189,7 +191,7 @@ public class TemplateController {
 
         Pane pane = new Pane(subject);
         Scene scene = new Scene(pane);
-        scene.getStylesheets().addAll(STYLE_SHEETS);
+        scene.getStylesheets().addAll(StyleSheetConstants.SNAPSHOT);
 
         byte pos = mapNode.getPos();
         subjectController.setOnAction(mapNode);
@@ -202,7 +204,7 @@ public class TemplateController {
         double ratio = Math.min(TemplateConstants.WIDTH / image.getWidth(), TemplateConstants.HEIGHT / image.getHeight());
         ratio = Math.floor(ratio * 100) / 100;
         ratio = Math.min(ratio, 0.5);
-        return new Template(FileUtil.saveImage(bufferedImage, null), ratio);
+        return new Template(IOUtil.saveImage(bufferedImage, null), ratio);
     }
 
     /**
@@ -235,6 +237,51 @@ public class TemplateController {
         SnapshotParameters params = new SnapshotParameters();
         params.setViewport(viewport);
         return params;
+    }
+
+    private void renameTemplate(Template template, int index) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        DialogPane dialogPane = dialog.getDialogPane();
+        Scene scene = dialogPane.getScene();
+        scene.getStylesheets().add(StyleSheetConstants.DIALOG);
+        dialogPane.setPrefWidth(300);
+        dialogPane.setPrefHeight(200);
+
+        ((Stage) scene.getWindow()).getIcons().add(IOConstants.ICON);
+        dialog.setTitle("重命名");
+
+        Label label = new Label("新名称：");
+        Font font = new Font(14);
+        label.setFont(font);
+        TextField textField = new TextField(template.getName());
+        textField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.length() > 10) {
+                textField.setText(newVal.substring(0, 10));
+                MessageUtil.showMessage("最长为10个字符");
+            }
+        });
+        textField.setFont(font);
+        Platform.runLater(textField::requestFocus);
+        VBox vBox = new VBox(17, label, textField);
+        dialogPane.setContent(vBox);
+
+        dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.showAndWait().ifPresent(input -> {
+            if (input != ButtonType.OK) {
+                return;
+            }
+            String newName = textField.getText().trim();
+            if (newName.isEmpty() || newName.equals(template.getName())) return;
+
+            boolean exists = templates.stream().anyMatch(t -> t.getName().equals(newName));
+            if (exists) {
+                MessageUtil.showMessage("名称已存在");
+                return;
+            }
+
+            template.setName(newName);
+            templates.set(index, template);
+        });
     }
 
 }

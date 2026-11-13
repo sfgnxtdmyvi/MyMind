@@ -10,7 +10,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.Getter;
 import myMind.common.constants.ConfigConstants;
-import myMind.common.constants.FileConstants;
+import myMind.common.constants.IOConstants;
 import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.manager.ReferenceManager;
@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class FileUtil {
+public class IOUtil {
 
     @Getter
     private static final LinkedList<String> recentFiles;
@@ -50,7 +50,7 @@ public class FileUtil {
         FileChooser fc = new FileChooser();
         fc.setInitialDirectory(new File(ConfigConstants.DIR_FILES));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MyMind Files", "*.mm"));
-        if (type == FileConstants.OPEN_TYPE) {
+        if (type == IOConstants.OPEN_TYPE) {
             return fc.showOpenDialog(mindMap.getScene().getWindow());
         } else {
             return fc.showSaveDialog(mindMap.getScene().getWindow());
@@ -86,8 +86,8 @@ public class FileUtil {
             SubjectController subjectController = mindMap.getSubjectController();
 
             // 加载子节点
-            loadChild(subject.getJSONArray(FileConstants.CHILDREN_R), rootNode, subjectController, PosConstants.RIGHT);
-            loadChild(subject.getJSONArray(FileConstants.CHILDREN_L), rootNode, subjectController, PosConstants.LEFT);
+            loadChild(subject.getJSONArray(IOConstants.CHILDREN_R), rootNode, subjectController, PosConstants.RIGHT);
+            loadChild(subject.getJSONArray(IOConstants.CHILDREN_L), rootNode, subjectController, PosConstants.LEFT);
 
             // 等得到真正的高度
             ObservableList<Node> children = subjectController.getSubject().getNodesLayer().getChildren();
@@ -115,7 +115,7 @@ public class FileUtil {
             parentNode.addChild(node, pos);
             subjectController.addNode(node, false);
 
-            loadChild(childrenJson.getJSONArray(FileConstants.CHILDREN), node, subjectController, pos);
+            loadChild(childrenJson.getJSONArray(IOConstants.CHILDREN), node, subjectController, pos);
         }
     }
 
@@ -129,23 +129,23 @@ public class FileUtil {
             MapNode node = buildNode(childrenJson, pos);
             parentNode.addChild(node, pos);
 
-            loadChild(childrenJson.getJSONArray(FileConstants.CHILDREN), node, pos);
+            loadChild(childrenJson.getJSONArray(IOConstants.CHILDREN), node, pos);
         }
     }
 
     public static MapNode buildNode(JSONObject json, byte pos) {
-        MapNode node = new MapNode(pos, json.getLong(FileConstants.ID), buildTextArea(json));
+        MapNode node = new MapNode(pos, json.getLong(IOConstants.ID), buildTextArea(json));
 
-        String imageName = json.getString(FileConstants.IMAGE_NAME);
+        String imageName = json.getString(IOConstants.IMAGE_NAME);
         if (imageName != null) {
-            node.setImage(imageName, json.getDouble(FileConstants.IMAGE_WIDTH), json.getDouble(FileConstants.IMAGE_HEIGHT));
+            node.setImage(imageName, json.getDouble(IOConstants.IMAGE_WIDTH), json.getDouble(IOConstants.IMAGE_HEIGHT));
         }
 
-        if (json.getLong(FileConstants.OUTGOING_REFERENCE) != null) {
-            ReferenceManager.addIncomingReference(node, json.getLong(FileConstants.OUTGOING_REFERENCE));
+        if (json.getLong(IOConstants.OUTGOING_REFERENCE) != null) {
+            ReferenceManager.addIncomingReference(node, json.getLong(IOConstants.OUTGOING_REFERENCE));
         }
-        if (json.getLong(FileConstants.SUBJECT_ID) != null) {
-            node.setSubjectId(json.getLong(FileConstants.SUBJECT_ID));
+        if (json.getLong(IOConstants.SUBJECT_ID) != null) {
+            node.setSubjectId(json.getLong(IOConstants.SUBJECT_ID));
             ReferenceManager.addOutgoingReference(node);
         }
 
@@ -156,7 +156,7 @@ public class FileUtil {
         // 带文本的只读文档
         ReadOnlyStyledDocument<Collection<String>, String, Collection<String>> initialDoc =
                 ReadOnlyStyledDocument.fromString(
-                        json.getString(FileConstants.TEXT),
+                        json.getString(IOConstants.TEXT),
                         Collections.emptyList(),
                         Collections.emptyList(),
                         SegmentOps.styledTextOps((s1, s2) -> Optional.empty())
@@ -166,17 +166,17 @@ public class FileUtil {
                 new SimpleEditableStyledDocument<>(initialDoc);
 
         // 设置样式
-        JSONArray styles = json.getJSONArray(FileConstants.STYLES);
+        JSONArray styles = json.getJSONArray(IOConstants.STYLES);
         if (styles != null) {
             for (int i = 0; i < styles.size(); i++) {
                 JSONObject styleItem = styles.getJSONObject(i);
-                JSONArray styleArray = styleItem.getJSONArray(FileConstants.STYLE);
+                JSONArray styleArray = styleItem.getJSONArray(IOConstants.STYLE);
                 List<String> styleList = new ArrayList<>();
                 for (int j = 0; j < styleArray.size(); j++) {
                     styleList.add(styleArray.getString(j));
                 }
-                doc.setStyle(styleItem.getIntValue(FileConstants.START),
-                        styleItem.getIntValue(FileConstants.END),
+                doc.setStyle(styleItem.getIntValue(IOConstants.START),
+                        styleItem.getIntValue(IOConstants.END),
                         styleList);
             }
         }
@@ -212,7 +212,7 @@ public class FileUtil {
      * 保存到新文件
      */
     public static void saveAs(MindMap mindMap) {
-        File file = openFileChooser(FileConstants.SAVE_TYPE, mindMap);
+        File file = openFileChooser(IOConstants.SAVE_TYPE, mindMap);
         // 取消时，file 为 null
         if (file != null) {
             saveFile(file, mindMap, true);
@@ -237,8 +237,8 @@ public class FileUtil {
             MapNode rootNode = subjectController.getRootNode();
 
             JSONObject subjectJson = saveNode(rootNode);
-            saveChildren(subjectJson, rootNode.getChildrenR(), FileConstants.CHILDREN_R, PosConstants.RIGHT);
-            saveChildren(subjectJson, rootNode.getChildrenL(), FileConstants.CHILDREN_L, PosConstants.LEFT);
+            saveChildren(subjectJson, rootNode.getChildrenR(), IOConstants.CHILDREN_R, PosConstants.RIGHT);
+            saveChildren(subjectJson, rootNode.getChildrenL(), IOConstants.CHILDREN_L, PosConstants.LEFT);
 
             subjects.put(String.valueOf(subjectController.getSubject().getSubjectId()), subjectJson);
         }
@@ -254,39 +254,39 @@ public class FileUtil {
             JSONObject childJson = saveNode(node);
             childrenJson.add(childJson);
 
-            saveChildren(childJson, node.getChildren(pos), FileConstants.CHILDREN, pos);
+            saveChildren(childJson, node.getChildren(pos), IOConstants.CHILDREN, pos);
         }
     }
 
     public static JSONObject saveNode(MapNode node) {
         JSONObject json = new JSONObject();
-        json.put(FileConstants.ID, node.getNodeId());
+        json.put(IOConstants.ID, node.getNodeId());
         // 文本
         StyleClassedTextArea textArea = node.getTextArea();
         String text = textArea.getText();
-        json.put(FileConstants.TEXT, text);
+        json.put(IOConstants.TEXT, text);
         // 样式
         if (!text.isEmpty()) {
             JSONArray styles = saveStyles(textArea);
             if (!styles.isEmpty()) {
-                json.put(FileConstants.STYLES, styles);
+                json.put(IOConstants.STYLES, styles);
             }
         }
 
         // 图片
         if (node.getImageName() != null) {
-            json.put(FileConstants.IMAGE_NAME, node.getImageName());
+            json.put(IOConstants.IMAGE_NAME, node.getImageName());
             ImageView image = node.getImageView();
-            json.put(FileConstants.IMAGE_WIDTH, image.getFitWidth());
-            json.put(FileConstants.IMAGE_HEIGHT, image.getFitHeight());
+            json.put(IOConstants.IMAGE_WIDTH, image.getFitWidth());
+            json.put(IOConstants.IMAGE_HEIGHT, image.getFitHeight());
         }
 
         // 引用
         if (node.getOutgoingReference() != null) {
-            json.put(FileConstants.OUTGOING_REFERENCE, node.getOutgoingReference().getNodeId());
+            json.put(IOConstants.OUTGOING_REFERENCE, node.getOutgoingReference().getNodeId());
         }
         if (node.getSubjectId() != 0) {
-            json.put(FileConstants.SUBJECT_ID, node.getSubjectId());
+            json.put(IOConstants.SUBJECT_ID, node.getSubjectId());
         }
 
         return json;
@@ -305,9 +305,9 @@ public class FileUtil {
             if (!currentStyles.equals(lastStyles)) {
                 if (!lastStyles.isEmpty()) {
                     JSONObject styleItem = new JSONObject();
-                    styleItem.put(FileConstants.START, start);
-                    styleItem.put(FileConstants.END, i);
-                    styleItem.put(FileConstants.STYLE, lastStyles);
+                    styleItem.put(IOConstants.START, start);
+                    styleItem.put(IOConstants.END, i);
+                    styleItem.put(IOConstants.STYLE, lastStyles);
 
                     styles.add(styleItem);
                 }
@@ -320,9 +320,9 @@ public class FileUtil {
         // 由于最后一段不会变化，额外保存
         if (!lastStyles.isEmpty()) {
             JSONObject styleItem = new JSONObject();
-            styleItem.put(FileConstants.START, start);
-            styleItem.put(FileConstants.END, length);
-            styleItem.put(FileConstants.STYLE, lastStyles);
+            styleItem.put(IOConstants.START, start);
+            styleItem.put(IOConstants.END, length);
+            styleItem.put(IOConstants.STYLE, lastStyles);
 
             styles.add(styleItem);
         }
@@ -431,8 +431,8 @@ public class FileUtil {
                 for (Object value : json.values()) {
                     JSONObject rootNode = (JSONObject) value;
                     addImage(fileNameSet, rootNode);
-                    addImage(rootNode.getJSONArray(FileConstants.CHILDREN_R), fileNameSet);
-                    addImage(rootNode.getJSONArray(FileConstants.CHILDREN_L), fileNameSet);
+                    addImage(rootNode.getJSONArray(IOConstants.CHILDREN_R), fileNameSet);
+                    addImage(rootNode.getJSONArray(IOConstants.CHILDREN_L), fileNameSet);
                 }
             }
         }
@@ -445,12 +445,12 @@ public class FileUtil {
         for (Object value : children) {
             JSONObject node = (JSONObject) value;
             addImage(fileNameSet, node);
-            addImage(node.getJSONArray(FileConstants.CHILDREN), fileNameSet);
+            addImage(node.getJSONArray(IOConstants.CHILDREN), fileNameSet);
         }
     }
 
     private static void addImage(Set<String> fileNameSet, JSONObject node) {
-        String imageName = node.getString(FileConstants.IMAGE_NAME);
+        String imageName = node.getString(IOConstants.IMAGE_NAME);
         if (imageName != null) {
             fileNameSet.add(imageName);
         }
@@ -483,8 +483,8 @@ public class FileUtil {
                         ids.add(Long.valueOf(key));
                     }
                     JSONObject subject = (JSONObject) mindMap.get(key);
-                    updateFile(subject, FileConstants.CHILDREN_R);
-                    updateFile(subject, FileConstants.CHILDREN_L);
+                    updateFile(subject, IOConstants.CHILDREN_R);
+                    updateFile(subject, IOConstants.CHILDREN_L);
                 }
 
 //                try (FileWriter fw = new FileWriter(file)) {
@@ -504,13 +504,13 @@ public class FileUtil {
 
         for (Object value : children) {
             JSONObject json = (JSONObject) value;
-            Long id = json.getLong(FileConstants.ID);
+            Long id = json.getLong(IOConstants.ID);
             if (ids.contains(id)) {
                 System.out.print(id + "、");
             } else {
                 ids.add(id);
             }
-            updateFile(json, FileConstants.CHILDREN);
+            updateFile(json, IOConstants.CHILDREN);
         }
     }
 

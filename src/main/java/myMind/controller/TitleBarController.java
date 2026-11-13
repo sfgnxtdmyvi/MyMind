@@ -22,11 +22,11 @@ import javafx.stage.WindowEvent;
 import lombok.Getter;
 import lombok.Setter;
 import myMind.common.constants.CssStyle;
-import myMind.common.constants.FileConstants;
+import myMind.common.constants.IOConstants;
 import myMind.common.constants.PosConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.manager.CssManager;
-import myMind.common.util.FileUtil;
+import myMind.common.util.IOUtil;
 import myMind.componet.MindMap;
 import myMind.componet.Subject;
 
@@ -85,7 +85,7 @@ public class TitleBarController {
 
     @FXML
     private void load() {
-        File file = FileUtil.openFileChooser(FileConstants.OPEN_TYPE, mindMap);
+        File file = IOUtil.openFileChooser(IOConstants.OPEN_TYPE, mindMap);
         if (file == null) {
             return;
         }
@@ -106,7 +106,7 @@ public class TitleBarController {
         mindMapController.createMindMap(new Stage(), false);
         // 其他更新 UI 的操作，可能会导致图标不显示，所以放在下一帧执行
         Platform.runLater(() -> {
-            FileUtil.load(file, mindMapController.getMindMap());
+            IOUtil.load(file, mindMapController.getMindMap());
             mindMapController.getTitleBarController().selectFirstSubject();
         });
     }
@@ -116,7 +116,7 @@ public class TitleBarController {
         ObservableList<MenuItem> items = recentFilesMenu.getItems();
         items.clear();
 
-        LinkedList<String> recentFiles = FileUtil.getRecentFiles();
+        LinkedList<String> recentFiles = IOUtil.getRecentFiles();
         if (recentFiles.isEmpty()) {
             items.add(new MenuItem("无最近文件"));
             return;
@@ -137,7 +137,7 @@ public class TitleBarController {
             }
         }
         if (changed) {
-            FileUtil.saveRecentFiles();
+            IOUtil.saveRecentFiles();
         }
     }
 
@@ -156,22 +156,22 @@ public class TitleBarController {
 
     @FXML
     private void save() {
-        FileUtil.save(mindMap);
+        IOUtil.save(mindMap);
     }
 
     @FXML
     public void saveAs() {
-        FileUtil.saveAs(mindMap);
+        IOUtil.saveAs(mindMap);
     }
 
     @FXML
     public void deleteUnusefulImage() {
-        FileUtil.deleteUnusefulImage();
+        IOUtil.deleteUnusefulImage();
     }
 
     @FXML
     public void updateMap() {
-        FileUtil.updateMap();
+        IOUtil.updateMap();
     }
 
     //—————————————————————————————————————————添加—————————————————————————————————————————

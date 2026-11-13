@@ -26,7 +26,7 @@ public class SaveUtil {
             }
 
             return scheduler.schedule(() -> {
-                FileUtil.saveFile(new File(mindMap.getFilePath()), mindMap, false);
+                IOUtil.saveFile(new File(mindMap.getFilePath()), mindMap, false);
                 pendingTasks.remove(mindMap);
             }, 10, TimeUnit.SECONDS);
         });
@@ -42,7 +42,7 @@ public class SaveUtil {
         if (!future.cancel(false)) {
             return;
         }
-        FileUtil.saveFile(new File(mindMap.getFilePath()), mindMap, false);
+        IOUtil.saveFile(new File(mindMap.getFilePath()), mindMap, false);
     }
 
     // ScheduledExecutorService 创建的是非守护线程，会阻止 JVM 自然退出，需要关闭

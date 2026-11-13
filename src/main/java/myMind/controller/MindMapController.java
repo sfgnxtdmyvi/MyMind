@@ -10,8 +10,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Tab;
-import javafx.scene.image.Image;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -20,10 +20,12 @@ import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.Data;
+import myMind.common.constants.IOConstants;
+import myMind.common.constants.StyleSheetConstants;
 import myMind.common.manager.CssManager;
 import myMind.common.manager.StyleWheelManager;
 import myMind.common.manager.shortcut.ShortcutManager;
-import myMind.common.util.FileUtil;
+import myMind.common.util.IOUtil;
 import myMind.common.util.MessageUtil;
 import myMind.common.util.SaveUtil;
 import myMind.componet.MapNode;
@@ -32,7 +34,6 @@ import myMind.componet.Subject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 @Data
 public class MindMapController {
@@ -51,14 +52,6 @@ public class MindMapController {
     private ContextMenuController contextMenuController;
     private ContextMenu contextMenu;
     private static final Popup styleWheel = StyleWheelManager.getStyleWheel();
-
-    private static final List<String> STYLE_SHEETS = List.of(
-            MindMapController.class.getResource("/css/base.css").toExternalForm(),
-            MindMapController.class.getResource("/css/node.css").toExternalForm(),
-            MindMapController.class.getResource("/css/search-panel.css").toExternalForm(),
-            MindMapController.class.getResource("/css/style-wheel.css").toExternalForm(),
-            MindMapController.class.getResource("/css/title-bar.css").toExternalForm()
-    );
 
     private ShortcutManager shortcutManager;
     private EventHandler<ContextMenuEvent> contextMenuEventEventHandler;
@@ -86,13 +79,12 @@ public class MindMapController {
 
         root = new AnchorPane(titleBar);
         scene = new Scene(root);
-        scene.getStylesheets().addAll(STYLE_SHEETS);
+        scene.getStylesheets().addAll(StyleSheetConstants.MAIN);
         CssManager.init(root);
 
         stage.setScene(scene);
-        Image icon = new Image(getClass().getResourceAsStream("/icon.png"));
-        stage.getIcons().add(icon);
-        titleBarController.getIcon().setImage(icon);
+        stage.getIcons().add(IOConstants.ICON);
+        titleBarController.getIcon().setImage(IOConstants.ICON);
         titleBarController.titleProperty().bind(stage.titleProperty());
         stage.setTitle("MyMind");
         stage.initStyle(StageStyle.UNDECORATED);
@@ -181,13 +173,17 @@ public class MindMapController {
             // 未保存且不为空
             else if (!mindMap.isEmpty()) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                DialogPane dialogPane = alert.getDialogPane();
+                Scene dialogScene = dialogPane.getScene();
+                dialogScene.getStylesheets().add(StyleSheetConstants.DIALOG);
+                ((Stage) dialogScene.getWindow()).getIcons().add(IOConstants.ICON);
                 alert.setTitle("保存导图");
                 alert.setHeaderText(null);
                 alert.setContentText("是否保存当前导图？");
                 alert.getButtonTypes().setAll(new ButtonType("保存", ButtonBar.ButtonData.YES),
                         new ButtonType("不保存", ButtonBar.ButtonData.NO),
                         new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE));
-                ButtonBar.ButtonData buttonData = alert.showAndWait().get().getButtonData();
+                ButtonBar.ButtonData buttonData = alert.showAndWait().orElse(ButtonType.CANCEL).getButtonData();
 
                 switch (buttonData) {
                     case YES -> titleBarController.saveAs();
@@ -196,7 +192,7 @@ public class MindMapController {
                             ObservableList<Node> children = ((Subject) tab.getContent()).getNodesLayer().getChildren();
                             for (Node child : children) {
                                 MapNode node = (MapNode) child;
-                                FileUtil.deleteImage(node.getImageName());
+                                IOUtil.deleteImage(node.getImageName());
                             }
                         }
                     }
@@ -211,7 +207,7 @@ public class MindMapController {
                 SaveUtil.shutdown();
                 // 关闭导图且不保存时，filePath 为 null
                 if (mindMap.getFilePath() != null) {
-                    FileUtil.addRecentFile(new File(mindMap.getFilePath()));
+                    IOUtil.addRecentFile(new File(mindMap.getFilePath()));
                 }
             }
 

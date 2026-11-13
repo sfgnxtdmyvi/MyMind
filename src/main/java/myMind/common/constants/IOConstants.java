@@ -1,6 +1,8 @@
 package myMind.common.constants;
 
-public class FileConstants {
+import javafx.scene.image.Image;
+
+public class IOConstants {
 
     public static final byte SAVE_TYPE = 0;
     public static final byte OPEN_TYPE = 1;
@@ -22,5 +24,7 @@ public class FileConstants {
     public static final String STYLE = "style";
     public static final String START = "start";
     public static final String END = "end";
+
+    public static final Image ICON = new Image(IOConstants.class.getResourceAsStream("/icon.png"));
 
 }

@@ -1,0 +1,36 @@
+.dialog-pane {
+    -fx-background-color: #f7f8fa;
+    -fx-padding: 17px 0px 0px 0px;
+}
+
+/* 适用所有按钮的基础样式 */
+.dialog-pane .button-bar .button {
+    -fx-background-radius: 4px;
+    -fx-border-radius: 4px;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dcdfe6;
+
+    -fx-padding: 7px 15px;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-text-fill: #606266;
+}
+
+.dialog-pane .button-bar .button:hover {
+    -fx-background-color: #7aadf1;
+    -fx-border-color: #0255ae;
+    -fx-text-fill: #ffffff;
+}
+
+/* 主按钮 / 默认操作按钮（按回车触发） */
+.dialog-pane .button-bar .button:default {
+
+}
+.dialog-pane .button-bar .default-button:hover {
+
+}
+
+/* 取消按钮 */
+.dialog-pane .button-bar .button:cancel {
+
+}
