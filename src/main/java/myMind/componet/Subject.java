@@ -129,19 +129,20 @@ public class Subject extends StackPane {
     }
 
     //———————————————————————————————————————————连线———————————————————————————————————————————
+
     public void addLine(QuadCurve line, byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            linesLayerR.getChildren().add(line);
-        } else {
+        if (pos == PosConstants.LEFT) {
             linesLayerL.getChildren().add(line);
+        } else {
+            linesLayerR.getChildren().add(line);
         }
     }
 
     public void clearLine(byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            linesLayerR.getChildren().clear();
-        } else {
+        if (pos == PosConstants.LEFT) {
             linesLayerL.getChildren().clear();
+        } else {
+            linesLayerR.getChildren().clear();
         }
     }
 

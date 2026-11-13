@@ -6,11 +6,9 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.DialogPane;
 import javafx.scene.control.Tab;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
@@ -30,6 +28,7 @@ import myMind.common.util.MessageUtil;
 import myMind.common.util.SaveUtil;
 import myMind.componet.MapNode;
 import myMind.componet.MindMap;
+import myMind.componet.PrettyDialog;
 import myMind.componet.Subject;
 
 import java.io.File;
@@ -172,18 +171,12 @@ public class MindMapController {
             }
             // 未保存且不为空
             else if (!mindMap.isEmpty()) {
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                DialogPane dialogPane = alert.getDialogPane();
-                Scene dialogScene = dialogPane.getScene();
-                dialogScene.getStylesheets().add(StyleSheetConstants.DIALOG);
-                ((Stage) dialogScene.getWindow()).getIcons().add(IOConstants.ICON);
-                alert.setTitle("保存导图");
-                alert.setHeaderText(null);
-                alert.setContentText("是否保存当前导图？");
-                alert.getButtonTypes().setAll(new ButtonType("保存", ButtonBar.ButtonData.YES),
+                PrettyDialog dialog = new PrettyDialog("保存导图");
+                dialog.setContentText("是否保存当前导图？");
+                dialog.setButtonTypes(new ButtonType("保存", ButtonBar.ButtonData.YES),
                         new ButtonType("不保存", ButtonBar.ButtonData.NO),
                         new ButtonType("取消", ButtonBar.ButtonData.CANCEL_CLOSE));
-                ButtonBar.ButtonData buttonData = alert.showAndWait().orElse(ButtonType.CANCEL).getButtonData();
+                ButtonBar.ButtonData buttonData = dialog.showAndWait().orElse(ButtonType.CANCEL).getButtonData();
 
                 switch (buttonData) {
                     case YES -> titleBarController.saveAs();

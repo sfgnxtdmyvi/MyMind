@@ -553,10 +553,10 @@ public class MapNode extends StackPane {
     //———————————————————————————————————————————节点———————————————————————————————————————————
 
     public List<MapNode> getChildren(byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            return childrenR;
-        } else {
+        if (pos == PosConstants.LEFT) {
             return childrenL;
+        } else {
+            return childrenR;
         }
     }
 

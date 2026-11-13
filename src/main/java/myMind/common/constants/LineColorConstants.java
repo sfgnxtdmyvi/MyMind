@@ -8,11 +8,11 @@ import java.util.Collections;
 import java.util.List;
 
 public class LineColorConstants {
+
     private static final List<Paint> lineColors = new ArrayList<>();
 
     static {
         Collections.addAll(lineColors,
-//                Color.web("#fdb466"),
                 Color.web("#64cab9"),
                 Color.web("#f6b7dd"),
                 Color.web("#a3daa6"),

@@ -288,18 +288,17 @@ public class SubjectController {
                 }
 
                 case ADJUST_X -> {
-                    if (pos == PosConstants.MIDDLE) {
-                        adjustChildrenX(node, PosConstants.RIGHT);
-                        adjustChildrenX(node, PosConstants.LEFT);
-                        refreshLines();
-                    } else {
-                        adjustChildrenX(node, pos);
-                        refreshLines(pos);
-                    }
+                    adjustChildrenX(node, pos);
+                    refreshLines(pos);
                 }
                 case ADJUST_Y -> {
-                    adjustChildrenY(pos);
-                    refreshLines(pos);
+                    if (pos == PosConstants.MIDDLE) {
+                        adjustChildrenY();
+                        refreshLines();
+                    } else {
+                        adjustChildrenY(pos);
+                        refreshLines(pos);
+                    }
                 }
 
                 case CHANGE -> saveLater();
@@ -318,12 +317,12 @@ public class SubjectController {
     }
 
     private double calculateChildX(MapNode parentNode, byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            // 父节点 X 轴 + 父节点宽度 + 节点间隔
-            return parentNode.getLayoutX() + parentNode.getWidth() + NodeConstants.GAP_X;
-        } else {
+        if (pos == PosConstants.LEFT) {
             // 父节点 X 轴 - 节点间隔 - 节点最小宽度
             return parentNode.getLayoutX() - NodeConstants.ADD_LEFT_NODE_GAP_X;
+        } else {
+            // 父节点 X 轴 + 父节点宽度 + 节点间隔
+            return parentNode.getLayoutX() + parentNode.getWidth() + NodeConstants.GAP_X;
         }
     }
 
@@ -724,18 +723,18 @@ public class SubjectController {
             return;
         }
 
-        if (pos == PosConstants.RIGHT) {
-            // 父节点的 X 坐标 + 父节点的宽度 + 节点间隔
-            double childX = calculateChildX(parentNode, pos);
-            for (MapNode child : children) {
-                child.setLayoutX(childX);
-                adjustChildrenX(child, pos);
-            }
-        } else {
+        if (pos == PosConstants.LEFT) {
             // 父节点的 X 坐标 - 节点间隔 - 子节点的宽度
             double childX = parentNode.getLayoutX() - NodeConstants.GAP_X;
             for (MapNode child : children) {
                 child.setLayoutX(childX - child.getWidth());
+                adjustChildrenX(child, pos);
+            }
+        } else {
+            // 父节点的 X 坐标 + 父节点的宽度 + 节点间隔
+            double childX = calculateChildX(parentNode, pos);
+            for (MapNode child : children) {
+                child.setLayoutX(childX);
                 adjustChildrenX(child, pos);
             }
         }
@@ -909,21 +908,21 @@ public class SubjectController {
 
     private Point2D getStart(MapNode node, int i, int maxIndex, byte pos) {
         double x;
-        if (pos == PosConstants.RIGHT) {
-            //最大值 - min（从左数第几个， 从右数第几个）
-            x = node.getLayoutX() + node.getWidth() - getLevel(maxIndex - Math.min(i, maxIndex - i));
-        } else {
+        if (pos == PosConstants.LEFT) {
             //最大值 + min（从左数第几个，从右数第几个）
             x = node.getLayoutX() + getLevel(maxIndex - Math.min(i, maxIndex - i));
+        } else {
+            //最大值 - min（从左数第几个， 从右数第几个）
+            x = node.getLayoutX() + node.getWidth() - getLevel(maxIndex - Math.min(i, maxIndex - i));
         }
         return new Point2D(x, getMidY(node));
     }
 
     private Point2D getEnd(MapNode node, byte pos) {
-        if (pos == PosConstants.RIGHT) {
-            return new Point2D(node.getLayoutX(), getMidY(node));
-        } else {
+        if (pos == PosConstants.LEFT) {
             return new Point2D(node.getLayoutX() + node.getWidth(), getMidY(node));
+        } else {
+            return new Point2D(node.getLayoutX(), getMidY(node));
         }
     }
 

@@ -2,7 +2,6 @@ package myMind.componet;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
-import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -10,6 +9,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.StackPane;
 import lombok.Data;
 import myMind.common.Location;
 import myMind.common.constants.SizeConstants;
@@ -210,12 +210,10 @@ public class MindMap extends TabPane {
 
         Tab tab = new Tab();
         tab.setOnCloseRequest(event -> {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("删除确认");
-            alert.setHeaderText(null);
-            alert.setContentText("确定要删除「" + tab.getText() + "」吗？");
+            PrettyDialog dialog = new PrettyDialog("删除确认");
+            dialog.setContentText("确定要删除「" + tab.getText() + "」吗？");
 
-            Optional<ButtonType> result = alert.showAndWait();
+            Optional<ButtonType> result = dialog.showAndWait();
             // 点了取消/关闭对话框 → 阻止删除
             if (result.isEmpty() || result.get() != ButtonType.OK) {
                 event.consume();
@@ -228,8 +226,12 @@ public class MindMap extends TabPane {
         getTabs().add(tab);
 
         MapNode rootNode = subjectController.getRootNode();
-        rootNode.setLayoutX((getWidth() - rootNode.getWidth()) / 2);
-        rootNode.setLayoutY((getHeight() - rootNode.getHeight()) / 2);
+        StackPane tabHeaderArea = (StackPane) lookup(".tab-header-area");
+        subjectController.adjustAsync(rootNode, () -> {
+            rootNode.setLayoutX((getWidth() - rootNode.getWidth()) / 2);
+            rootNode.setLayoutY((getHeight() - rootNode.getHeight()) / 2 - tabHeaderArea.getHeight());
+        });
+
         rootNode.getTextArea().textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty()) {
                 tab.setText(newValue);

@@ -17,7 +17,6 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CustomMenuItem;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -30,7 +29,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-import javafx.stage.Stage;
 import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.IOConstants;
 import myMind.common.constants.PosConstants;
@@ -41,6 +39,7 @@ import myMind.common.util.CloneNodeUtil;
 import myMind.common.util.IOUtil;
 import myMind.common.util.MessageUtil;
 import myMind.componet.MapNode;
+import myMind.componet.PrettyDialog;
 import myMind.componet.Subject;
 
 import java.awt.image.BufferedImage;
@@ -240,18 +239,13 @@ public class TemplateController {
     }
 
     private void renameTemplate(Template template, int index) {
-        Dialog<ButtonType> dialog = new Dialog<>();
+        PrettyDialog dialog = new PrettyDialog("重命名");
         DialogPane dialogPane = dialog.getDialogPane();
-        Scene scene = dialogPane.getScene();
-        scene.getStylesheets().add(StyleSheetConstants.DIALOG);
         dialogPane.setPrefWidth(300);
-        dialogPane.setPrefHeight(200);
-
-        ((Stage) scene.getWindow()).getIcons().add(IOConstants.ICON);
-        dialog.setTitle("重命名");
+        dialogPane.setPrefHeight(170);
 
         Label label = new Label("新名称：");
-        Font font = new Font(14);
+        Font font = new Font(15);
         label.setFont(font);
         TextField textField = new TextField(template.getName());
         textField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -265,7 +259,6 @@ public class TemplateController {
         VBox vBox = new VBox(17, label, textField);
         dialogPane.setContent(vBox);
 
-        dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.showAndWait().ifPresent(input -> {
             if (input != ButtonType.OK) {
                 return;
