@@ -4,27 +4,21 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
-import javafx.event.Event;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import lombok.Getter;
 import lombok.Setter;
 import myMind.common.constants.CssStyle;
 import myMind.common.constants.IOConstants;
 import myMind.common.constants.PosConstants;
-import myMind.common.constants.SizeConstants;
 import myMind.common.manager.CssManager;
 import myMind.common.util.IOUtil;
 import myMind.componet.MindMap;
@@ -38,9 +32,6 @@ import java.util.LinkedList;
 public class TitleBarController {
 
     @FXML
-    private HBox titleBar;
-
-    @FXML
     @Getter
     private ImageView icon;
     @FXML
@@ -52,20 +43,10 @@ public class TitleBarController {
     @FXML
     private MenuItem collapseOrExpandItem;
 
-    @FXML
-    private Button maximizeBtn;
-
     private AnchorPane root;
     private Stage stage;
     private MindMap mindMap;
     private SubjectController subjectController;
-
-    private boolean maximized = false;
-    // 最大化时，记录宽高位置，恢复时使用
-    private double width;
-    private double height;
-    private double x;
-    private double y;
 
     public StringProperty titleProperty() {
         return titleProperty;
@@ -248,51 +229,6 @@ public class TitleBarController {
             collapseOrExpandItem.setAccelerator(KeyCombination.keyCombination("Ctrl+Shift+-"));
             collapseOrExpandItem.setUserData("collapse");
         }
-    }
-
-    //—————————————————————————————————————————标题栏—————————————————————————————————————————
-    // todo 调整尺寸
-    // todo 移动窗口
-    @FXML
-    public void clickBar(MouseEvent event) {
-        if (event.getClickCount() == 2) {
-            maximize();
-        }
-    }
-
-    @FXML
-    public void minimize() {
-        stage.setIconified(true);
-    }
-
-    @FXML
-    public void maximize() {
-        if (maximized) {
-            // 还原
-            stage.setX(x);
-            stage.setY(y);
-            stage.setWidth(width);
-            stage.setHeight(height);
-            maximizeBtn.setText("□");
-        } else {
-            // 最大化
-            x = stage.getX();
-            y = stage.getY();
-            width = stage.getWidth();
-            height = stage.getHeight();
-            stage.setX(0);
-            stage.setY(0);
-            // UNDECORATED 模式下，setMaximized()会让窗口覆盖整个屏幕（包括任务栏）
-            stage.setWidth(SizeConstants.SCREEN_WIDTH);
-            stage.setHeight(SizeConstants.SCREEN_HEIGHT);
-            maximizeBtn.setText("❐");
-        }
-        maximized = !maximized;
-    }
-
-    @FXML
-    public void close() {
-        Event.fireEvent(stage, new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 
     public void dispose() {

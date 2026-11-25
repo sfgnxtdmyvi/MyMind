@@ -53,7 +53,7 @@ class TextFlowExt extends TextFlow {
         return navigator.offsetToPosition(charIdx, Forward).getMajor();
     }
 
-    PathElement[] getCaretShape(int charIdx, boolean isLeading) {
+    public PathElement[] getCaretShape(int charIdx, boolean isLeading) {
         return caretShape(charIdx, isLeading);
     }
 
@@ -69,9 +69,9 @@ class TextFlowExt extends TextFlow {
         return getUnderlineShape(range.getStart(), range.getEnd());
     }
 
-    PathElement[] getUnderlineShape(int from, int to) {
-        return getUnderlineShape(from, to, 0, 0);
-    }
+//    PathElement[] getUnderlineShape(int from, int to) {
+//        return getUnderlineShape(from, to, 0, 0);
+//    }
 
     /**
      * @param from       The index of the first character.

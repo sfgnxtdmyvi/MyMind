@@ -2,6 +2,7 @@ package myMind.componet;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
+import javafx.geometry.Point2D;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -11,7 +12,8 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import lombok.Data;
-import myMind.common.Location;
+import myMind.common.pojo.Location;
+import myMind.common.constants.NodeConstants;
 import myMind.common.constants.SizeConstants;
 import myMind.common.util.SaveUtil;
 import myMind.componet.styledArea.StyleClassedTextArea;
@@ -243,6 +245,8 @@ public class MindMap extends TabPane {
         return tab;
     }
 
+    //—————————————————————————————————————————位置—————————————————————————————————————————
+
     /**
      * 记录当前位置
      */
@@ -296,10 +300,37 @@ public class MindMap extends TabPane {
                 getSelectionModel().select(tab);
                 // 不能抽取到 recordLocation()，如果主题没变，则不会触发 recordLocation()
                 needRecording = true;
+
+                MapNode mapNode = location.getMapNode();
+                SubjectController subjectController = (SubjectController) tab.getUserData();
+                subjectController.setSelectedNode(mapNode, false);
+
+                // 移动 subject，使节点可见
+                Point2D nodeCoords = mapNode.localToScene(0, 0);
+                Point2D mindMapCoords = localToScene(0, 0);
+                double nodeMinX = nodeCoords.getX();
+                double nodeMinY = nodeCoords.getY();
+                if (nodeMinX < NodeConstants.SELECTED_NODE_BORDER_WIDTH) {
+                    location.setSubjectTranslateX(subject.getTranslateX() + (NodeConstants.SELECTED_NODE_BORDER_WIDTH - nodeMinX));
+                } else {
+                    double mindMapMaxX = getWidth() - NodeConstants.SELECTED_NODE_BORDER_WIDTH;
+                    double nodeMaxX = nodeMinX + mapNode.getWidth();
+                    if (mindMapMaxX < nodeMaxX) {
+                        location.setSubjectTranslateX(subject.getTranslateX() + mindMapMaxX - nodeMaxX);
+                    }
+                }
+                double mindMapMinY = mindMapCoords.getY() + ((StackPane) lookup(".tab-header-area")).getHeight() + NodeConstants.SELECTED_NODE_BORDER_WIDTH;
+                if (nodeMinY < mindMapMinY) {
+                    location.setSubjectTranslateY(subject.getTranslateY() + mindMapMinY - nodeMinY);
+                } else {
+                    double nodeMaxX = nodeMinY + mapNode.getHeight();
+                    if (getScene().getHeight() < nodeMaxX) {
+                        location.setSubjectTranslateY(subject.getTranslateY() + getScene().getHeight() - nodeMaxX);
+                    }
+                }
+
                 subject.setTranslateX(location.getSubjectTranslateX());
                 subject.setTranslateY(location.getSubjectTranslateY());
-                SubjectController subjectController = (SubjectController) tab.getUserData();
-                subjectController.setSelectedNode(location.getMapNode(), false);
                 return;
             }
         }
@@ -320,19 +351,6 @@ public class MindMap extends TabPane {
                 return;
             }
         }
-    }
-
-    public boolean isEmpty() {
-        boolean empty = true;
-        for (Tab tab : getTabs()) {
-            SubjectController subjectController = (SubjectController) tab.getUserData();
-            // 只要一个不为空就为 false
-            if (!subjectController.getRootNode().isEmpty()) {
-                empty = false;
-                break;
-            }
-        }
-        return empty;
     }
 
     //—————————————————————————————————————————切换选中节点—————————————————————————————————————————
@@ -379,6 +397,19 @@ public class MindMap extends TabPane {
 
     public void deleteLine() {
         subjectController.deleteLine();
+    }
+
+    public boolean isEmpty() {
+        boolean empty = true;
+        for (Tab tab : getTabs()) {
+            SubjectController subjectController = (SubjectController) tab.getUserData();
+            // 只要一个不为空就为 false
+            if (!subjectController.getRootNode().isEmpty()) {
+                empty = false;
+                break;
+            }
+        }
+        return empty;
     }
 
 }

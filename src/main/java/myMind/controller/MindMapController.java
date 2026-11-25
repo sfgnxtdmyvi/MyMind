@@ -4,6 +4,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonBar;
@@ -12,11 +13,11 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Tab;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.HeaderBar;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import lombok.Data;
 import myMind.common.constants.IOConstants;
 import myMind.common.constants.StyleSheetConstants;
@@ -41,7 +42,7 @@ public class MindMapController {
     private Scene scene;
 
     private AnchorPane root;
-    private HBox titleBar;
+    private HeaderBar titleBar;
     private TitleBarController titleBarController;
 
     private MindMap mindMap;
@@ -76,7 +77,7 @@ public class MindMapController {
             e.printStackTrace();
         }
 
-        root = new AnchorPane(titleBar);
+        root = new AnchorPane();
         scene = new Scene(root);
         scene.getStylesheets().addAll(StyleSheetConstants.MAIN);
         CssManager.init(root);
@@ -86,14 +87,20 @@ public class MindMapController {
         titleBarController.getIcon().setImage(IOConstants.ICON);
         titleBarController.titleProperty().bind(stage.titleProperty());
         stage.setTitle("MyMind");
-        stage.initStyle(StageStyle.UNDECORATED);
+//        stage.initStyle(StageStyle.EXTENDED);
         // 取消最大化时的位置
-        stage.setX(6);
-        stage.setY(12);
-        stage.setHeight(740);
-        stage.setWidth(1450);
-        titleBarController.maximize();
+        Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+        double width = bounds.getWidth();
+        double height = bounds.getHeight();
+        stage.setX(width * 0.02);
+        stage.setY(height * 0.02);
+        stage.setWidth(width * 0.96);
+        stage.setHeight(height * 0.96);
+        stage.setMaximized(true);
+        // 避免闪烁
+        stage.setOpacity(0);
         stage.show();
+        stage.setOpacity(1);
 
         AnchorPane.setLeftAnchor(titleBar, 0.0);
         AnchorPane.setRightAnchor(titleBar, 0.0);
@@ -146,13 +153,14 @@ public class MindMapController {
             if (newTab == null) {
                 return;
             }
+
             SubjectController subjectController = (SubjectController) newTab.getUserData();
             mindMap.setSubject(((Subject) newTab.getContent()));
-
             mindMap.setSubjectController(subjectController);
             titleBarController.setSubjectController(subjectController);
             contextMenuController.setSubjectController(subjectController);
             StyleWheelArcController.setSubjectController(subjectController);
+
             mindMap.recordLocation();
         };
         mindMap.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
@@ -248,7 +256,7 @@ public class MindMapController {
             stage.setScene(null);
             stage = null;
             System.gc();
-            System.runFinalization();
+//            System.runFinalization();
         });
     }
 

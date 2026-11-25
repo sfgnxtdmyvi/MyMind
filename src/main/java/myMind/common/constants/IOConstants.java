@@ -4,6 +4,8 @@ import javafx.scene.image.Image;
 
 public class IOConstants {
 
+    public static final int MAX_RECENT_FILES = 15;
+
     public static final byte SAVE_TYPE = 0;
     public static final byte OPEN_TYPE = 1;
 

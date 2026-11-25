@@ -16,6 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 
 /**
@@ -51,7 +52,6 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
         IndexRange selection = getSelection();
         if (selection.getLength() > 0) {
             ClipboardContent content = new ClipboardContent();
-
             content.putString(getSelectedText());
 
             getStyleCodecs().ifPresent(codecs -> {
@@ -62,7 +62,8 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
                 DataOutputStream dos = new DataOutputStream(os);
                 try {
                     codec.encode(dos, doc);
-                    content.put(format, os.toByteArray());
+                    // 在新版的安全策略下，需要包装成 ByteBuffer
+                    content.put(format, ByteBuffer.wrap(os.toByteArray()));
                 } catch (IOException e) {
                     System.err.println("Codec error: Exception in encoding '" + codec.getName() + "':");
                     e.printStackTrace();
@@ -86,9 +87,17 @@ public interface ClipboardActions<PS, SEG, S> extends EditActions<PS, SEG, S> {
             Codec<StyledDocument<PS, SEG, S>> codec = ReadOnlyStyledDocument.codec(codecs._1, codecs._2, getSegOps());
             DataFormat format = dataFormat(codec.getName());
             if (clipboard.hasContent(format)) {
-                byte[] bytes = (byte[]) clipboard.getContent(format);
-                ByteArrayInputStream is = new ByteArrayInputStream(bytes);
-                DataInputStream dis = new DataInputStream(is);
+                ByteBuffer buffer = (ByteBuffer) clipboard.getContent(format);
+                byte[] bytes = new byte[buffer.remaining()];
+                System.arraycopy(
+                        buffer.array(),
+                        buffer.arrayOffset() + buffer.position(),
+                        bytes,
+                        0,
+                        buffer.remaining()
+                );
+
+                DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes));
                 StyledDocument<PS, SEG, S> doc = null;
                 try {
                     doc = codec.decode(dis);

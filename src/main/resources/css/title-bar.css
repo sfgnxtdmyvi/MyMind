@@ -1,13 +1,18 @@
 .title-bar {
-    -fx-background-color: linear-gradient(to right, #dfe9ec, #fff3cf, #e0eef1);
+    -fx-background-color: linear-gradient(to right, #dfe9ec, #fff1bf, #e0eef1);
     -fx-pref-height: 25px;
 }
 
 /*图标、标题*/
 #topLeft {
-    -fx-padding: 0 0 0 15;
+    -fx-padding: 0 0 0 10;
     -fx-spacing: 15;
     -fx-alignment: center-left;
+}
+
+#icon {
+    -fx-fit-width: 20px;
+    -fx-fit-height: 20px;
 }
 
 #title {
@@ -51,20 +56,4 @@
 
 .tooltip {
     -fx-show-delay: 30ms;
-}
-
-/*最小化、最大化、关闭*/
-.window-btn {
-    -fx-pref-width: 46px;
-    -fx-background-color: transparent;
-    -fx-font-size: 14px;
-}
-
-.window-btn:hover {
-    -fx-background-color: #d5d4d4;
-}
-
-.close-btn:hover {
-    -fx-background-color: #e81123;
-    -fx-text-fill: white;
 }

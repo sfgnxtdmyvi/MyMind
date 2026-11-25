@@ -12,7 +12,6 @@ import lombok.Getter;
 import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.IOConstants;
 import myMind.common.constants.PosConstants;
-import myMind.common.constants.SizeConstants;
 import myMind.common.manager.ReferenceManager;
 import myMind.componet.MapNode;
 import myMind.componet.MindMap;
@@ -350,7 +349,7 @@ public class IOUtil {
         String string = file.getName().substring(0, file.getName().length() - 3) + "=" + file.getAbsolutePath();
         recentFiles.remove(string);
         recentFiles.addFirst(string);
-        if (recentFiles.size() > SizeConstants.MAX_RECENT_FILES) {
+        if (recentFiles.size() > IOConstants.MAX_RECENT_FILES) {
             recentFiles.removeLast();
         }
 

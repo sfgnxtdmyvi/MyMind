@@ -1,4 +1,4 @@
-package myMind.common;
+package myMind.common.pojo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -39,7 +39,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextFlow;
-import myMind.common.constants.ConfigConstants;
 import myMind.common.constants.NodeConstants;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
@@ -1045,7 +1044,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
                 public Point2D getTextLocation(int offset) {
                     return getCaretBounds()
                             .or(() -> getCharacterBoundsOnScreen(offset, offset))
-                            .map(cb -> new Point2D((cb.getMaxX() - 5) * ConfigConstants.SCALE, cb.getMaxY() * ConfigConstants.SCALE))
+                            .map(cb -> new Point2D((cb.getMaxX() - 5), cb.getMaxY()))
                             .orElse(new Point2D(10, 10));
                 }
 

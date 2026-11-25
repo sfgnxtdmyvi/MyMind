@@ -414,18 +414,22 @@ public class MapNode extends StackPane {
         });
 
         widthProperty().addListener((obs, oldVal, newVal) -> {
-            Point2D sceneCoords = localToScene(0, 0);
-            double nodeX = sceneCoords.getX();
             double newWidth = newVal.doubleValue();
             if (pos == PosConstants.LEFT) {
                 setLayoutX(getLayoutX() - (newWidth - oldVal.doubleValue()));
-                // 与 scene 左边的距离
-                if (nodeX < 0) {
-                    setSubjectTranslateX.accept(-nodeX);
+            }
+
+            Point2D nodeCoords = localToScene(0, 0);
+            double nodeMinX = nodeCoords.getX();
+            // 与 mindMap 左边的距离
+            if (nodeMinX < NodeConstants.SELECTED_NODE_BORDER_WIDTH) {
+                setSubjectTranslateX.accept(NodeConstants.SELECTED_NODE_BORDER_WIDTH - nodeMinX);
+            } else {
+                double mindMapMaxX = getScene().getWidth() - NodeConstants.SELECTED_NODE_BORDER_WIDTH;
+                double nodeMaxX = nodeMinX + newWidth;
+                if (mindMapMaxX < nodeMaxX) {
+                    setSubjectTranslateX.accept(mindMapMaxX - nodeMaxX);
                 }
-            } else if (getScene().getWidth() < nodeX + newWidth) {
-                double dx = nodeX + newWidth - getScene().getWidth();
-                setSubjectTranslateX.accept(-dx);
             }
             onAction.accept(NodeEvent.ADJUST_X);
         });
@@ -625,6 +629,7 @@ public class MapNode extends StackPane {
 
     /**
      * 改变方向到指定索引
+     *
      * @param index -1表示添加到最后
      */
     public void transPosAt(int index, byte srcPos, byte targetPos) {

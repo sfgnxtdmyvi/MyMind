@@ -1,79 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.HeaderBar?>
+<?import javafx.scene.layout.Pane?>
 
-<HBox xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="myMind.controller.TitleBarController"
-      onMouseClicked="#clickBar"
-      fx:id="titleBar"
-      styleClass="title-bar">
+<HeaderBar xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="myMind.controller.TitleBarController"
+           styleClass="title-bar">
 
     <!-- 图标、标题 -->
-    <HBox fx:id="topLeft" spacing="8">
-        <ImageView fx:id="icon" fitWidth="20" fitHeight="20"/>
-        <Label fx:id="title"/>
-    </HBox>
+    <leading>
+        <HBox id="topLeft">
+            <ImageView fx:id="icon"/>
+            <Label fx:id="title"/>
+        </HBox>
+    </leading>
 
-    <!-- 菜单 -->
-    <MenuBar>
-        <Menu text="文件">
-            <MenuItem onAction="#newMindMap" text="新建" accelerator="Ctrl+N"/>
-            <MenuItem onAction="#load" text="打开" accelerator="Ctrl+O"/>
-            <Menu fx:id="recentFilesMenu" onShowing="#loadRecentFiles" text="打开最近">
-                <MenuItem text="无最近文件" disable="true"/>
-            </Menu>
-            <SeparatorMenuItem/>
+    <center>
+        <HBox>
+            <!-- 菜单 -->
+            <MenuBar>
+                <Menu text="文件">
+                    <MenuItem onAction="#newMindMap" text="新建" accelerator="Ctrl+N"/>
+                    <MenuItem onAction="#load" text="打开" accelerator="Ctrl+O"/>
+                    <Menu fx:id="recentFilesMenu" onShowing="#loadRecentFiles" text="打开最近">
+                        <MenuItem text="无最近文件" disable="true"/>
+                    </Menu>
+                    <SeparatorMenuItem/>
 
-            <MenuItem onAction="#save" text="保存" accelerator="Ctrl+S"/>
-            <MenuItem onAction="#saveAs" text="另存为" accelerator="Ctrl+Shift+S"/>
-            <SeparatorMenuItem/>
+                    <MenuItem onAction="#save" text="保存" accelerator="Ctrl+S"/>
+                    <MenuItem onAction="#saveAs" text="另存为" accelerator="Ctrl+Shift+S"/>
+                    <SeparatorMenuItem/>
 
-            <MenuItem onAction="#deleteUnusefulImage" text="清除无用图片"/>
-            <MenuItem onAction="#updateMap" text="更新文件结构"/>
-        </Menu>
+                    <MenuItem onAction="#deleteUnusefulImage" text="清除无用图片"/>
+                    <MenuItem onAction="#updateMap" text="更新文件结构"/>
+                </Menu>
 
-        <Menu text="编辑">
-            <MenuItem onAction="#addSubject" text="新建主题" accelerator="Ctrl+M"/>
-            <SeparatorMenuItem/>
+                <Menu text="编辑">
+                    <MenuItem onAction="#addSubject" text="新建主题" accelerator="Ctrl+M"/>
+                    <SeparatorMenuItem/>
 
-            <MenuItem onAction="#insert" text="插入节点" accelerator="Alt+I"/>
-            <MenuItem onAction="#addChildR" text="添加右子节点" accelerator="Alt+Right"/>
-            <MenuItem onAction="#addChildL" text="添加左子节点" accelerator="Alt+Left"/>
-            <MenuItem onAction="#addSibling" text="添加兄弟节点" accelerator="Alt+Down"/>
-            <SeparatorMenuItem/>
+                    <MenuItem onAction="#insert" text="插入节点" accelerator="Alt+I"/>
+                    <MenuItem onAction="#addChildR" text="添加右子节点" accelerator="Alt+Right"/>
+                    <MenuItem onAction="#addChildL" text="添加左子节点" accelerator="Alt+Left"/>
+                    <MenuItem onAction="#addSibling" text="添加兄弟节点" accelerator="Alt+Down"/>
+                    <SeparatorMenuItem/>
 
-            <MenuItem onAction="#batchAddChildR" text="批量添加右子节点" accelerator="Ctrl+Alt+Right"/>
-            <MenuItem onAction="#batchAddChildL" text="批量添加左子节点" accelerator="Ctrl+Alt+Left"/>
-            <MenuItem onAction="#batchAddSibling" text="批量添加兄弟节点" accelerator="Ctrl+Alt+Down"/>
-        </Menu>
+                    <MenuItem onAction="#batchAddChildR" text="批量添加右子节点" accelerator="Ctrl+Alt+Right"/>
+                    <MenuItem onAction="#batchAddChildL" text="批量添加左子节点" accelerator="Ctrl+Alt+Left"/>
+                    <MenuItem onAction="#batchAddSibling" text="批量添加兄弟节点" accelerator="Ctrl+Alt+Down"/>
+                </Menu>
 
-        <Menu text="设置">
-            <MenuItem onAction="#addSubject" text="快捷键"/>
-        </Menu>
+                <Menu text="设置">
+                    <MenuItem onAction="#addSubject" text="快捷键"/>
+                </Menu>
 
-        <Menu text="显示">
-            <MenuItem fx:id="collapseOrExpandItem" text="收起叶子节点 ▲"
-                      onAction="#collapseOrExpand" userData="collapse" accelerator="Ctrl+Shift+-"/>
-            <MenuItem onAction="#change" text="样式"/>
-        </Menu>
+                <Menu text="显示">
+                    <MenuItem fx:id="collapseOrExpandItem" text="收起叶子节点 ▲"
+                              onAction="#collapseOrExpand" userData="collapse" accelerator="Ctrl+Shift+-"/>
+                    <MenuItem onAction="#change" text="样式"/>
+                </Menu>
 
-        <fx:include source="tmepate-menu.fxml" />
-    </MenuBar>
+                <fx:include source="tmepate-menu.fxml"/>
+            </MenuBar>
 
-    <!-- 弹性占位符：占据所有剩余空间，把 topRight 推到右侧 -->
-    <!-- 不能直接把 HBox.hgrow="ALWAYS" 加在 MenuBar 上，否则无法触发双击最大化 -->
-    <Pane HBox.hgrow="ALWAYS"/>
-    <!-- 最小化、最大化、关闭 -->
-    <Button onAction="#minimize" text="─" styleClass="window-btn, minimize-btn"/>
-    <Button fx:id="maximizeBtn" onAction="#maximize" text="❐" styleClass="window-btn, maximize-btn"/>
-    <Button onAction="#close" text="✕" styleClass="window-btn, close-btn"/>
-</HBox>
+            <!-- 占据所有剩余空间，用于拖拽窗口 -->
+            <Pane HBox.hgrow="ALWAYS" HeaderBar.dragType="DRAGGABLE"/>
+        </HBox>
+    </center>
+
+</HeaderBar>
